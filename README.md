@@ -105,6 +105,10 @@ Pages on your plan: **do not enable Pages while licensing review is incomplete**
 
 The bundled `libmidi.wasm` uses the original, procedurally synthesized **PoP Mobile Original FM GM** SoundFont instead of the upstream sample bank. The generator is `tools/generate_fm_soundfont.py`; a build provenance record is in [`docs/MIDI_BUILD_PROVENANCE.md`](docs/MIDI_BUILD_PROVENANCE.md). See [`docs/MIDI_AUDIO_TEST.md`](docs/MIDI_AUDIO_TEST.md) for the manual browser-audio acceptance test. The matching complete emulator-source archive must be publicly linked alongside the binaries before a public release; see [`docs/SOURCE_COMPLIANCE.md`](docs/SOURCE_COMPLIANCE.md).
 
+## Release checklist
+
+See [`docs/NEXT_PUBLICATION_STEPS.md`](docs/NEXT_PUBLICATION_STEPS.md) for the tested JAR preflight update and the procedure for publishing the corresponding-source release alongside the new clean GitHub history.
+
 ## Clean public repository history
 
 For the separate, history-clean GitHub repository (without the legacy MIDI SoundFont binary in earlier commits), follow [`docs/CLEAN_PUBLIC_HISTORY.md`](docs/CLEAN_PUBLIC_HISTORY.md). **Do not publish the existing private development history.**

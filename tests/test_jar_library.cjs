@@ -48,6 +48,28 @@ vm.runInNewContext(fs.readFileSync(path.join(base,'sw-jar.js'),'utf8'), context)
   await assert.rejects(lib.storeBytes({...build,size:bytes.length+1},ab), /Wrong file size/);
   await lib.storeBytes(build,ab);
   assert.equal(await lib.cached(build),true);
+  const request = new Request(new URL('emulator/jar/'+build.sha256+'.jar',origin));
+  // Reject a Cache Storage entry with valid-looking metadata but truncated bytes.
+  await cache.put(request, new Response(Buffer.from('PK\x03\x04wrong', 'binary'), {headers: {
+    'X-PoP-Verified-SHA256':build.sha256, 'X-PoP-JAR-Size':String(build.size)
+  }}));
+  assert.equal(await lib.cached(build),false,'wrong cached byte length must not start emulator');
+  await lib.storeBytes(build,ab);
+  assert.equal(await lib.cached(build),true);
+  // A local server JAR can be probed with HEAD; a browser-cached JAR should
+  // NOT take this path because the parent page can be uncontrolled by the SW.
+  let localProbeCount = 0;
+  context.fetch = async request => {
+    localProbeCount++;
+    assert.equal(request.method, 'HEAD');
+    return new Response(null,{status:200,headers:{'Content-Length':String(build.size)}});
+  };
+  assert.equal((await lib.reachableLocal(build)).ok,true);
+  assert.equal(localProbeCount,1);
+  context.fetch = async()=>new Response(null,{status:404});
+  assert.equal((await lib.reachableLocal(build)).ok,false);
+  assert.equal((await lib.reachableLocal(build)).reason, 'HTTP 404');
+  context.fetch = async()=>{throw new Error('Unexpected network access')};
   async function swFetch(req) {
     let promise=null;
     const event={request:req, respondWith(p){promise=p}};

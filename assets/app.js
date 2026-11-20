@@ -42,7 +42,7 @@
 
   const jarLibrary = window.PoPJarLibrary;
   let playTicket = 0;
-  const state = { data: null, buildMap: new Map(), groupMap: new Map(), view: 'builds', currentGame: null, selectedGroup: null, selectedBuild: null, selectedPlay: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null, favorites: new Set() };
+  const state = { data: null, buildMap: new Map(), groupMap: new Map(), view: 'builds', currentGame: null, selectedGroup: null, selectedBuild: null, selectedPlay: null, readyPlaySha: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null, favorites: new Set() };
   try { state.favorites = new Set(JSON.parse(localStorage.getItem('pop-mobile-favorites-v1') || '[]')); } catch { /* localStorage may be off */ }
   const NUMPAD_SETTING_KEY = 'pop-mobile-numpad-mode-v1';
   let numpadMode = 'phone';
@@ -151,7 +151,9 @@
       if (!build) return;
       try {
         await jarLibrary.forget(build);
-        setJarStatus('Removed this verified JAR from browser cache. The running game will continue until restarted.');
+        state.readyPlaySha = null;
+        $('restart-play').disabled = true;
+        setJarStatus('Removed the browser-cached JAR. The current game can continue, but select the JAR again before restarting.');
         $('jar-forget').hidden = true;
       } catch (error) { setJarStatus(`Could not clear cache: ${error.message}`, true); }
     });
@@ -276,6 +278,8 @@
     $(id).hidden = true;
     if (id === 'play-modal') {
       ++playTicket; // Ignore delayed file validation after closing the dialog.
+      state.readyPlaySha = null;
+      $('restart-play').disabled = true;
       if (document.fullscreenElement === $('player-stage')) {
         document.exitFullscreen().catch(() => {});
       }
@@ -406,9 +410,24 @@
   }
   function loadPlayerOnce(build, ticket, status, cachedCopy = false) {
     if (ticket !== playTicket || $('play-modal').hidden || state.selectedPlay !== build.sha256) return;
+    state.readyPlaySha = build.sha256;
+    $('restart-play').disabled = false;
     setJarStatus(status);
     $('jar-forget').hidden = !cachedCopy;
     restartPlayer();
+  }
+  async function loadVerifiedLocal(build, ticket) {
+    setJarStatus('Checking that the local JAR is accessible to the emulator…');
+    const check = await jarLibrary.reachableLocal(build);
+    if (ticket !== playTicket || $('play-modal').hidden || state.selectedPlay !== build.sha256) return;
+    if (check.ok) {
+      loadPlayerOnce(build, ticket, 'Using the SHA-256-verified local JAR from the preview server.');
+    } else {
+      state.readyPlaySha = null;
+      $('restart-play').disabled = true;
+      setJarStatus('The local JAR is currently unavailable (' + check.reason + '). ' +
+        'Choose the matching JAR file, or start the server with --jar-dir pointing to your JAR collection.', true);
+    }
   }
   // Never fetch an external JAR automatically. A user-provided file is checked
   // by size, ZIP signature and SHA-256 before it reaches Cache Storage.
@@ -426,7 +445,7 @@
     } catch (error) {
       if (!current()) return;
       if (localExists) {
-        loadPlayerOnce(build, ticket, 'Using the SHA-256-verified local JAR from the preview server.');
+        await loadVerifiedLocal(build, ticket);
       } else {
         setJarStatus('Browser cache is unavailable: ' + error.message + '. Use HTTPS or localhost and enable site storage to import JARs.', true);
       }
@@ -434,7 +453,7 @@
     }
     if (!current()) return;
     if (localExists) {
-      loadPlayerOnce(build, ticket, 'Using the SHA-256-verified local JAR from the preview server.');
+      await loadVerifiedLocal(build, ticket);
     } else {
       setJarStatus('JAR not cached. Open its SHA-256 entry on the J2ME index, download the file, then click Choose JAR file…');
     }
@@ -459,6 +478,8 @@
     const build = state.buildMap.get(sha);
     if (!state.emulatorReady) { showInfo(); return; }
     state.selectedPlay = sha;
+    state.readyPlaySha = null;
+    $('restart-play').disabled = true;
     const ticket = ++playTicket;
     const screen = chooseEmulatorResolution(build.resolution);
     $('play-heading').textContent = `${build.name} · ${build.resolution}${screen && !screen.exact ? ` → ${screen.width}x${screen.height}` : ''}`;
@@ -517,7 +538,7 @@
     }
   }
   function restartPlayer() {
-    if (!state.selectedPlay) return;
+    if (!state.selectedPlay || state.readyPlaySha !== state.selectedPlay) return;
     const frame = document.createElement('iframe');
     frame.title = 'Java ME browser player';
     frame.allow = 'autoplay; fullscreen';

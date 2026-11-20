@@ -73,31 +73,39 @@ def validate() -> None:
     if (ROOT / '.gitmodules').exists():
         problems.append('Submodule metadata should not be present')
     if (ROOT / '.git').exists():
-        # One new initial commit is okay, but any existing private history is not.
-        result = git('rev-list', '--count', '--all', check=False)
-        if result.returncode != 0:
+        # Normal updates must not make this verifier fail. Audit *every*
+        # reachable commit/branch/tag rather than requiring exactly one commit.
+        history = git('rev-list', '--all', check=False)
+        if history.returncode != 0:
             problems.append('Could not inspect Git history')
         else:
-            count = int(result.stdout.strip() or b'0')
-            print(f'Git history: {count} reachable commits')
-            if count > 1:
-                problems.append('More than one reachable Git commit; use a fresh git init')
-            if count == 1:
-                refs = git('rev-list', '--all').stdout.decode().strip().splitlines()
-                commit = refs[0]
-                # A single commit can still be the *old* initial private commit.
+            refs = history.stdout.decode().splitlines()
+            print(f'Git history: {len(refs)} reachable commits')
+            if not refs:
+                problems.append('Git repository has no reachable commit')
+            roots = git('rev-list', '--max-parents=0', '--all', check=False)
+            if roots.returncode or len(roots.stdout.decode().splitlines()) != 1:
+                problems.append('Expected a single independent root history')
+            for commit in refs:
+                # Check *every* historical copy; deleting a file later does
+                # not hide it after making the repository public.
                 for rel, wanted in EXPECTED.items():
                     stored = git('show', f'{commit}:{rel}', check=False)
                     if stored.returncode or digest(stored.stdout) != wanted:
-                        problems.append(f'Git commit does not contain expected approved binary: {rel}')
-                tracked = git('ls-tree', '-r', '--name-only', commit).stdout.decode().splitlines()
-                if any(p.lower().endswith('.jar') and p != EMULATOR_JAR for p in tracked):
-                    problems.append('A game JAR is in committed history')
-                if any(p.endswith('.sf2') for p in tracked):
-                    problems.append('A SoundFont is in committed history')
-                if any(p.startswith('_site/') or p.startswith('PoP JAR Database 2026/') for p in tracked):
-                    problems.append('Generated site or game database was committed')
-                print('PASS: single root commit matches approved emulator binaries' if not problems else 'FAIL: Git commit verification')
+                        problems.append(f'Unexpected emulator binary in commit {commit[:12]}: {rel}')
+                tree = git('ls-tree', '-r', '--name-only', commit, check=False)
+                if tree.returncode:
+                    problems.append(f'Could not read tree of commit {commit[:12]}')
+                    continue
+                tracked = tree.stdout.decode().splitlines()
+                if any(x.lower().endswith('.jar') and x != EMULATOR_JAR for x in tracked):
+                    problems.append(f'A game or unknown JAR was committed: {commit[:12]}')
+                if any(x.endswith('.sf2') for x in tracked):
+                    problems.append(f'A SoundFont was committed: {commit[:12]}')
+                if any(x.startswith('_site/') or x.startswith('PoP JAR Database 2026/') for x in tracked):
+                    problems.append(f'Generated site or game database was committed: {commit[:12]}')
+            if not problems:
+                print('PASS: all reachable commits contain only the approved emulator binaries')
     else:
         print('PASS: no .git directory; exporting a fresh history is possible')
     if problems:

@@ -48,8 +48,26 @@
   async function cached(build) {
     const cache = await caches.open(CACHE_NAME);
     const response = await cache.match(jarRequest(build.sha256));
-    return Boolean(response?.ok && response.headers.get('X-PoP-Verified-SHA256') === build.sha256 &&
-      Number(response.headers.get('X-PoP-JAR-Size')) === Number(build.size));
+    if (!response?.ok || response.headers.get('X-PoP-Verified-SHA256') !== build.sha256 ||
+        Number(response.headers.get('X-PoP-JAR-Size')) !== Number(build.size)) return false;
+    // Check the actual cached byte length too: a metadata-only hit is unsafe.
+    return (await response.blob()).size === Number(build.size);
+  }
+
+  async function reachableLocal(build) {
+    // Used only for server-matched JARs. Never probe a browser-cached JAR
+    // through the outer page: it can be uncontrolled after Firefox hard reloads
+    // even though the new emulator iframe will be controlled by the worker.
+    try {
+      const response = await fetch(new Request(jarRequest(build.sha256), {method: 'HEAD', cache: 'no-store'}));
+      if (!response.ok) return {ok:false,reason:`HTTP ${response.status}`};
+      if (Number(response.headers.get('Content-Length')) !== Number(build.size)) {
+        return {ok:false,reason:'unexpected file size'};
+      }
+      return {ok:true};
+    } catch (error) {
+      return {ok:false,reason:String(error?.message || error)};
+    }
   }
 
   async function forget(build) {
@@ -95,5 +113,5 @@
     return `https://toca-1.github.io/new-j2me-software-archive-search/?sha256=${build.sha256}`;
   }
 
-  window.PoPJarLibrary = Object.freeze({ ensureWorker, cached, forget, storeBytes, storeFile, archiveSearchLink });
+  window.PoPJarLibrary = Object.freeze({ ensureWorker, cached, reachableLocal, forget, storeBytes, storeFile, archiveSearchLink });
 })();

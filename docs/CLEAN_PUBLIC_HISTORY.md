@@ -18,7 +18,7 @@ that contained a SoundFont identified as copyrighted by Roland. Replacing
   `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b`
 
 `python3 tools/verify_public_snapshot.py` checks these and, once Git has been
-initialized, verifies that the only reachable commit contains the same bytes.
+initialized, verifies that **every reachable commit** contains the same approved binary bytes, so later legitimate updates remain checkable.
 
 ## Create new local history (safe now, no GitHub publication required)
 
