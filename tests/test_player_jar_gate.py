@@ -16,6 +16,22 @@ class TestPlayerJarGate(unittest.TestCase):
         self.assertNotIn("JAR not cached. Open its SHA-256 entry",script)
         self.assertIn("el.hidden = !message", script)
 
+    def test_status_messages_are_temporary_and_reports_identify_the_build(self):
+        script = (ROOT / "assets/app.js").read_text()
+        html = (ROOT / "catalogue.html").read_text()
+        self.assertIn("const JAR_STATUS_DURATION_MS = 5000", script)
+        self.assertIn("clearTimeout(jarStatusTimer)", script)
+        self.assertIn("el.hidden = true", script)
+        self.assertIn("setJarStatus(''); // Clear a pending notification", script)
+        self.assertIn('id="player-report-issue"', html)
+        self.assertIn('target="_blank" rel="noopener noreferrer"', html)
+        for field in ('build.sha256', 'build.sourceFilenames', 'build.vendor', 'build.version', 'build.size', 'build.game'):
+            self.assertIn(field, script)
+        self.assertIn("issueUrl.searchParams.set('body', body)", script)
+        self.assertIn("$('player-report-issue').href = playerIssueUrl(build)", script)
+        self.assertIn("$('play-heading').textContent = [build.name, build.resolution].filter(Boolean).join(' · ')", script)
+        self.assertNotIn('→ ${screen.width}', script)
+
     def test_local_vs_browser_source_preflight(self):
         script = (ROOT / "assets/app.js").read_text()
         lib = (ROOT / "assets/jar-library.js").read_text()

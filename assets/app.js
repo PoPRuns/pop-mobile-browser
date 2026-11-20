@@ -30,6 +30,8 @@
 
   const jarLibrary = window.PoPJarLibrary;
   let playTicket = 0;
+  let jarStatusTimer = null;
+  const JAR_STATUS_DURATION_MS = 5000;
   const state = { data: null, buildMap: new Map(), groupMap: new Map(), currentGame: null, selectedGroup: null, selectedBuild: null, selectedPlay: null, readyPlaySha: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null };
   const NUMPAD_SETTING_KEY = 'pop-mobile-numpad-mode-v1';
   let numpadMode = 'phone';
@@ -187,6 +189,7 @@
   function closeModal(id) {
     $(id).hidden = true;
     if (id === 'play-modal') {
+      setJarStatus(''); // Clear a pending notification and cancel its timer.
       ++playTicket; // Ignore delayed file validation after closing the dialog.
       state.readyPlaySha = null;
       $('restart-play').disabled = true;
@@ -301,10 +304,49 @@
     checkEmulator();
   }
   function setJarStatus(message, error = false) {
+    clearTimeout(jarStatusTimer); // A later status replaces the previous timer.
+    jarStatusTimer = null;
     const el = $('jar-status');
     el.textContent = message;
     el.hidden = !message;
     el.classList.toggle('jar-error', error);
+    if (message) {
+      jarStatusTimer = setTimeout(() => {
+        el.hidden = true;
+        jarStatusTimer = null;
+      }, JAR_STATUS_DURATION_MS);
+    }
+  }
+  function playerIssueUrl(build) {
+    const game = state.currentGame?.ungrouped ? 'Others' : (state.currentGame?.title || build.collection || build.game);
+    const catalogueUrl = new URL('https://popruns.github.io/pop-mobile-browser/catalogue.html');
+    catalogueUrl.searchParams.set('game', build.game);
+    catalogueUrl.searchParams.set('sha256', build.sha256);
+    const screen = chooseEmulatorResolution(build.resolution);
+    const body = [
+      '### What went wrong?',
+      'Describe the problem and the steps to reproduce it.',
+      '',
+      '### Expected behavior',
+      'Describe what should happen.',
+      '',
+      '### JAR build details',
+      `- Collection: ${game}`,
+      `- Game / JAR title: ${build.name}`,
+      `- Source filename: ${build.sourceFilenames || build.oldFilename || 'Not recorded'}`,
+      `- Vendor: ${build.vendor || 'Not recorded'}`,
+      `- Version: ${build.version || 'Not recorded'}`,
+      `- File size: ${fmtBytes(build.size)}`,
+      `- Language: ${build.language || 'Not recorded'}`,
+      `- Catalogued screen: ${build.resolution || 'Not recorded'}`,
+      `- Emulator screen: ${screen ? `${screen.width}x${screen.height}` : 'Default'}`,
+      `- SHA-256: ${build.sha256}`,
+      `- Catalogue: ${catalogueUrl.href}`,
+    ].join('\n');
+    const issueUrl = new URL('https://github.com/PoPRuns/pop-mobile-browser/issues/new');
+    issueUrl.searchParams.set('title', `[Playback] ${game}: ${build.name}`);
+    issueUrl.searchParams.set('body', body);
+    return issueUrl.href;
   }
   function loadPlayerOnce(build, ticket, status, cachedCopy = false) {
     if (ticket !== playTicket || $('play-modal').hidden || state.selectedPlay !== build.sha256) return;
@@ -379,8 +421,9 @@
     state.readyPlaySha = null;
     $('restart-play').disabled = true;
     const ticket = ++playTicket;
-    const screen = chooseEmulatorResolution(build.resolution);
-    $('play-heading').textContent = `${build.name} · ${build.resolution}${screen && !screen.exact ? ` → ${screen.width}x${screen.height}` : ''}`;
+    // Emulator-specific canvas sizes belong in the runtime, not the window title.
+    $('play-heading').textContent = [build.name, build.resolution].filter(Boolean).join(' · ');
+    $('player-report-issue').href = playerIssueUrl(build);
     if (!$('details-modal').hidden) $('details-modal').hidden = true;
     if ($('play-modal').hidden) showModal('play-modal');
     $('player-holder').replaceChildren();
@@ -388,6 +431,7 @@
     $('jar-forget').hidden = true;
     $('jar-file-picker').value = '';
     $('jar-index-link').href = jarLibrary.archiveSearchLink(build);
+    setJarStatus(''); // Prevent stale messages from a previous JAR flashing briefly.
     prepareSource(build, ticket);
   }
   // The upstream emulator's "Maximize" key toggles fractional scaling, not
