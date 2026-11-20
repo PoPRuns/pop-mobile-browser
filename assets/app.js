@@ -42,8 +42,7 @@
 
   const jarLibrary = window.PoPJarLibrary;
   let playTicket = 0;
-  const state = { data: null, buildMap: new Map(), groupMap: new Map(), view: 'builds', currentGame: null, selectedGroup: null, selectedBuild: null, selectedPlay: null, readyPlaySha: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null, favorites: new Set() };
-  try { state.favorites = new Set(JSON.parse(localStorage.getItem('pop-mobile-favorites-v1') || '[]')); } catch { /* localStorage may be off */ }
+  const state = { data: null, buildMap: new Map(), groupMap: new Map(), currentGame: null, selectedGroup: null, selectedBuild: null, selectedPlay: null, readyPlaySha: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null };
   const NUMPAD_SETTING_KEY = 'pop-mobile-numpad-mode-v1';
   let numpadMode = 'phone';
   try { if (localStorage.getItem(NUMPAD_SETTING_KEY) === 'standard') numpadMode = 'standard'; }
@@ -67,9 +66,6 @@
     const el = $('toast'); el.textContent = message; el.hidden = false;
     clearTimeout(toast.timer); toast.timer = setTimeout(() => { el.hidden = true; }, 2800);
   }
-  function saveFavorites() {
-    try { localStorage.setItem('pop-mobile-favorites-v1', JSON.stringify([...state.favorites])); } catch { /* private mode */ }
-  }
   function fillSelect(id, values) {
     const el = $(id);
     values.forEach((value) => {
@@ -85,13 +81,6 @@
     document.title = `PoP Mobile · ${currentGameTitle}`;
     $('game-title').textContent = currentGameTitle;
     $('result-dataset').textContent = data.game.sheet.toUpperCase();
-    if (data.game.ungrouped) {
-      $('view-groups').hidden = true;
-      $('view-builds').hidden = true;
-      $('filter-group').closest('.filter-block').hidden = true;
-      $('filter-favorites').closest('.filter-block').hidden = true;
-      document.querySelector('.filter-tip').innerHTML = '<span aria-hidden="true">◇</span><strong>Needs review</strong><p>Entries here have no confirmed gameplay-group assignment. Each JAR is displayed individually.</p>';
-    }
     if (data.relatedFiles.length) {
       $('related-files-container').hidden = false;
       $('related-files-count').textContent = `(${data.relatedFiles.length})`;
@@ -105,14 +94,11 @@
       return (aw*ah)-(bw*bh);
     }));
     fillSelect('filter-language', [...new Set(data.builds.map(b => b.language).filter(Boolean))].sort());
-    fillSelect('filter-group', data.groups.map(g => g.id));
-    for (const id of ['filter-search', 'filter-resolution', 'filter-language', 'filter-group', 'filter-favorites', 'sort-results']) {
-      $(id).addEventListener(['filter-search','filter-favorites'].includes(id) ? 'input' : 'change', render);
+    for (const id of ['filter-search', 'filter-resolution', 'filter-language', 'sort-results']) {
+      $(id).addEventListener(id === 'filter-search' ? 'input' : 'change', render);
     }
     $('clear-filters').addEventListener('click', resetFilters);
     $('empty-clear').addEventListener('click', resetFilters);
-    $('view-groups').addEventListener('click', () => setView('groups'));
-    $('view-builds').addEventListener('click', () => setView('builds'));
     $('results').addEventListener('click', handleResultAction);
     $('details-body').addEventListener('click', handleDetailAction);
     $('close-info').addEventListener('click', () => closeModal('info-modal'));
@@ -171,25 +157,16 @@
     }
   }
   function resetFilters() {
-    $('filter-search').value=''; $('filter-resolution').value=''; $('filter-language').value=''; $('filter-group').value=''; $('filter-favorites').checked=false; $('sort-results').value='group';
-    render();
-  }
-  function setView(view) {
-    if (state.currentGame?.ungrouped && view === 'groups') return;
-    state.view = view;
-    $('view-groups').classList.toggle('selected',view==='groups');
-    $('view-builds').classList.toggle('selected',view==='builds');
-    $('view-groups').setAttribute('aria-pressed',String(view==='groups'));
-    $('view-builds').setAttribute('aria-pressed',String(view==='builds'));
+    $('filter-search').value = '';
+    $('filter-resolution').value = '';
+    $('filter-language').value = '';
+    $('sort-results').value = 'group';
     render();
   }
   function matchesBuild(b) {
     const q = $('filter-search').value.trim().toLocaleLowerCase();
-    const group = $('filter-group').value;
-    if (group && b.group !== group) return false;
     if ($('filter-resolution').value && b.resolution !== $('filter-resolution').value) return false;
     if ($('filter-language').value && b.language !== $('filter-language').value) return false;
-    if ($('filter-favorites').checked && !state.favorites.has(b.group)) return false;
     if (!q) return true;
     const g = state.groupMap.get(b.group);
     const searchText = [b.group, b.name, b.displayTitle, b.vendor, b.version, b.language, b.resolution, b.device, b.oldFilename, b.sourceFilenames, b.sha256, b.sha1, b.crc32, b.notesGeneral, b.notesGameplay, b.notesGameplay2, ...(g?.notes || [])].join(' ').toLocaleLowerCase();
@@ -198,56 +175,29 @@
   function render() {
     if (!state.data) return;
     const filteredBuilds = state.data.builds.filter(matchesBuild);
-    const groups = state.data.groups.filter(g => filteredBuilds.some(b => b.group === g.id));
     const sort = $('sort-results').value;
-    if (sort === 'count') groups.sort((a,b) => b.count - a.count || a.id.localeCompare(b.id));
-    else if (sort === 'size') groups.sort((a,b) => (a.resolutions[0]||'').localeCompare(b.resolutions[0]||'') || a.id.localeCompare(b.id));
-    else groups.sort((a,b) => a.id.localeCompare(b.id));
-    if (sort === 'count') filteredBuilds.sort((a,b) => state.groupMap.get(b.group).count - state.groupMap.get(a.group).count || a.group.localeCompare(b.group));
+    if (sort === 'count') filteredBuilds.sort((a,b) =>
+      state.groupMap.get(b.group).count - state.groupMap.get(a.group).count || a.group.localeCompare(b.group));
     if (sort === 'size') filteredBuilds.sort((a,b) => a.resolution.localeCompare(b.resolution) || a.group.localeCompare(b.group));
     if (sort === 'group') filteredBuilds.sort((a,b) => a.group.localeCompare(b.group));
-    const count = state.view === 'groups' ? groups.length : filteredBuilds.length;
-    $('result-count').textContent = `SHOWING ${count} ${state.view === 'groups' ? 'GAMEPLAY GROUPS' : 'JAR BUILDS'}`;
-    $('results').className = state.view === 'groups' ? 'group-grid' : 'jar-list';
-    $('results').innerHTML = state.view === 'groups'
-      ? groups.map(g => renderCard(g,filteredBuilds.filter(b => b.group===g.id))).join('')
-      : filteredBuilds.map(renderJarRow).join('');
-    $('empty-state').hidden = count !== 0;
-  }
-  function shortList(values, max=2) { return values.length > max ? values.slice(0,max).join(', ')+' +' + (values.length-max) : values.join(', '); }
-  function renderCard(g, matching) {
-    const favorite = state.favorites.has(g.id);
-    const note = g.notes[0] || 'Explore the device, language and version details for this gameplay group.';
-    return `<article class="group-card">
-      <div class="group-head"><span class="group-num">${escape(g.id)} / GAMEPLAY GROUP</span><button type="button" class="favorite-btn ${favorite ? 'is-favorite':''}" data-action="favorite" data-group="${escape(g.id)}" aria-pressed="${favorite}" aria-label="${favorite?'Unsave':'Save'} group ${escape(g.id)}" title="${favorite?'Remove saved group':'Save group'}">${favorite?'★':'☆'}</button></div>
-      <h3>${escape(state.currentGame.title)}</h3><div class="group-metadata"><span class="pill accent">${g.count} ${g.count===1?'JAR':'JARs'}</span><span class="pill">${escape(shortList(g.resolutions))}</span><span class="pill">${escape(shortList(g.languages))}</span></div>
-      <p class="group-note">${escape(note)}</p>
-      <div class="group-bottom"><span>${matching.length === g.count ? 'ALL VARIANTS' : matching.length + ' MATCHING / ' + g.count + ' TOTAL'}</span><button type="button" data-action="details" data-group="${escape(g.id)}">Explore builds <span aria-hidden="true">↗</span></button></div>
-    </article>`;
+    $('result-count').textContent = `SHOWING ${filteredBuilds.length} JAR BUILDS`;
+    $('results').className = 'jar-list';
+    $('results').innerHTML = filteredBuilds.map(renderJarRow).join('');
+    $('empty-state').hidden = filteredBuilds.length !== 0;
   }
   function isAvailable(b) {
     // A visitor can supply any catalogue build through the verified JAR picker.
     return true;
   }
-  function jarBadge(b) {
-    if (state.staticSite) return '<span class="pill local-pill">Import or use cached JAR</span>';
-    return state.localHashes.has(b.sha256)
-      ? '<span class="pill local-pill local-found">✓ Local JAR</span>'
-      : '<span class="pill local-pill local-missing">Not found locally</span>';
-  }
   function renderJarRow(b) {
     const available = isAvailable(b);
     const filename = (b.sourceFilenames || b.oldFilename || b.name || '').split(/\r?\n/)[0];
-    return `<article class="jar-row"><div class="jar-core"><div class="jar-eyebrow">${b.unclassified?'NEEDS REVIEW':escape(b.group)} <span aria-hidden="true">/</span> ${escape(b.resolution||'Screen unknown')} <span aria-hidden="true">/</span> ${escape(b.language || 'Unknown language')}</div><h3 class="jar-title">${escape(b.name || 'Untitled MIDlet')}</h3><div class="jar-file-name" title="${escape(filename)}"><span aria-hidden="true">▤</span> ${escape(filename)}</div><div class="jar-sub">${escape(b.vendor||'Unknown vendor')} · v${escape(b.version||'?')} · ${fmtBytes(b.size)} · SHA-256 ${escape(b.sha256.slice(0,12))}…</div><div class="jar-local">${jarBadge(b)}</div></div><div class="jar-actions"><button type="button" data-action="details" data-group="${escape(b.group)}" data-build="${escape(b.id)}">Details</button><button type="button" data-action="play" data-build="${escape(b.id)}" class="jar-go" ${available?'':'disabled title="No matching local JAR"'}>${state.emulatorReady?'Play / Load':'Try player'} ↗</button></div></article>`;
+    return `<article class="jar-row"><div class="jar-core"><div class="jar-eyebrow">${b.unclassified?'NEEDS REVIEW':escape(b.group)} <span aria-hidden="true">/</span> ${escape(b.resolution||'Screen unknown')} <span aria-hidden="true">/</span> ${escape(b.language || 'Unknown language')}</div><h3 class="jar-title">${escape(b.name || 'Untitled MIDlet')}</h3><div class="jar-file-name" title="${escape(filename)}"><span aria-hidden="true">▤</span> ${escape(filename)}</div><div class="jar-sub">${escape(b.vendor||'Unknown vendor')} · v${escape(b.version||'?')} · ${fmtBytes(b.size)} · SHA-256 ${escape(b.sha256.slice(0,12))}…</div></div><div class="jar-actions"><button type="button" data-action="details" data-group="${escape(b.group)}" data-build="${escape(b.id)}">Details</button><button type="button" data-action="play" data-build="${escape(b.id)}" class="jar-go" ${available?'':'disabled title="No matching local JAR"'}>Play</button></div></article>`;
   }
   function handleResultAction(e) {
     const button = e.target.closest('button[data-action]'); if (!button) return;
     const { action, group, build } = button.dataset;
-    if (action === 'favorite') {
-      state.favorites.has(group) ? state.favorites.delete(group) : state.favorites.add(group);
-      saveFavorites(); render();
-      toast(state.favorites.has(group)?'Group saved in this browser':'Group removed from saved list');
-    } else if (action === 'details') openGroup(group, build);
+    if (action === 'details') openGroup(group, build);
     else if (action === 'play') play(build);
   }
   function showModal(id) {
@@ -301,13 +251,13 @@
       <div class="details-intro"><span class="pill accent">${g.count} unique SHA-256 builds</span><span class="pill">${escape(g.resolutions.join(' · '))}</span><p>Gameplay classification from the supplied catalogue. Not a claim of identical binaries.</p></div>
       ${g.notes.length?`<div class="details-note">${escape(g.notes[0])}</div>`:''}
       <div class="details-sublabel">SELECT A RECORDED JAR BUILD</div><div class="build-selector">${chips}</div>
-      <div class="selected-build"><h3 class="build-title">${escape(b.name)}</h3><div class="build-subtitle">${escape(b.group)} · ${escape(b.version)} · ${escape(b.vendor||'Unknown vendor')} ${jarBadge(b)}</div>
+      <div class="selected-build"><h3 class="build-title">${escape(b.name)}</h3><div class="build-subtitle">${escape(b.group)} · ${escape(b.version)} · ${escape(b.vendor||'Unknown vendor')}</div>
         <div class="meta-grid">${[
           ['Display',b.resolution||'Not recorded'],['Language',b.language],['Device',b.device||'Not recorded'],
           ['CLDC / MIDP',`${b.cldc||'?'} / ${b.midp||'?'}`],['Applet version',b.version],['In-game version',b.aboutVersion||'Not recorded'],
           ['In-game author',b.aboutAuthor||'Not recorded'],['File size',fmtBytes(b.size)],['Archive references',b.urls.length]
         ].map(([k,v])=>`<div class="meta-field"><span>${escape(k.toUpperCase())}</span><strong>${escape(v)}</strong></div>`).join('')}</div>
-        <div class="build-actions"><button class="btn btn-primary" type="button" data-action="play" data-build="${escape(b.id)}" ${available?'':'disabled title="No matching local JAR found"'}>${state.emulatorReady?'▶ Play / load JAR':'◇ Set up browser play'}</button><button class="btn btn-outline" type="button" data-action="copy" data-copy="${escape(b.sha256)}">Copy SHA-256</button>${links ? `<a class="btn btn-outline" href="${escape(b.urls.find(safeUrl))}" rel="noopener noreferrer" target="_blank">Archive download ↗</a>` : ''}</div>
+        <div class="build-actions"><button class="btn btn-primary" type="button" data-action="play" data-build="${escape(b.id)}" ${available?'':'disabled title="No matching local JAR found"'}>Play</button><button class="btn btn-outline" type="button" data-action="copy" data-copy="${escape(b.sha256)}">Copy SHA-256</button>${links ? `<a class="btn btn-outline" href="${escape(b.urls.find(safeUrl))}" rel="noopener noreferrer" target="_blank">Archive download ↗</a>` : ''}</div>
         <p class="emulator-help">${!state.emulatorReady?'Browser emulator runtime is unavailable. Check the deployment or local setup.':state.localHashes.has(b.sha256)?'A locally verified JAR is available. You can also choose a matching file to save it in browser storage.':'The player will check its verified browser cache. Otherwise, use the J2ME index and choose a matching JAR file.'}</p>
         ${links?`<div class="details-sublabel">EXTERNAL ARCHIVE SOURCES</div><div class="download-links">${links}</div>`:''}
         ${notes.length?`<div class="details-sublabel">RESEARCH NOTES</div><div class="notes-list">${notes.map(n=>`<p>${escape(n)}</p>`).join('')}</div>`:''}
@@ -357,16 +307,6 @@
     }
     render();
     if (!$('details-modal').hidden) renderGroupDetails();
-    const summary = $('local-status');
-    if (state.staticSite) {
-      summary.textContent = 'BROWSER PLAY · CHOOSE YOUR OWN VERIFIED JAR · NO GAME FILES HOSTED';
-    } else if (!status) {
-      summary.textContent = 'Local JAR status unavailable. Start python3 server.py to enable the player.';
-    } else {
-      const count = state.data.builds.filter(b => state.localHashes.has(b.sha256)).length;
-      const total = state.data.stats.builds;
-      summary.textContent = `${count} / ${total} LOCAL JARS MATCHED BY SHA-256 · BROWSER IMPORT AVAILABLE`;
-    }
     $('play-notice').textContent = state.staticSite
       ? 'Playing SHA-256-verified JARs saved in your browser. No game files are hosted or downloaded automatically.'
       : 'Using SHA-256-verified local JARs or files saved in your browser. No automatic downloads; browser emulation is experimental.';

@@ -37,9 +37,15 @@ class FullCatalogueTests(unittest.TestCase):
    self.assertIn(text,catalogue)
   self.assertIn('id="game-title"',catalogue)
   self.assertIn('id="result-count"',catalogue)
-  self.assertIn('id="local-status"',catalogue)
   self.assertIn('id="filter-search"',catalogue)
-  self.assertLess(catalogue.index('id="result-count"'),catalogue.index('id="local-status"'))
+  for removed_id in ('view-groups','view-builds','filter-group','filter-favorites','local-status'):
+   self.assertNotIn('id="'+removed_id+'"',catalogue)
+   self.assertNotIn("$('"+removed_id+"')",app)
+  for removed_copy in ('Showing records from the supplied research spreadsheet.', 'BROWSER PLAY · CHOOSE YOUR OWN VERIFIED JAR', 'Import or use cached JAR', 'Play / Load', 'Play / load JAR'):
+   self.assertNotIn(removed_copy,catalogue+app)
+  self.assertIn('>Play</button>',app)
+  self.assertLess(catalogue.index('id="filter-search"'),catalogue.index('id="filter-resolution"'))
+  self.assertLess(catalogue.index('id="filter-resolution"'),catalogue.index('id="filter-language"'))
   self.assertIn("data.game.ungrouped ? 'Others' : data.game.title",app)
   for removed in ('game-masthead', 'stats-band', 'collection-highlight', 'side-index-link', 'about-section', 'GO DEEPER', 'id="how-play"'):
    self.assertNotIn(removed,catalogue)

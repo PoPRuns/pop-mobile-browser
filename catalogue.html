@@ -8,9 +8,9 @@
   <meta name="description" content="Game-specific Prince of Persia Java ME catalogue, SHA-256-verified JAR metadata and browser emulation.">
   <title>PoP Mobile · JAR Catalogue</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/site.css?v=ready-2">
+  <link rel="stylesheet" href="assets/site.css?v=ready-3">
   <script defer src="assets/jar-library.js?v=jar-gate-2"></script>
-  <script defer src="assets/app.js?v=jar-gate-3"></script>
+  <script defer src="assets/app.js?v=jar-gate-4"></script>
 </head>
 <body>
   <a class="skip-link" href="#catalogue">Skip to catalogue</a>
@@ -33,13 +33,9 @@
           <div class="filter-block"><label for="filter-search">SEARCH THE RECORDS</label><div class="search-box"><span aria-hidden="true">⌕</span><input id="filter-search" type="search" placeholder="Group, build, hash, note…" autocomplete="off"></div></div>
           <div class="filter-block"><label for="filter-resolution">SCREEN RESOLUTION</label><select id="filter-resolution"><option value="">All display sizes</option></select></div>
           <div class="filter-block"><label for="filter-language">LANGUAGE</label><select id="filter-language"><option value="">All languages</option></select></div>
-          <div class="filter-block"><label for="filter-group">GAMEPLAY GROUP</label><select id="filter-group"><option value="">All gameplay groups</option></select></div>
-          <div class="filter-block"><label class="checkline"><input type="checkbox" id="filter-favorites"> <span>Saved groups only</span><span aria-hidden="true">☆</span></label></div>
-          <div class="filter-tip"><span aria-hidden="true">✦</span><strong>What is a gameplay group?</strong><p>Builds with research-associated gameplay are collected under one ID. The groups are not claims of binary-identical JAR files.</p></div>
         </aside>
         <div class="results-area">
-          <div class="results-toolbar"><div><div class="view-label" id="result-count" role="status" aria-live="polite">Loading catalogue…</div><p>Showing records from the supplied research spreadsheet.</p></div><div class="toolbar-actions"><label for="sort-results" class="visually-hidden">Sort results</label><select id="sort-results" title="Sort results"><option value="group">Group number</option><option value="count">Most builds</option><option value="size">Screen size</option></select><div class="view-toggle" role="group" aria-label="Catalogue view"><button id="view-groups" type="button" aria-pressed="false" title="Gameplay groups">▦ <span>Groups</span></button><button id="view-builds" class="selected" type="button" aria-pressed="true" title="Individual JAR builds">☷ <span>JARs</span></button></div></div></div>
-          <div id="local-status" class="local-status" role="status" aria-live="polite">Checking available JAR sources…</div>
+          <div class="results-toolbar"><div class="view-label" id="result-count" role="status" aria-live="polite">Loading catalogue…</div><div class="toolbar-actions"><label for="sort-results" class="visually-hidden">Sort results</label><select id="sort-results" title="Sort results"><option value="group">Group number</option><option value="count">Most builds</option><option value="size">Screen size</option></select></div></div>
           <div id="results" class="jar-list" aria-live="polite"></div>
           <div id="empty-state" class="empty-state" hidden><span aria-hidden="true">◇</span><h3>No matches in this collection</h3><p>Try a different screen size, language or search term.</p><button type="button" class="btn btn-outline" id="empty-clear">Reset filters</button></div>
           <div class="results-footer"><span>THE ARCHIVE IS A WORK IN PROGRESS</span><span>·</span><span><span id="result-dataset">ALL RECORDED BUILDS</span></span></div>
