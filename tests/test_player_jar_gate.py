@@ -12,7 +12,9 @@ class TestPlayerJarGate(unittest.TestCase):
         self.assertIn("jarLibrary.reachableLocal(build)", script)
         self.assertIn("await jarLibrary.cached(build)", script)
         self.assertIn("await jarLibrary.storeFile(build, file)", script)
-        self.assertIn("JAR not cached", script)
+        self.assertIn("setJarStatus('');", script)
+        self.assertNotIn("JAR not cached. Open its SHA-256 entry",script)
+        self.assertIn("el.hidden = !message", script)
 
     def test_local_vs_browser_source_preflight(self):
         script = (ROOT / "assets/app.js").read_text()

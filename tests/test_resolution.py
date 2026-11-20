@@ -92,7 +92,7 @@ class ResolutionTests(unittest.TestCase):
     def test_browser_selection_and_emulator_bridge_mocks(self):
         # Test the real browser function, not a hand-reimplemented Python algorithm.
         app = (ROOT / 'assets' / 'app.js').read_text()
-        match = re.search(r'  const SCREEN_PRESETS = Object.freeze\([\s\S]*?(?=  function playerResolutionNotice)', app)
+        match = re.search(r'  const SCREEN_PRESETS = Object.freeze\([\s\S]*?(?=  const jarLibrary)', app)
         self.assertIsNotNone(match)
         code = match.group(0)
         runner = r'''

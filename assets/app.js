@@ -27,18 +27,6 @@
       original: `${width}x${height}`, exact: width === selected[0] && height === selected[1],
       custom: !fitting.length };
   }
-  function playerResolutionNotice(resolution, status = 'requested') {
-    if (!resolution) return;
-    const label = `${resolution.width}x${resolution.height}`;
-    const relation = resolution.exact ? 'matches the catalogue' :
-      resolution.custom ? `custom size for ${resolution.original}` : `smallest fitting preset for ${resolution.original}`;
-    if (status === 'failed') {
-      $('play-notice').textContent = `Could not apply ${label} automatically. The game may use its previously saved screen size. Press Esc for emulator settings. Check the browser console for details.`;
-    } else {
-      const action = status === 'applied' ? 'Emulator LCD configured' : 'Configuring emulator LCD';
-      $('play-notice').textContent = `${action}: ${label} (${relation}). Keyboard controls are under Controls below the game.`;
-    }
-  }
 
   const jarLibrary = window.PoPJarLibrary;
   let playTicket = 0;
@@ -129,11 +117,7 @@
       const frame = $('player-holder').querySelector('iframe');
       if (event.origin !== location.origin || !frame || event.source !== frame.contentWindow) return;
       if (event.data?.type !== 'pop-mobile:resolution' || !state.selectedPlay) return;
-      const build = state.buildMap.get(state.selectedPlay);
-      const selected = build && chooseEmulatorResolution(build.resolution);
-      if (selected && selected.width === event.data.width && selected.height === event.data.height) {
-        playerResolutionNotice(selected, event.data.ok ? 'applied' : 'failed');
-      }
+      if (!event.data.ok) console.warn('Emulator display resolution could not be applied; use Esc for emulator settings.');
     });
 
     document.addEventListener('fullscreenchange', syncFullscreenButton);
@@ -302,9 +286,6 @@
     }
     render();
     if (!$('details-modal').hidden) renderGroupDetails();
-    $('play-notice').textContent = state.staticSite
-      ? 'Playing SHA-256-verified JARs saved in your browser. No game files are hosted or downloaded automatically.'
-      : 'Using SHA-256-verified local JARs or files saved in your browser. No automatic downloads; browser emulation is experimental.';
     $('source-instructions').textContent = state.staticSite
       ? 'Open the J2ME index for the exact SHA-256, download your own JAR, and choose it in the player. The browser verifies and caches the file; no local Python server is required.'
       : 'If a matching file is in the local JAR folder, the server verifies and serves it. Otherwise, open the J2ME index for the exact SHA-256, download the JAR, and choose it in the player. Your browser verifies and caches it.';
@@ -322,6 +303,7 @@
   function setJarStatus(message, error = false) {
     const el = $('jar-status');
     el.textContent = message;
+    el.hidden = !message;
     el.classList.toggle('jar-error', error);
   }
   function loadPlayerOnce(build, ticket, status, cachedCopy = false) {
@@ -371,7 +353,7 @@
     if (localExists) {
       await loadVerifiedLocal(build, ticket);
     } else {
-      setJarStatus('JAR not cached. Open its SHA-256 entry on the J2ME index, download the file, then click Choose JAR file…');
+      setJarStatus(''); // Keep the JAR chooser visible without the redundant cache-miss instructions.
     }
   }
 
@@ -406,7 +388,6 @@
     $('jar-forget').hidden = true;
     $('jar-file-picker').value = '';
     $('jar-index-link').href = jarLibrary.archiveSearchLink(build);
-    playerResolutionNotice(screen);
     prepareSource(build, ticket);
   }
   // The upstream emulator's "Maximize" key toggles fractional scaling, not
@@ -418,7 +399,6 @@
     button.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen');
     button.title = active ? 'Exit fullscreen' : 'Enter fullscreen';
     $('player-fullscreen-icon').textContent = active ? '⤢' : '⛶';
-    $('player-fullscreen-label').textContent = active ? 'Exit fullscreen' : 'Fullscreen';
     // The button takes focus away from the game; give it back after resizing.
     if (!$('play-modal').hidden) requestAnimationFrame(focusPlayer);
   }
@@ -470,7 +450,6 @@
     if (screen) {
       params.set('screenWidth', String(screen.width));
       params.set('screenHeight', String(screen.height));
-      playerResolutionNotice(screen);
     }
     frame.src = new URL(`emulator/run.html?${params.toString()}`, document.baseURI).href;
     $('player-holder').replaceChildren(frame);

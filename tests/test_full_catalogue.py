@@ -63,6 +63,18 @@ class FullCatalogueTests(unittest.TestCase):
   self.assertIn('assets/home.js',home)
   self.assertIn('href="index.html"',catalogue)
   self.assertIn('id="player-stage"',catalogue)
+  # Play: compact controls appear before verified JAR actions and the screen.
+  self.assertNotIn('EXPERIMENTAL / BROWSER EMULATION',catalogue)
+  self.assertNotIn('id="play-notice"',catalogue)
+  self.assertNotIn('jar-help',catalogue)
+  self.assertNotIn('id="player-fullscreen-label"',catalogue)
+  self.assertNotIn("$('play-notice')",app)
+  self.assertNotIn("$('player-fullscreen-label')",app)
+  self.assertLess(catalogue.index('id="player-controls"'),catalogue.index('id="jar-source-panel"'))
+  self.assertLess(catalogue.index('id="jar-source-panel"'),catalogue.index('id="player-stage"'))
+  self.assertIn('aria-label="Enter fullscreen"',catalogue)
+  self.assertIn("button.title = active ? 'Exit fullscreen' : 'Enter fullscreen'",app)
+
   self.assertIn('id="jar-index-link"',catalogue)
   self.assertNotIn('id="jar-recover"',catalogue)
   self.assertIn("state.currentGame = data.game",app)
