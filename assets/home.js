@@ -1,6 +1,5 @@
 (() => {
   'use strict';
-  const $ = id => document.getElementById(id);
   const escapeHTML = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const COVER = {
     'sands-of-time':'sands-of-time.jpg','warrior-within':'warrior-within.jpg',
@@ -13,8 +12,6 @@
       const result = await fetch('data/catalogue.json');
       if (!result.ok) throw new Error(`HTTP ${result.status}`);
       const data = await result.json();
-      for (const [id, val] of Object.entries({'count-games':data.stats.games,'count-builds':data.stats.builds,
-                   'count-groups':data.stats.groups,'count-resolutions':data.stats.resolutions})) $(id).textContent=val.toLocaleString('en-US');
       const containers = data.games.filter(game=>!game.ungrouped);
       const other = data.games.filter(game=>game.ungrouped);
       const html = [...containers,...other].map((game, i) => {

@@ -37,7 +37,13 @@ class LocalServerTests(unittest.TestCase):
     def test_serves_home_catalogue_and_public_credits(self):
         with urllib.request.urlopen(self.url + '/') as r:
             self.assertEqual(r.status, 200)
-            self.assertIn(b'Many kingdoms', r.read())
+            html = r.read().decode('utf-8')
+            self.assertIn('id="game-grid"', html)
+            self.assertIn('>Source code</a>', html)
+            self.assertIn('href="https://github.com/PoPRuns/pop-mobile-browser" target="_blank"', html)
+            self.assertIn('NOT AFFILIATED WITH UBISOFT OR GAMELOFT', html)
+            self.assertNotIn('Many kingdoms', html)
+            self.assertNotIn('id="approach"', html)
         with urllib.request.urlopen(self.url + '/data/catalogue.json') as r:
             self.assertEqual(len(json.load(r)['builds']), 950)
         with urllib.request.urlopen(self.url + '/THIRD_PARTY_NOTICES.md') as r:
