@@ -21,16 +21,11 @@ Binary SHA-256 identifiers for this release (FreeJ2ME `c19416e`, with PoP Mobile
 
 The static build adds the PoP Mobile resolution and numpad adapters using `tools/build_pages.py` and the hook source in `server.py`. Build output is not the unmodified upstream `main.js`.
 
-**Complete corresponding source (v0.1.0):**
+**Complete corresponding source (v0.1.0):** [Download the source archive](https://github.com/PoPRuns/pop-mobile-browser/releases/download/v0.1.0/pop-mobile-emulator-corresponding-source-v1.tar.gz)
 
-https://github.com/PoPRuns/pop-mobile-browser/releases/download/v0.1.0/pop-mobile-emulator-corresponding-source-v1.tar.gz
+SHA-256: `ad711845e72f1fbbd0491c3642bd2e35b98f4dfd959444e580a88b331cc3fcd9`
 
-SHA-256:
-`ad711845e72f1fbbd0491c3642bd2e35b98f4dfd959444e580a88b331cc3fcd9`
-
-This archive contains the pinned FreeJ2ME source, modified FluidSynth 2.4.0 source, the original PoP Mobile FM General MIDI SoundFont and its generator, FFmpeg 7.1.1, the pinned x264 source and patch, and the corresponding build scripts and PoP Mobile adapters.
-
-The replacement MIDI module was rebuilt and tested in Firefox. The original Java and media binaries were matched to their documented upstream build inputs, but were not independently reproduced from source.
+The archive contains pinned FreeJ2ME source, modified FluidSynth 2.4.0 source, the PoP Mobile original FM General MIDI SoundFont and its generator, FFmpeg 7.1.1, the pinned x264 source and patch, applicable license texts, build scripts and PoP Mobile adapters. The MIDI replacement was rebuilt and tested in Firefox. The original FreeJ2ME Java and media binaries have documented source/build inputs but were not independently reproduced from source.
 
 ## MIDI replacement and FluidSynth
 
