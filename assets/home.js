@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  const $ = id => document.getElementById(id);
   const escapeHTML = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const COVER = {
     'sands-of-time':'sands-of-time.jpg','warrior-within':'warrior-within.jpg',
