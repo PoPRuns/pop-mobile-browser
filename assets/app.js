@@ -94,7 +94,7 @@
       return (aw*ah)-(bw*bh);
     }));
     fillSelect('filter-language', [...new Set(data.builds.map(b => b.language).filter(Boolean))].sort());
-    for (const id of ['filter-search', 'filter-resolution', 'filter-language', 'sort-results']) {
+    for (const id of ['filter-search', 'filter-resolution', 'filter-language']) {
       $(id).addEventListener(id === 'filter-search' ? 'input' : 'change', render);
     }
     $('clear-filters').addEventListener('click', resetFilters);
@@ -160,7 +160,6 @@
     $('filter-search').value = '';
     $('filter-resolution').value = '';
     $('filter-language').value = '';
-    $('sort-results').value = 'group';
     render();
   }
   function matchesBuild(b) {
@@ -175,11 +174,8 @@
   function render() {
     if (!state.data) return;
     const filteredBuilds = state.data.builds.filter(matchesBuild);
-    const sort = $('sort-results').value;
-    if (sort === 'count') filteredBuilds.sort((a,b) =>
-      state.groupMap.get(b.group).count - state.groupMap.get(a.group).count || a.group.localeCompare(b.group));
-    if (sort === 'size') filteredBuilds.sort((a,b) => a.resolution.localeCompare(b.resolution) || a.group.localeCompare(b.group));
-    if (sort === 'group') filteredBuilds.sort((a,b) => a.group.localeCompare(b.group));
+    // Preserve the previous default group-number order without a sort control.
+    filteredBuilds.sort((a,b) => a.group.localeCompare(b.group));
     $('result-count').textContent = `SHOWING ${filteredBuilds.length} JAR BUILDS`;
     $('results').className = 'jar-list';
     $('results').innerHTML = filteredBuilds.map(renderJarRow).join('');
@@ -191,8 +187,7 @@
   }
   function renderJarRow(b) {
     const available = isAvailable(b);
-    const filename = (b.sourceFilenames || b.oldFilename || b.name || '').split(/\r?\n/)[0];
-    return `<article class="jar-row"><div class="jar-core"><div class="jar-eyebrow">${b.unclassified?'NEEDS REVIEW':escape(b.group)} <span aria-hidden="true">/</span> ${escape(b.resolution||'Screen unknown')} <span aria-hidden="true">/</span> ${escape(b.language || 'Unknown language')}</div><h3 class="jar-title">${escape(b.name || 'Untitled MIDlet')}</h3><div class="jar-file-name" title="${escape(filename)}"><span aria-hidden="true">▤</span> ${escape(filename)}</div><div class="jar-sub">${escape(b.vendor||'Unknown vendor')} · v${escape(b.version||'?')} · ${fmtBytes(b.size)} · SHA-256 ${escape(b.sha256.slice(0,12))}…</div></div><div class="jar-actions"><button type="button" data-action="details" data-group="${escape(b.group)}" data-build="${escape(b.id)}">Details</button><button type="button" data-action="play" data-build="${escape(b.id)}" class="jar-go" ${available?'':'disabled title="No matching local JAR"'}>Play</button></div></article>`;
+    return `<article class="jar-row"><div class="jar-core"><div class="jar-eyebrow">${b.unclassified?'NEEDS REVIEW':escape(b.group)} <span aria-hidden="true">/</span> ${escape(b.resolution||'Screen unknown')} <span aria-hidden="true">/</span> ${escape(b.language || 'Unknown language')}</div><h3 class="jar-title">${escape(b.name || 'Untitled MIDlet')}</h3><div class="jar-sub">${escape(b.vendor||'Unknown vendor')} · v${escape(b.version||'?')} · ${fmtBytes(b.size)}</div><div class="jar-sha"><span>SHA-256</span> <code>${escape(b.sha256)}</code></div></div><div class="jar-actions"><button type="button" data-action="details" data-group="${escape(b.group)}" data-build="${escape(b.id)}">Details</button><button type="button" data-action="play" data-build="${escape(b.id)}" class="jar-go" ${available?'':'disabled title="No matching local JAR"'}>Play</button></div></article>`;
   }
   function handleResultAction(e) {
     const button = e.target.closest('button[data-action]'); if (!button) return;

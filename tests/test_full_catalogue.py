@@ -37,6 +37,11 @@ class FullCatalogueTests(unittest.TestCase):
    self.assertIn(text,catalogue)
   self.assertIn('id="game-title"',catalogue)
   self.assertIn('id="result-count"',catalogue)
+  self.assertNotIn('id="sort-results"',catalogue)
+  self.assertNotIn("$('sort-results')",app)
+  self.assertNotIn('jar-file-name',app)
+  self.assertIn('${escape(b.sha256)}</code>',app)
+  self.assertNotIn('b.sha256.slice(',app)
   self.assertIn('id="filter-search"',catalogue)
   for removed_id in ('view-groups','view-builds','filter-group','filter-favorites','local-status'):
    self.assertNotIn('id="'+removed_id+'"',catalogue)
