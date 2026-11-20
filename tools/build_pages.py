@@ -30,7 +30,8 @@ def build_site(output: Path):
     for rel in ('index.html', 'catalogue.html', 'sw-jar.js',
                 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'README.md'):
         shutil.copy2(ROOT / rel, output / rel)
-    for directory in ('assets', 'data', 'docs'):
+    # Documentation lives in Git; it is not needed in the deployed website.
+    for directory in ('assets', 'data'):
         shutil.copytree(ROOT / directory, output / directory)
 
     # A build-time flag avoids calls to the unavailable /api/status endpoint.

@@ -66,7 +66,7 @@ Optional JavaScript cache / service-worker test (Node.js 18+):
 node tests/test_jar_library.cjs
 ```
 
-## GitHub Pages deployment (after completing the source audit)
+## GitHub Pages deployment
 
 A serverless GitHub Pages build is included. It works at the project subpath
 `https://popruns.github.io/pop-mobile-browser/` and does not require Python at
@@ -87,40 +87,41 @@ For accurate CheerpJ runtime testing locally, use a server with HTTP byte-range 
 static site builder generates `emulator/src/main.js` with the same resolution and
 numpad adapters as the local preview server, leaving vendored upstream source unchanged.
 
-After **all licensing/source/artwork requirements below are resolved**, create
-repository Actions variable `POP_MOBILE_PUBLICATION_APPROVED` = `true` under
-**Settings → Secrets and variables → Actions → Variables**. This is an explicit
-release gate: without it, the deployment job is skipped. Next, push to `main`,
-make the repository public, and select **Settings → Pages → Build and deployment
-→ Source: GitHub Actions**. Run the workflow manually from **Actions** if needed.
-The workflow `.github/workflows/pages.yml` tests, builds and deploys the `_site/`
-directory. Visit the resulting URL and verify a user-imported game in a real
-browser. Publishing is not yet tested
-on the live GitHub Pages environment.
+The workflow `.github/workflows/pages.yml` tests, builds, and deploys `_site/`
+on pushes that affect the website or its static build process. Pushes affecting
+only `docs/`, `tests/`, or research scripts do **not** trigger deployment.
+You can always deploy manually from **Actions → Deploy PoP Mobile to GitHub Pages**.
+The workflow retains the repository Actions variable
+`POP_MOBILE_PUBLICATION_APPROVED=true` as a release safety gate. GitHub Pages
+must be configured with **Settings → Pages → Build and deployment → GitHub Actions**.
+The deployed site was tested in Firefox with a user-provided game JAR and audio.
 
-The GitHub Pages site can be public even if a private repo is allowed to use
-Pages on your plan: **do not enable Pages while licensing review is incomplete**.
+## Emulator sources and MIDI
 
-## Rebuilt MIDI component
+The bundled MIDI module uses **PoP Mobile Original FM GM**, a procedurally
+generated SoundFont rather than upstream sampled instruments. The generator is
+`tools/generate_fm_soundfont.py`. For SHA-256 build fingerprints, source
+revisions, regeneration instructions, and build qualifications, see
+[Emulator source and build provenance](https://github.com/PoPRuns/pop-mobile-browser/blob/main/docs/EMULATOR_SOURCE.md).
 
-The bundled `libmidi.wasm` uses the original, procedurally synthesized **PoP Mobile Original FM GM** SoundFont instead of the upstream sample bank. The generator is `tools/generate_fm_soundfont.py`; a build provenance record is in [`docs/MIDI_BUILD_PROVENANCE.md`](docs/MIDI_BUILD_PROVENANCE.md). See [`docs/MIDI_AUDIO_TEST.md`](docs/MIDI_AUDIO_TEST.md) for the manual browser-audio acceptance test. The matching complete emulator-source archive must be publicly linked alongside the binaries before a public release; see [`docs/SOURCE_COMPLIANCE.md`](docs/SOURCE_COMPLIANCE.md).
-
-## Release checklist
-
-See [`docs/NEXT_PUBLICATION_STEPS.md`](docs/NEXT_PUBLICATION_STEPS.md) for the tested JAR preflight update and the procedure for publishing the corresponding-source release alongside the new clean GitHub history.
-
-## Clean public repository history
-
-For the separate, history-clean GitHub repository (without the legacy MIDI SoundFont binary in earlier commits), follow [`docs/CLEAN_PUBLIC_HISTORY.md`](docs/CLEAN_PUBLIC_HISTORY.md). **Do not publish the existing private development history.**
+The v0.1.0 corresponding-source archive is available from the
+[GitHub release](https://github.com/PoPRuns/pop-mobile-browser/releases/tag/v0.1.0).
+The main repository contains the reduced runtime, while its matching build
+sources are distributed as a separate release asset.
 
 ## Licensing and credits
 
-- Original PoP Mobile source code: **GPL-3.0-or-later**; see [`LICENSE`](LICENSE).
-- Third-party emulator, dependencies, CheerpJ and cover artwork: **separately licensed**; see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and `assets/covers/POPRUNS-LICENSE.txt`.
-- **Before publicly distributing the compiled emulator runtime**, publish and verify the assembled version-matched corresponding-source archive alongside the JAR and WebAssembly runtime, test MIDI playback, and resolve cover-image rights. Follow [`docs/SOURCE_COMPLIANCE.md`](docs/SOURCE_COMPLIANCE.md) before switching visibility or deploying Pages. The upstream freej2me-web commit alone does not establish complete compliance.
-- Built with [CheerpJ](https://cheerpj.com/). The site includes a visible attribution in its footers.
+- PoP Mobile original source code: **GPL-3.0-or-later**; see [`LICENSE`](LICENSE).
+- Third-party emulator, dependencies, CheerpJ, and game-related artwork:
+  see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and
+  `assets/covers/POPRUNS-LICENSE.txt`. Software licensing does not grant
+  rights to copyrighted game assets.
+- This project uses [CheerpJ](https://cheerpj.com/), loaded from its official
+  CDN; the website displays **Built with CheerpJ** attribution.
 
-The Prince of Persia games and associated intellectual property belong to their respective rights holders. This is an independent archival and research project, and the repository contains no original game JAR files.
+The Prince of Persia games and associated intellectual property belong to
+their respective rights holders. This independent catalogue contains no
+original game JAR files.
 
 ## Usage of AI
 

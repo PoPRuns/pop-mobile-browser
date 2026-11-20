@@ -3,7 +3,22 @@ name: Deploy PoP Mobile to GitHub Pages
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+    # Rebuild only when a file included in the deployed site, or its builder,
+    # changes. Docs, test-only changes and research scripts do not redeploy.
+    paths:
+      - '.github/workflows/pages.yml'
+      - 'index.html'
+      - 'catalogue.html'
+      - 'sw-jar.js'
+      - 'assets/**'
+      - 'data/**'
+      - 'vendor/freej2me-web/**'
+      - 'server.py'              # source of resolution/numpad build hooks
+      - 'tools/build_pages.py'
+      - 'LICENSE'
+      - 'THIRD_PARTY_NOTICES.md'
+      - 'README.md'
+  workflow_dispatch:           # manual deployments are always possible
 
 # Upload the generated site first; deployment is a separate job so it can
 # only start after GitHub has completed the artifact upload.

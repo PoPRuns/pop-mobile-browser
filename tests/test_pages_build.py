@@ -27,6 +27,8 @@ class PagesBuildTests(unittest.TestCase):
             self.assertIn('await config.saveConfig()', main)
             self.assertFalse((site / 'server.py').exists())
             self.assertFalse((site / 'tools').exists())
+            self.assertFalse((site / 'docs').exists())
+            self.assertTrue((site / 'THIRD_PARTY_NOTICES.md').is_file())
             self.assertFalse((site / '.git').exists())
             self.assertEqual([x for x in site.rglob('*.jar')], [site / 'emulator/freej2me-web.jar'])
             self.assertIn('pop-mobile:resolution', main)
