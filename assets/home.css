@@ -16,3 +16,12 @@
 @media(max-width:600px){.footer-credits{align-items:flex-start;text-align:left;margin-top:12px}}
 
 .footer-disclaimer{color:#8e999a}
+
+/* Clear page identity and gallery-style cards: the artwork and title do the work. */
+.topbar-inner{justify-content:space-between}
+.site-title{min-width:0;color:var(--ink);font-size:14px;font-weight:600;line-height:1.35;letter-spacing:.01em}
+.game-tile .tile-art{filter:saturate(.88) brightness(.82)}
+.game-tile::after{background:linear-gradient(180deg,transparent 12%,#070c0d20 43%,#060b0cde 100%)}
+.game-tile .tile-inner{justify-content:flex-end;padding:22px}
+.game-tile .tile-inner h3{margin:0;font:29px/1.16 Georgia,serif;color:#f9f4e7;text-wrap:balance;text-shadow:0 2px 14px #000a}
+@media(max-width:600px){.topbar-inner{align-items:center;gap:12px}.site-title{font-size:12px}.topbar nav{flex-shrink:0}.game-tile .tile-inner{padding:20px}.game-tile .tile-inner h3{font-size:27px}}

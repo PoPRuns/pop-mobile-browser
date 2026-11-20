@@ -40,6 +40,7 @@ class LocalServerTests(unittest.TestCase):
             html = r.read().decode('utf-8')
             self.assertIn('id="game-grid"', html)
             self.assertIn('>Source code</a>', html)
+            self.assertIn('Prince of Persia · Java Mobile Game Archive', html)
             self.assertIn('href="https://github.com/PoPRuns/pop-mobile-browser" target="_blank"', html)
             self.assertIn('NOT AFFILIATED WITH UBISOFT OR GAMELOFT', html)
             self.assertNotIn('Many kingdoms', html)
