@@ -1,0 +1,54 @@
+name: Deploy PoP Mobile to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    # Explicit release gate: no public deployment while source/artwork audit is open.
+    if: ${{ vars.POP_MOBILE_PUBLICATION_APPROVED == 'true' }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run Python regressions
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Run JavaScript regressions
+        run: |
+          node tests/test_jar_library.cjs
+          node tests/test_pages_sw.cjs
+      - name: Generate static site and emulator adapter
+        run: python3 tools/build_pages.py
+      - name: Confirm no private game JARs are included
+        run: |
+          test ! -e '_site/PoP JAR Database 2026'
+          test -f '_site/emulator/freej2me-web.jar'
+          test -f '_site/.nojekyll'
+          ! find _site/emulator/jar -type f -iname '*.jar' 2>/dev/null | grep -q .
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload generated site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

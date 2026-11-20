@@ -1,0 +1,36 @@
+"""Static Pages artifact: project subpath, source adapters, and no game JARs."""
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from tools.build_pages import build_site
+
+class PagesBuildTests(unittest.TestCase):
+    def test_static_site(self):
+        with tempfile.TemporaryDirectory() as temp:
+            site = build_site(Path(temp) / 'pop-mobile-browser')
+            self.assertTrue((site / 'index.html').is_file())
+            self.assertTrue((site / '.nojekyll').exists())
+            self.assertTrue((site / 'sw-jar.js').exists())
+            self.assertTrue((site / 'emulator/freej2me-web.jar').is_file())
+            html = (site / 'catalogue.html').read_text()
+            self.assertIn('name="pop-mobile-static"', html)
+            main = (site / 'emulator/src/main.js').read_text()
+            upstream = (ROOT / 'vendor/freej2me-web/web/src/main.js').read_text()
+            self.assertNotIn('popMapNumpadKey(', upstream)
+            self.assertIn('popMapNumpadKey(', main)
+            self.assertIn('await config.saveConfig()', main)
+            self.assertFalse((site / 'server.py').exists())
+            self.assertFalse((site / 'tools').exists())
+            self.assertFalse((site / '.git').exists())
+            self.assertEqual([x for x in site.rglob('*.jar')], [site / 'emulator/freej2me-web.jar'])
+            self.assertIn('pop-mobile:resolution', main)
+            for html_name in ('index.html','catalogue.html'):
+                self.assertIn('Built with CheerpJ', (site / html_name).read_text())
+
+if __name__ == '__main__': unittest.main()

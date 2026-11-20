@@ -1,0 +1,9 @@
+/PoP JAR Database 2026/
+/.pop-mobile-local-cache/
+/.jarchive-cache/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+/_site/
