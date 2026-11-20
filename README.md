@@ -1,6 +1,6 @@
 # PoP Mobile Browser
 
-[PoP Mobile](https://popruns.github.io/pop-mobile-browser/) is an independent archival catalogue of Prince of Persia Java ME builds, featuring detailed metadata and the option to run JARs in a browser using freej2me-web and CheerpJ.
+[This website](https://popruns.github.io/pop-mobile-browser/) is an independent archival catalogue of Prince of Persia Java ME builds, featuring detailed metadata and the option to run JARs in a browser using freej2me-web and CheerpJ.
 
 **No Prince of Persia game JAR files are included in this repository or hosted by the website.** Players supply their own matching JARs.
 
