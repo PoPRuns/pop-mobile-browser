@@ -8,52 +8,25 @@
   <meta name="description" content="Game-specific Prince of Persia Java ME catalogue, SHA-256-verified JAR metadata and browser emulation.">
   <title>PoP Mobile · JAR Catalogue</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/site.css?v=ready-1">
+  <link rel="stylesheet" href="assets/site.css?v=ready-2">
   <script defer src="assets/jar-library.js?v=jar-gate-2"></script>
-  <script defer src="assets/app.js?v=jar-gate-2"></script>
+  <script defer src="assets/app.js?v=jar-gate-3"></script>
 </head>
 <body>
   <a class="skip-link" href="#catalogue">Skip to catalogue</a>
   <div class="grain" aria-hidden="true"></div>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="index.html" aria-label="PoP Mobile home">
-        <span class="brand-mark" aria-hidden="true">P<span>·</span></span>
-        <span class="brand-words">PoP <strong>Mobile</strong><small>THE J2ME ATLAS</small></span>
-      </a>
-      <nav class="site-nav" aria-label="Main navigation">
-        <a href="index.html">All games</a>
-        <a href="#catalogue" class="nav-active">JAR browser</a>
-        <a href="#about">About the project</a>
+  <header class="site-header compact-header">
+    <div class="header-inner compact-header-inner">
+      <a class="site-title" href="index.html">Prince of Persia · Java Mobile Game Archive</a>
+      <h1 id="game-title" class="current-game-title" aria-live="polite">Loading collection…</h1>
+      <nav class="compact-header-nav" aria-label="Site navigation">
+        <a href="https://github.com/PoPRuns/pop-mobile-browser" target="_blank" rel="noopener noreferrer">Source code</a>
       </nav>
-      <a href="https://github.com/toca-1/new-j2me-software-archive-search" target="_blank" rel="noopener noreferrer" class="header-index-link" title="Original J2ME archive index">Original J2ME index <span aria-hidden="true">↗</span></a>
     </div>
   </header>
 
   <main id="top">
-    <section class="game-masthead page-width" aria-label="Selected mobile collection">
-      <a class="game-back" href="index.html">← ALL GAMES</a>
-      <div class="game-masthead-copy"><span class="section-kicker">THE MOBILE ARCHIVE <span></span> <span id="game-year">JAVA ME</span></span>
-      <h1 id="game-title">Loading collection…</h1>
-      <p id="game-description">Individual JAR builds and gameplay research notes.</p>
-      <div class="game-masthead-actions"><a href="#catalogue" class="btn btn-primary">Browse JARs ↓</a>
-      <button class="btn btn-outline" id="how-play" type="button">How browser play works ↗</button></div></div>
-      <div id="game-switcher" class="game-switcher" aria-label="Other game collections"></div>
-    </section>
-
-    <section class="stats-band" aria-label="Catalogue figures"><div class="stats-inner page-width">
-      <div class="stat"><span class="stat-num" id="stat-builds">—</span><span class="stat-label">CATALOGUED JARS</span></div>
-      <div class="stat"><span class="stat-num" id="stat-groups">—</span><span class="stat-label">GAMEPLAY GROUPS</span></div>
-      <div class="stat"><span class="stat-num" id="stat-screens">—</span><span class="stat-label">DISPLAY SIZES</span></div>
-      <div class="stat"><span class="stat-num" id="stat-langs">—</span><span class="stat-label">LANGUAGES</span></div>
-      <div class="stats-annotation">THE CURRENT GAME<br><strong id="stat-game-label">THE COLLECTION</strong></div>
-    </div></section>
-
-    <section class="catalogue-section page-width" id="catalogue">
-      <div class="section-kicker">01 <span></span> THE CATALOGUE</div>
-      <div class="section-heading-row"><div><h2>Browse the <em>builds.</em></h2><p>Select any JAR to inspect its catalogue entry or play it in-browser.</p></div><span class="section-aside"><span id="collection-subheading">GAME-SPECIFIC CATALOGUE</span></span></div>
-      <div class="collection-highlight"><div class="collection-symbol"><span>✧</span></div><div class="collection-info"><span class="collection-overline">CURRENT COLLECTION <span class="tiny-divider">/</span> AVAILABLE NOW</span><h3><span id="featured-title">Prince of Persia: Harem Adventures</span></h3><p><span id="featured-description">Every recorded phone build, with experimental gameplay grouping and metadata.</span></p></div><div class="collection-count"><strong id="collection-count">—</strong><span>BUILDS IN COLLECTION</span></div></div>
-
+    <section class="catalogue-section page-width" id="catalogue" aria-label="JAR catalogue">
       <div class="workspace">
         <aside class="filters" aria-label="Catalogue filters">
           <div class="filters-title"><h3>Refine your view</h3><button type="button" id="clear-filters" class="text-button">Clear all</button></div>
@@ -63,10 +36,10 @@
           <div class="filter-block"><label for="filter-group">GAMEPLAY GROUP</label><select id="filter-group"><option value="">All gameplay groups</option></select></div>
           <div class="filter-block"><label class="checkline"><input type="checkbox" id="filter-favorites"> <span>Saved groups only</span><span aria-hidden="true">☆</span></label></div>
           <div class="filter-tip"><span aria-hidden="true">✦</span><strong>What is a gameplay group?</strong><p>Builds with research-associated gameplay are collected under one ID. The groups are not claims of binary-identical JAR files.</p></div>
-          <div class="side-index-link"><span>GO DEEPER</span><a href="https://toca-1.github.io/new-j2me-software-archive-search/" target="_blank" rel="noopener noreferrer">Browse the full J2ME software index ↗</a></div>
         </aside>
         <div class="results-area">
-          <div id="local-status" class="local-status" role="status" aria-live="polite">Checking available JAR sources…</div><div class="results-toolbar"><div><div class="view-label" id="result-count" role="status" aria-live="polite">Loading catalogue…</div><p>Showing records from the supplied research spreadsheet.</p></div><div class="toolbar-actions"><label for="sort-results" class="visually-hidden">Sort results</label><select id="sort-results" title="Sort results"><option value="group">Group number</option><option value="count">Most builds</option><option value="size">Screen size</option></select><div class="view-toggle" role="group" aria-label="Catalogue view"><button id="view-groups" type="button" aria-pressed="false" title="Gameplay groups">▦ <span>Groups</span></button><button id="view-builds" class="selected" type="button" aria-pressed="true" title="Individual JAR builds">☷ <span>JARs</span></button></div></div></div>
+          <div class="results-toolbar"><div><div class="view-label" id="result-count" role="status" aria-live="polite">Loading catalogue…</div><p>Showing records from the supplied research spreadsheet.</p></div><div class="toolbar-actions"><label for="sort-results" class="visually-hidden">Sort results</label><select id="sort-results" title="Sort results"><option value="group">Group number</option><option value="count">Most builds</option><option value="size">Screen size</option></select><div class="view-toggle" role="group" aria-label="Catalogue view"><button id="view-groups" type="button" aria-pressed="false" title="Gameplay groups">▦ <span>Groups</span></button><button id="view-builds" class="selected" type="button" aria-pressed="true" title="Individual JAR builds">☷ <span>JARs</span></button></div></div></div>
+          <div id="local-status" class="local-status" role="status" aria-live="polite">Checking available JAR sources…</div>
           <div id="results" class="jar-list" aria-live="polite"></div>
           <div id="empty-state" class="empty-state" hidden><span aria-hidden="true">◇</span><h3>No matches in this collection</h3><p>Try a different screen size, language or search term.</p><button type="button" class="btn btn-outline" id="empty-clear">Reset filters</button></div>
           <div class="results-footer"><span>THE ARCHIVE IS A WORK IN PROGRESS</span><span>·</span><span><span id="result-dataset">ALL RECORDED BUILDS</span></span></div>
@@ -76,9 +49,8 @@
 
     <section class="related-files-section page-width" id="related-files-container" hidden><details><summary>Related non-JAR files in the workbook <span id="related-files-count"></span></summary><div id="related-files-list"></div></details></section>
 
-    <section class="about-section" id="about"><div class="page-width about-inner"><div><div class="section-kicker">02 <span></span> OUR APPROACH</div><h2>Preserve the differences.<br><em>Not just the titles.</em></h2></div><div class="about-body"><p>Old mobile games often appeared in many distinct forms: different resolutions, languages, devices, builds, and sometimes even gameplay. PoP Mobile makes those differences searchable without pretending they're all the same.</p><p>Catalogue metadata comes from the supplied 2026 research workbook. Download addresses point to independent archives; this website itself includes no original game JARs.</p><div class="about-links"><a href="index.html">All game collections ↗</a><a href="data/catalogue.json" download>Download catalogue JSON ↗</a><a href="https://github.com/shinovon/KEmulator" target="_blank" rel="noopener noreferrer">KEmulator project ↗</a></div></div></div></section>
   </main>
-  <footer class="site-footer"><div class="page-width footer-inner"><div><span class="footer-logo">P·</span> PoP Mobile <span class="footer-secondary">AN INDEPENDENT PRESERVATION PROJECT</span></div><div class="footer-credits"><span>NOT AFFILIATED WITH UBISOFT, GAMELOFT OR ARCHIVE HOSTS</span><span><a href="https://cheerpj.com/" target="_blank" rel="noopener noreferrer">Built with CheerpJ</a> · <a href="https://github.com/zb3/freej2me-web" target="_blank" rel="noopener noreferrer">freej2me-web</a> · <a href="THIRD_PARTY_NOTICES.md">Licenses &amp; credits</a></span></div></div></footer>
+  <footer class="site-footer"><div class="footer-inner"><span class="footer-disclaimer">NOT AFFILIATED WITH UBISOFT OR GAMELOFT</span><div class="footer-credits"><span><a href="https://cheerpj.com/" target="_blank" rel="noopener noreferrer">Built with CheerpJ</a> · <a href="https://github.com/zb3/freej2me-web" target="_blank" rel="noopener noreferrer">freej2me-web</a> · <a href="THIRD_PARTY_NOTICES.md">Licenses &amp; credits</a></span></div></div></footer>
 
   <div class="modal-backdrop" id="details-modal" hidden>
     <section class="details-dialog" role="dialog" aria-modal="true" aria-labelledby="details-heading" tabindex="-1"><div class="modal-header"><div><span class="modal-overline">THE ARCHIVE / BUILD DETAILS</span><h2 id="details-heading">Gameplay group</h2></div><button class="icon-button" id="close-details" type="button" aria-label="Close details">✕</button></div><div class="modal-body" id="details-body"></div></section>

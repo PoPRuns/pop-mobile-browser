@@ -81,23 +81,10 @@
   function initialize(data) {
     state.data = data;
     state.currentGame = data.game;
-    document.title = `PoP Mobile · ${data.game.title}`;
-    $('game-title').textContent = data.game.title;
-    $('game-year').textContent = data.game.year;
-    $('game-description').textContent = data.game.description;
-    $('featured-title').textContent = data.game.title;
-    $('featured-description').textContent = data.game.description;
-    $('collection-subheading').textContent = data.game.ungrouped ? 'UNCLASSIFIED ENTRIES' : 'EXPERIMENTAL GAMEPLAY GROUPING';
-    $('stat-game-label').textContent = data.game.sheet.toUpperCase();
+    const currentGameTitle = data.game.ungrouped ? 'Others' : data.game.title;
+    document.title = `PoP Mobile · ${currentGameTitle}`;
+    $('game-title').textContent = currentGameTitle;
     $('result-dataset').textContent = data.game.sheet.toUpperCase();
-    const switcher = $('game-switcher');
-    for (const game of data.allGames) {
-      const link = document.createElement('a');
-      link.href = 'catalogue.html?game=' + encodeURIComponent(game.id);
-      link.textContent = game.sheet;
-      if (game.id === data.game.id) link.setAttribute('aria-current','page');
-      switcher.append(link);
-    }
     if (data.game.ungrouped) {
       $('view-groups').hidden = true;
       $('view-builds').hidden = true;
@@ -113,11 +100,6 @@
     }
     state.buildMap = new Map(data.builds.map(b => [b.id, b]));
     state.groupMap = new Map(data.groups.map(g => [g.id, g]));
-    $('stat-builds').textContent = data.stats.builds;
-    $('stat-groups').textContent = data.stats.groups;
-    $('stat-screens').textContent = data.stats.resolutions;
-    $('stat-langs').textContent = data.stats.languages;
-    $('collection-count').textContent = data.stats.builds;
     fillSelect('filter-resolution', [...new Set(data.builds.map(b => b.resolution).filter(Boolean))].sort((a,b) => {
       const [aw, ah] = a.split('x').map(Number), [bw, bh] = b.split('x').map(Number);
       return (aw*ah)-(bw*bh);
@@ -133,7 +115,6 @@
     $('view-builds').addEventListener('click', () => setView('builds'));
     $('results').addEventListener('click', handleResultAction);
     $('details-body').addEventListener('click', handleDetailAction);
-    $('how-play').addEventListener('click', showInfo);
     $('close-info').addEventListener('click', () => closeModal('info-modal'));
     $('close-info-secondary').addEventListener('click', () => closeModal('info-modal'));
     $('close-details').addEventListener('click', () => closeModal('details-modal'));

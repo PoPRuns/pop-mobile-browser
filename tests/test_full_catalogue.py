@@ -28,6 +28,23 @@ class FullCatalogueTests(unittest.TestCase):
   self.assertTrue(all(b['unclassified'] for b in unclassified))
   self.assertTrue(all(g['unclassified'] for g in DATA['groups'] if g['game']=='needs-review'))
   self.assertEqual(next(g for g in DATA['games'] if g['id']=='needs-review')['groups'],0)
+ def test_compact_catalogue_matches_home_navigation(self):
+  home=(ROOT/'index.html').read_text()
+  catalogue=(ROOT/'catalogue.html').read_text()
+  app=(ROOT/'assets/app.js').read_text()
+  for text in ('Prince of Persia · Java Mobile Game Archive', 'Source code', 'NOT AFFILIATED WITH UBISOFT OR GAMELOFT'):
+   self.assertIn(text,home)
+   self.assertIn(text,catalogue)
+  self.assertIn('id="game-title"',catalogue)
+  self.assertIn('id="result-count"',catalogue)
+  self.assertIn('id="local-status"',catalogue)
+  self.assertIn('id="filter-search"',catalogue)
+  self.assertLess(catalogue.index('id="result-count"'),catalogue.index('id="local-status"'))
+  self.assertIn("data.game.ungrouped ? 'Others' : data.game.title",app)
+  for removed in ('game-masthead', 'stats-band', 'collection-highlight', 'side-index-link', 'about-section', 'GO DEEPER', 'id="how-play"'):
+   self.assertNotIn(removed,catalogue)
+  for missing_id in ('game-year','game-description','featured-title','featured-description','collection-subheading','stat-game-label','game-switcher','stat-builds','stat-groups','stat-screens','stat-langs','collection-count','how-play'):
+   self.assertNotIn("$('"+missing_id+"')",app)
  def test_navigation_and_player_contract(self):
   home=(ROOT/'index.html').read_text()
   catalogue=(ROOT/'catalogue.html').read_text()
@@ -37,7 +54,7 @@ class FullCatalogueTests(unittest.TestCase):
   self.assertIn('id="player-stage"',catalogue)
   self.assertIn('id="jar-index-link"',catalogue)
   self.assertNotIn('id="jar-recover"',catalogue)
-  self.assertIn("data.game.id",app)
+  self.assertIn("state.currentGame = data.game",app)
   self.assertIn("const requested = new URLSearchParams(location.search).get('game')",app)
   self.assertNotIn('The JAR service worker is active, but the emulator iframe is not controlled.',app)
 if __name__=='__main__':unittest.main()
