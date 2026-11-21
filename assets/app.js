@@ -4,7 +4,6 @@
   const $ = (id) => document.getElementById(id);
   const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmtBytes = (n) => n >= 1024 ? `${(n / 1024).toFixed(1)} KB` : `${n} B`;
-  const safeUrl = (u) => /^https:\/\/archive\.org\/download\//.test(u) ? u : null;
 
   // Presets visible in freej2me-web's Display Size settings. The emulator's
   // underlying configuration accepts pixel dimensions; only use a custom size
@@ -32,7 +31,7 @@
   let playTicket = 0;
   let jarStatusTimer = null;
   const JAR_STATUS_DURATION_MS = 5000;
-  const state = { data: null, buildMap: new Map(), groupMap: new Map(), currentGame: null, selectedGroup: null, selectedBuild: null, selectedPlay: null, readyPlaySha: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null };
+  const state = { data: null, buildMap: new Map(), groupMap: new Map(), currentGame: null, expandedBuilds: new Set(), selectedPlay: null, readyPlaySha: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null };
   const NUMPAD_SETTING_KEY = 'pop-mobile-numpad-mode-v1';
   let numpadMode = 'phone';
   try { if (localStorage.getItem(NUMPAD_SETTING_KEY) === 'standard') numpadMode = 'standard'; }
@@ -90,10 +89,8 @@
     $('clear-filters').addEventListener('click', resetFilters);
     $('empty-clear').addEventListener('click', resetFilters);
     $('results').addEventListener('click', handleResultAction);
-    $('details-body').addEventListener('click', handleDetailAction);
     $('close-info').addEventListener('click', () => closeModal('info-modal'));
     $('close-info-secondary').addEventListener('click', () => closeModal('info-modal'));
-    $('close-details').addEventListener('click', () => closeModal('details-modal'));
     $('close-play').addEventListener('click', () => closeModal('play-modal'));
     $('restart-play').addEventListener('click', restartPlayer);
     $('player-fullscreen').addEventListener('click', togglePlayerFullscreen);
@@ -123,24 +120,19 @@
     });
 
     document.addEventListener('fullscreenchange', syncFullscreenButton);
-    for (const modal of ['details-modal', 'info-modal', 'play-modal']) {
+    for (const modal of ['info-modal', 'play-modal']) {
       $(modal).addEventListener('mousedown', event => { if (event.target === $(modal)) closeModal(modal); });
     }
     document.addEventListener('keydown', (e) => {
       // Esc first exits browser fullscreen; it must not also close the player.
       if (e.key === 'Escape' && document.fullscreenElement === $('player-stage')) return;
-      if (e.key === 'Escape' && !['details-modal','play-modal','info-modal'].every(id => $(id).hidden)) {
-        const open = ['play-modal','details-modal','info-modal'].find(id => !$(id).hidden);
+      if (e.key === 'Escape' && !['play-modal','info-modal'].every(id => $(id).hidden)) {
+        const open = ['play-modal','info-modal'].find(id => !$(id).hidden);
         closeModal(open);
       }
     });
     window.addEventListener('hashchange', followDeepLink);
     render(); followDeepLink();
-    const deepSha = new URLSearchParams(location.search).get('sha256');
-    if (deepSha && state.buildMap.has(deepSha.toLowerCase())) {
-      const build = state.buildMap.get(deepSha.toLowerCase());
-      openGroup(build.group, build.id);
-    }
   }
   function resetFilters() {
     $('filter-search').value = '';
@@ -173,13 +165,16 @@
   }
   function renderJarRow(b) {
     const available = isAvailable(b);
-    return `<article class="jar-row"><div class="jar-core"><div class="jar-eyebrow">${b.unclassified?'NEEDS REVIEW':escape(b.group)} <span aria-hidden="true">/</span> ${escape(b.resolution||'Screen unknown')} <span aria-hidden="true">/</span> ${escape(b.language || 'Unknown language')}</div><h3 class="jar-title">${escape(b.name || 'Untitled MIDlet')}</h3><div class="jar-sub">${escape(b.vendor||'Unknown vendor')} · v${escape(b.version||'?')} · ${fmtBytes(b.size)}</div><div class="jar-sha"><span>SHA-256</span> <code>${escape(b.sha256)}</code></div></div><div class="jar-actions"><button type="button" data-action="details" data-group="${escape(b.group)}" data-build="${escape(b.id)}">Details</button><button type="button" data-action="play" data-build="${escape(b.id)}" class="jar-go" ${available?'':'disabled title="No matching local JAR"'}>Play</button></div></article>`;
+    const expanded = state.expandedBuilds.has(b.id);
+    const detailsId = `build-details-${b.id}`;
+    return `<article class="jar-row"><div class="jar-summary"><div class="jar-core"><div class="jar-eyebrow">${b.unclassified?'NEEDS REVIEW':escape(b.group)} <span aria-hidden="true">/</span> ${escape(b.resolution||'Screen unknown')} <span aria-hidden="true">/</span> ${escape(b.language || 'Unknown language')}</div><h3 class="jar-title">${escape(b.name || 'Untitled MIDlet')}</h3><div class="jar-sub">${escape(b.vendor||'Unknown vendor')} · v${escape(b.version||'?')} · ${fmtBytes(b.size)}</div><div class="jar-sha"><span>SHA-256</span> <code>${escape(b.sha256)}</code></div></div><div class="jar-actions"><button type="button" data-action="details" data-build="${escape(b.id)}" aria-expanded="${expanded}" aria-controls="${escape(detailsId)}">${expanded ? 'Hide details' : 'Details'}</button><button type="button" data-action="play" data-build="${escape(b.id)}" class="jar-go" ${available?'':'disabled title="No matching local JAR"'}>Play</button></div></div><div class="inline-build-details" id="${escape(detailsId)}" ${expanded ? '' : 'hidden'}>${expanded ? renderBuildDetails(b) : ''}</div></article>`;
   }
   function handleResultAction(e) {
     const button = e.target.closest('button[data-action]'); if (!button) return;
-    const { action, group, build } = button.dataset;
-    if (action === 'details') openGroup(group, build);
+    const { action, build } = button.dataset;
+    if (action === 'details') setBuildDetails(build, !state.expandedBuilds.has(build));
     else if (action === 'play') play(build);
+    else if (action === 'copy') copyText(button.dataset.copy);
   }
   function showModal(id) {
     state.lastFocus = document.activeElement;
@@ -198,62 +193,45 @@
       }
       $('player-holder').replaceChildren();
     }
-    if (id === 'details-modal' && location.hash.startsWith('#group/')) history.replaceState(null,'',location.pathname+location.search+'#catalogue');
-    if (['details-modal','info-modal','play-modal'].every(id => $(id).hidden)) document.body.classList.remove('modal-open');
+    if (['info-modal','play-modal'].every(id => $(id).hidden)) document.body.classList.remove('modal-open');
     if (state.lastFocus && typeof state.lastFocus.focus === 'function') state.lastFocus.focus();
   }
   function followDeepLink() {
+    // Issue-report links identify the precise JAR, not the first member of its group.
+    const sha = new URLSearchParams(location.search).get('sha256')?.toLowerCase();
     const match = /^#group\/([A-Za-z0-9_+.-]+)$/.exec(location.hash);
-    if (match && state.groupMap.has(match[1])) openGroup(match[1], null, true);
+    const id = state.buildMap.has(sha) ? sha : (match && state.groupMap.get(match[1])?.buildIds[0]);
+    if (id) setBuildDetails(id, true, true);
   }
-  function openGroup(id, buildId = null, fromHash = false) {
-    const group = state.groupMap.get(id);
-    if (!group) return;
-    state.selectedGroup = group;
-    state.selectedBuild = (buildId && state.buildMap.has(buildId)) ? buildId : group.buildIds[0];
-    $('details-heading').textContent = group.unclassified ? `Needs review · entry ${group.id}` : `${group.collection} · ${group.id}`;
-    renderGroupDetails();
-    if ($('details-modal').hidden) showModal('details-modal');
-    if (!fromHash && location.hash !== `#group/${id}`) history.replaceState(null,'',location.pathname+location.search+`#group/${id}`);
+  function setBuildDetails(id, expanded, scroll = false) {
+    const build = state.buildMap.get(id);
+    const panel = $(`build-details-${id}`);
+    if (!build || !panel) return;
+    const row = panel.closest('.jar-row');
+    const button = row.querySelector('button[data-action="details"]');
+    if (expanded) {
+      state.expandedBuilds.add(id);
+      if (panel.hidden) panel.innerHTML = renderBuildDetails(build);
+    } else {
+      state.expandedBuilds.delete(id);
+      panel.replaceChildren();
+    }
+    panel.hidden = !expanded;
+    button.setAttribute('aria-expanded', String(expanded));
+    button.textContent = expanded ? 'Hide details' : 'Details';
+    if (scroll) row.scrollIntoView({block: 'start'});
   }
-  function renderGroupDetails() {
-    const g = state.selectedGroup, b = state.buildMap.get(state.selectedBuild);
-    if (!g || !b) return;
-    const chips = g.buildIds.map((id,index) => {
-      const v = state.buildMap.get(id), selected = v.id === b.id;
-      return `<button type="button" class="build-chip ${selected ? 'selected':''}" aria-pressed="${selected}" data-action="select-build" data-build="${escape(v.id)}"><strong>#${index+1} · ${escape(v.resolution)}</strong><small>${escape(v.language||'?')} · ${escape(v.version||'?')}</small></button>`;
-    }).join('');
-    const notes = [b.notesGeneral, b.notesGameplay, b.notesGameplay2].filter(Boolean);
-    const available = isAvailable(b);
-    const links = b.urls.filter(safeUrl).map((url,index) => {
-      const collection = url.includes('JARchiveLite_v11') ? 'Lite archive' : url.includes('JARchive_v11') ? 'Full archive' : 'Archive source';
-      return `<a href="${escape(url)}" target="_blank" rel="noopener noreferrer" title="Third-party archive; availability not guaranteed">Source ${index+1} · ${collection} ↗</a>`;
-    }).join('');
-    $('details-body').innerHTML = `
-      <div class="details-intro"><span class="pill accent">${g.count} unique SHA-256 builds</span><span class="pill">${escape(g.resolutions.join(' · '))}</span><p>Gameplay classification from the supplied catalogue. Not a claim of identical binaries.</p></div>
-      ${g.notes.length?`<div class="details-note">${escape(g.notes[0])}</div>`:''}
-      <div class="details-sublabel">SELECT A RECORDED JAR BUILD</div><div class="build-selector">${chips}</div>
-      <div class="selected-build"><h3 class="build-title">${escape(b.name)}</h3><div class="build-subtitle">${escape(b.group)} · ${escape(b.version)} · ${escape(b.vendor||'Unknown vendor')}</div>
-        <div class="meta-grid">${[
-          ['Display',b.resolution||'Not recorded'],['Language',b.language],['Device',b.device||'Not recorded'],
-          ['CLDC / MIDP',`${b.cldc||'?'} / ${b.midp||'?'}`],['Applet version',b.version],['In-game version',b.aboutVersion||'Not recorded'],
-          ['In-game author',b.aboutAuthor||'Not recorded'],['File size',fmtBytes(b.size)],['Archive references',b.urls.length]
-        ].map(([k,v])=>`<div class="meta-field"><span>${escape(k.toUpperCase())}</span><strong>${escape(v)}</strong></div>`).join('')}</div>
-        <div class="build-actions"><button class="btn btn-primary" type="button" data-action="play" data-build="${escape(b.id)}" ${available?'':'disabled title="No matching local JAR found"'}>Play</button><button class="btn btn-outline" type="button" data-action="copy" data-copy="${escape(b.sha256)}">Copy SHA-256</button>${links ? `<a class="btn btn-outline" href="${escape(b.urls.find(safeUrl))}" rel="noopener noreferrer" target="_blank">Archive download ↗</a>` : ''}</div>
-        <p class="emulator-help">${!state.emulatorReady?'Browser emulator runtime is unavailable. Check the deployment or local setup.':state.localHashes.has(b.sha256)?'A locally verified JAR is available. You can also choose a matching file to save it in browser storage.':'The player will check its verified browser cache. Otherwise, use the J2ME index and choose a matching JAR file.'}</p>
-        ${links?`<div class="details-sublabel">EXTERNAL ARCHIVE SOURCES</div><div class="download-links">${links}</div>`:''}
-        ${notes.length?`<div class="details-sublabel">RESEARCH NOTES</div><div class="notes-list">${notes.map(n=>`<p>${escape(n)}</p>`).join('')}</div>`:''}
-        <div class="hash-fields">${[['CRC32',b.crc32],['SHA-1',b.sha1],['SHA-256',b.sha256]].map(([k,v])=>`<div><div><label>${k}</label><code>${escape(v)}</code></div><button type="button" data-action="copy" data-copy="${escape(v)}">Copy</button></div>`).join('')}</div>
-        ${b.sourceFilenames?`<div class="details-sublabel">SOURCE FILENAME</div><div class="jar-sub">${escape(b.sourceFilenames)}</div>`:''}
-        ${b.archivePaths?`<div class="details-sublabel">CATALOGUED ARCHIVE PATHS</div><div class="jar-sub">${escape(b.archivePaths)}</div>`:''}
-      </div>`;
-  }
-  function handleDetailAction(e) {
-    const button = e.target.closest('button[data-action]'); if (!button) return;
-    if (button.dataset.action === 'select-build' && state.selectedGroup.buildIds.includes(button.dataset.build)) {
-      state.selectedBuild = button.dataset.build; renderGroupDetails();
-    } else if (button.dataset.action === 'copy') copyText(button.dataset.copy);
-    else if (button.dataset.action === 'play') play(button.dataset.build);
+  function renderBuildDetails(b) {
+    const fields = [
+      ['Display', b.resolution], ['Language', b.language], ['Device', b.device],
+      ['CLDC / MIDP', `${b.cldc || '?'} / ${b.midp || '?'}`],
+      ['Applet version', b.version], ['In-game version', b.aboutVersion],
+      ['In-game author', b.aboutAuthor], ['File size', fmtBytes(b.size)]
+    ];
+    return `<h4 class="build-title">${escape(b.name || 'Untitled MIDlet')}</h4>
+      <div class="build-subtitle">${escape(b.unclassified ? 'Others' : b.group)} · ${escape(b.version || '?')} · ${escape(b.vendor || 'Unknown vendor')}</div>
+      <div class="meta-grid">${fields.map(([k,v]) => `<div class="meta-field"><span>${escape(k.toUpperCase())}</span><strong>${escape(v || 'Not recorded')}</strong></div>`).join('')}</div>
+      <div class="hash-fields">${[['CRC32',b.crc32],['SHA-1',b.sha1],['SHA-256',b.sha256]].map(([k,v]) => `<div><div><label>${k}</label><code>${escape(v || 'Not recorded')}</code></div>${v ? `<button type="button" data-action="copy" data-copy="${escape(v)}" aria-label="Copy ${k}">Copy</button>` : ''}</div>`).join('')}</div>`;
   }
   async function copyText(text) {
     try { await navigator.clipboard.writeText(text); toast('Copied to clipboard'); }
@@ -287,8 +265,6 @@
         }
       } catch { /* A local server is needed for the optional local JAR directory. */ }
     }
-    render();
-    if (!$('details-modal').hidden) renderGroupDetails();
     $('source-instructions').textContent = state.staticSite
       ? 'Open the J2ME index for the exact SHA-256, download your own JAR, and choose it in the player. The browser verifies and caches the file; no local Python server is required.'
       : 'If a matching file is in the local JAR folder, the server verifies and serves it. Otherwise, open the J2ME index for the exact SHA-256, download the JAR, and choose it in the player. Your browser verifies and caches it.';
@@ -424,7 +400,6 @@
     // Emulator-specific canvas sizes belong in the runtime, not the window title.
     $('play-heading').textContent = [build.name, build.resolution].filter(Boolean).join(' · ');
     $('player-report-issue').href = playerIssueUrl(build);
-    if (!$('details-modal').hidden) $('details-modal').hidden = true;
     if ($('play-modal').hidden) showModal('play-modal');
     $('player-holder').replaceChildren();
     $('player-controls').open = false;

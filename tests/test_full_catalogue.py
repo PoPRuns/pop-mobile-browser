@@ -56,6 +56,22 @@ class FullCatalogueTests(unittest.TestCase):
    self.assertNotIn(removed,catalogue)
   for missing_id in ('game-year','game-description','featured-title','featured-description','collection-subheading','stat-game-label','game-switcher','stat-builds','stat-groups','stat-screens','stat-langs','collection-count','how-play'):
    self.assertNotIn("$('"+missing_id+"')",app)
+ def test_details_are_inline_and_build_specific(self):
+  html=(ROOT/'catalogue.html').read_text()
+  app=(ROOT/'assets/app.js').read_text()
+  self.assertNotIn('details-modal',html+app)
+  self.assertNotIn('renderGroupDetails',app)
+  self.assertIn('class="inline-build-details"',app)
+  self.assertIn('aria-expanded="${expanded}"',app)
+  self.assertIn('aria-controls="${escape(detailsId)}"',app)
+  self.assertIn("setBuildDetails(build, !state.expandedBuilds.has(build))",app)
+  self.assertIn("state.buildMap.has(sha) ? sha",app)
+  self.assertIn("else if (action === 'copy') copyText(button.dataset.copy)",app)
+  details=app.split('  function renderBuildDetails(b) {',1)[1].split('  async function copyText',1)[0]
+  for label in ('Display','Language','Device','CLDC / MIDP','Applet version','In-game version','In-game author','File size','CRC32','SHA-1','SHA-256'):
+   self.assertIn(label,details)
+  for label in ('Archive references','EXTERNAL ARCHIVE SOURCES','RESEARCH NOTES','SOURCE FILENAME','CATALOGUED ARCHIVE PATHS','SELECT A RECORDED JAR BUILD'):
+   self.assertNotIn(label,details)
  def test_navigation_and_player_contract(self):
   home=(ROOT/'index.html').read_text()
   catalogue=(ROOT/'catalogue.html').read_text()

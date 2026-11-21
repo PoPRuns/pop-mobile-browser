@@ -140,3 +140,13 @@
 
 /* The player header no longer has an overline. */
 .play-dialog .modal-header h2 { margin-top:0; }
+
+/* Expand just the selected JAR's metadata, without a group modal. */
+.jar-row{display:block}
+.jar-summary{display:flex;align-items:center;justify-content:space-between;gap:15px;min-width:0}
+.inline-build-details{min-width:0;margin-top:16px;padding:18px;border:1px solid #435046;background:#19211e}
+.inline-build-details .build-title,.inline-build-details .build-subtitle{overflow-wrap:anywhere}
+.inline-build-details .hash-fields>div>div{min-width:0}
+.inline-build-details .hash-fields>div:last-child{border-bottom:0;padding-bottom:0}
+.inline-build-details .hash-fields code{user-select:text;word-break:break-all}
+@media(max-width:580px){.jar-summary{align-items:flex-start;flex-direction:column}.inline-build-details{padding:12px}}
