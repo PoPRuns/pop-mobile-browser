@@ -32,6 +32,7 @@ function setListeners() {
     }
 }
 const natives = {
+            ...canvasGraphicsNatives,
             async Java_pl_zb3_freej2me_bridge_shell_Shell_restart(lib) {
                 location.reload();
             },

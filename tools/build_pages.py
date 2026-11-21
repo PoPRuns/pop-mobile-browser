@@ -41,7 +41,7 @@ def build_site(output: Path):
     if marker in html:
         raise ValueError('Unexpected duplicate static marker')
     html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n  ' + marker, 1)
-    html = html.replace('assets/app.js?v=jar-gate-14', 'assets/app.js?v=pages-jar-gate-14')
+    html = html.replace('assets/app.js?v=harem-families-1', 'assets/app.js?v=pages-harem-families-1')
     catalogue.write_text(html, encoding='utf-8')
 
     vendor = ROOT / 'vendor/freej2me-web/web'
@@ -54,12 +54,12 @@ def build_site(output: Path):
     shutil.copytree(vendor, emulator)
     launcher = emulator / 'src/main.js'
     source = launcher.read_text(encoding='utf-8')
-    adapted = server.inject_numpad_hook(server.inject_resolution_hook(source))
+    adapted = server.inject_fps_hook(server.inject_numpad_hook(server.inject_resolution_hook(source)))
     launcher.write_text(adapted, encoding='utf-8')
     # Bust cached launcher modules when the player adapter changes.
     run_html = emulator / 'run.html'
     run_html.write_text(run_html.read_text(encoding='utf-8').replace(
-        'src="src/main.js"', 'src="src/main.js?v=native-restart-2"', 1), encoding='utf-8')
+        'src="src/main.js"', 'src="src/main.js?v=family-fps-1"', 1), encoding='utf-8')
     # Preserve upstream license in the downloadable static distribution.
     shutil.copy2(ROOT / 'vendor/freej2me-web/LICENSE', emulator / 'LICENSE')
     # Avoid Jekyll filtering underscore-named files on a project Pages site.

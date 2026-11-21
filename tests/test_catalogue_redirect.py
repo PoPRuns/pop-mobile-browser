@@ -16,11 +16,21 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync('assets/app.js', 'utf8');
 const data = JSON.parse(fs.readFileSync('data/catalogue.json', 'utf8'));
+function expectedCount(game) {
+  // Unplayable builds are hidden until the visitor opts to show them.
+  const visible = data.builds.filter(b => b.game === game.id && !b.unplayable);
+  const families = (data.families || []).filter(f =>
+    f.game === game.id && visible.some(b => b.family === f.id));
+  if (game.id === 'harem-adventures' && families.length) {
+    return `${families.length} GAMEPLAY VERSIONS · ${visible.length} VISIBLE JAR BUILDS`;
+  }
+  return `SHOWING ${visible.length} JAR BUILDS`;
+}
 async function run(url, response = {ok:true, json:async()=>data}) {
   const nodes = new Map();
   const get = id => {
     if (!nodes.has(id)) nodes.set(id, {value:'', textContent:'', innerHTML:'',
-      addEventListener(){}, append(){}, querySelector(){return null;}});
+      addEventListener(){}, append(){}, replaceChildren(){this.innerHTML='';}, querySelector(){return null;}});
     return nodes.get(id);
   };
   const parsed = new URL(url);
@@ -48,11 +58,11 @@ async function run(url, response = {ok:true, json:async()=>data}) {
     for (const game of data.games) {
       const result = await run(root+'catalogue.html?game='+encodeURIComponent(game.id));
       assert.deepEqual(result.redirects,[]);
-      assert.equal(result.count,`SHOWING ${game.count} JAR BUILDS`);
+      assert.equal(result.count,expectedCount(game));
       assert.equal(result.workerCalls,1);
     }
     const defaultGame = await run(root+'catalogue.html');
-    assert.equal(defaultGame.count,'SHOWING 58 JAR BUILDS');
+    assert.equal(defaultGame.count,expectedCount(data.games.find(g => g.id === 'harem-adventures')));
     assert.deepEqual(defaultGame.redirects,[]);
     const failure = await run(root+'catalogue.html?game=unknown',{ok:false,status:503});
     assert.equal(failure.count,'COULD NOT LOAD CATALOGUE');

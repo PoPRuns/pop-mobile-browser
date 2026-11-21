@@ -24,13 +24,30 @@ FIELDS=['group','name','displayTitle','version','vendor','cldc','midp','resoluti
 HEX64=re.compile('[0-9a-fA-F]{64}\\Z')
 HEX40=re.compile('[0-9a-fA-F]{40}\\Z')
 URL=re.compile(r'https?://[^\s\r\n]+')
+FPS_NOTE = re.compile(r'\blimit\s+fps\s+to\s+(15|30|60)\b', re.IGNORECASE)
+UNPLAYABLE_NOTE = re.compile(r'\bunplayable\b', re.IGNORECASE)
+HAREM_FAMILY = re.compile(r'^(HA-G[0-9]{2})(?:-([a-z]+))?$', re.IGNORECASE)
+HAREM_PREVIEWS = {
+    'HA-G01': 'assets/previews/harem-g01.png',
+    'HA-G02': 'assets/previews/harem-g02.png',
+    'HA-G03': 'assets/previews/harem-g03.png',
+}
+
+def classify_notes(notes):
+    """Extract playback hints from all three free-text Notes fields."""
+    joined = '\n'.join(n for n in notes if n)
+    limits = {int(m) for m in FPS_NOTE.findall(joined)}
+    if len(limits) > 1:
+        raise ValueError('conflicting FPS limits: ' + ', '.join(map(str, sorted(limits))))
+    return bool(UNPLAYABLE_NOTE.search(joined)), (next(iter(limits)) if limits else None)
+
 
 def as_text(value):
     return '' if value is None else str(value).strip()
 
 def convert(input_path, output):
     w=load_workbook(input_path, read_only=True, data_only=True)
-    games=[]; builds=[]; groups=[]; related_files=[]; hashes=set(); errors=[]
+    games=[]; builds=[]; groups=[]; families=[]; related_files=[]; hashes=set(); errors=[]
     for sheet_name,slug,title,year,description in COLLECTIONS:
         s=w[sheet_name]
         rows=s.iter_rows(values_only=True)
@@ -82,6 +99,18 @@ def convert(input_path, output):
                 values['unclassified']=True
             elif not values['group']:
                 errors.append(f'{sheet_name}!A{sheet_row}: missing gameplay group'); continue
+            # These are independent build-level flags, never inherited from a group.
+            notes = [values[k] for k in ('notesGeneral', 'notesGameplay', 'notesGameplay2')]
+            try:
+                values['unplayable'], values['fpsLimit'] = classify_notes(notes)
+            except ValueError as error:
+                errors.append(f'{sheet_name} row {sheet_row}: {error}'); continue
+            if sheet_name == 'Harem Adventures':
+                match = HAREM_FAMILY.fullmatch(values['group'])
+                if not match:
+                    errors.append(f'{sheet_name}!A{sheet_row}: unrecognized gameplay family {values["group"]!r}'); continue
+                values['family'] = match.group(1).upper()
+                values['variant'] = (match.group(2) or '').lower()
             game_builds.append(values); builds.append(values)
             if values['group']: gbuilds.setdefault(values['group'], []).append(values)
         for gid, records in gbuilds.items():
@@ -93,6 +122,14 @@ def convert(input_path, output):
                            'resolutions':distinct('resolution'),'languages':distinct('language'),
                            'devices':distinct('device'),'vendors':distinct('vendor'),
                            'notes':notes})
+        if sheet_name == 'Harem Adventures':
+            for fid in dict.fromkeys(b['family'] for b in game_builds):
+                preview = HAREM_PREVIEWS.get(fid, '')
+                members = [b for b in game_builds if b.get('family') == fid]
+                if members:
+                    families.append({'id':fid, 'game':slug, 'image':preview,
+                                     'buildIds':[b['sha256'] for b in members],
+                                     'count':len(members)})
         games.append({'id':slug,'sheet':sheet_name,'title':title,'year':year,
                       'description':description,'count':len(game_builds),'groups':(0 if sheet_name=='Needs review' else len(gbuilds)),
                       'resolutions':len(set(r['resolution'] for r in game_builds if r['resolution'])),
@@ -107,7 +144,7 @@ def convert(input_path, output):
                      'resolutions':len(set(b['resolution'] for b in builds if b['resolution'])),
                      'languages':len(set(b['language'] for b in builds if b['language'])),
                      'linkedBuilds':sum(bool(b['urls']) for b in builds)},
-            'groups':groups,'builds':builds,'relatedFiles':related_files}
+            'groups':groups,'families':families,'builds':builds,'relatedFiles':related_files}
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(result,ensure_ascii=False,indent=1)+'\n', encoding='utf-8')
     print(json.dumps({'relatedNonJars':len(related_files),'total':result['stats'],'games':[{'sheet':g['sheet'],'builds':g['count'],'groups':g['groups']} for g in games]},ensure_ascii=False,indent=2))

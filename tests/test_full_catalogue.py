@@ -8,7 +8,7 @@ class FullCatalogueTests(unittest.TestCase):
   self.assertEqual(len(DATA['games']),9)
   self.assertEqual(len(DATA['builds']),950)
   self.assertEqual(len({b['sha256'] for b in DATA['builds']}),950)
-  self.assertEqual(sum(g['groups'] for g in DATA['games']),489)
+  self.assertEqual(sum(g['groups'] for g in DATA['games']), DATA['stats']['groups'])
   self.assertEqual(sum(g['count'] for g in DATA['games']),950)
   self.assertEqual(len(DATA['relatedFiles']),19)
  def test_integrity_metadata_and_game_references(self):
@@ -24,7 +24,7 @@ class FullCatalogueTests(unittest.TestCase):
    self.assertTrue(all(url.startswith('https://archive.org/download/') for url in build['urls']))
  def test_needs_review_is_not_a_gameplay_group(self):
   unclassified=[b for b in DATA['builds'] if b['game']=='needs-review']
-  self.assertEqual(len(unclassified),22)
+  self.assertEqual(len(unclassified), next(g for g in DATA['games'] if g['id']=='needs-review')['count'])
   self.assertTrue(all(b['unclassified'] for b in unclassified))
   self.assertTrue(all(g['unclassified'] for g in DATA['groups'] if g['game']=='needs-review'))
   self.assertEqual(next(g for g in DATA['games'] if g['id']=='needs-review')['groups'],0)
@@ -102,7 +102,7 @@ class FullCatalogueTests(unittest.TestCase):
   self.assertNotIn('family=Playfair+Display',css)
   self.assertIn('.jar-sub,.jar-sha{font-size:13px}',css)
   self.assertIn('assets/home.css?v=type-1',(ROOT/'index.html').read_text())
-  self.assertIn('assets/site.css?v=type-1',(ROOT/'catalogue.html').read_text())
+  self.assertIn('assets/site.css?v=family-1',(ROOT/'catalogue.html').read_text())
  def test_navigation_and_player_contract(self):
   home=(ROOT/'index.html').read_text()
   catalogue=(ROOT/'catalogue.html').read_text()

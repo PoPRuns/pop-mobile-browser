@@ -250,6 +250,46 @@ def inject_resolution_hook(upstream_source: str) -> str:
                           EMULATOR_RESOLUTION_HOOK + '\n' + EMULATOR_MAIN_ANCHOR, 1)
 
 
+# Browser-only, best-effort display-frame pacing for workbook FPS hints.
+# This deliberately leaves the vendored freej2me-web source and JAR intact.
+# The current FreeJ2ME-web fork has no configurable simulation FPS knob;
+# pacing its screen blits is the closest compatible option.
+EMULATOR_FPS_URL_ANCHOR = 'const sp = new URLSearchParams(location.search);'
+EMULATOR_FPS_NATIVES_ANCHOR = '            ...canvasGraphicsNatives,'
+EMULATOR_FPS_STATE = r"""
+// Optional per-JAR display-frame cap, specified by the research workbook.
+const popFps = [15, 30, 60].includes(Number(sp.get('fpsLimit')))
+    ? Number(sp.get('fpsLimit')) : 0;
+const popDrawFrame = canvasGraphicsNatives.Java_pl_zb3_freej2me_bridge_graphics_CanvasGraphics_drawImage2;
+let popLastFrameAt = 0;
+const popFpsNatives = {
+    async Java_pl_zb3_freej2me_bridge_graphics_CanvasGraphics_drawImage2(lib, ctx, ...args) {
+        // FreeJ2ME presents frames by blitting its offscreen image onto the
+        // visible LCD canvas. Never delay drawing to other/offscreen canvases.
+        if (popFps && ctx === screenCtx) {
+            const minimum = 1000 / popFps;
+            const elapsed = performance.now() - popLastFrameAt;
+            if (popLastFrameAt && elapsed < minimum) {
+                await new Promise(resolve => setTimeout(resolve, minimum - elapsed));
+            }
+            popLastFrameAt = performance.now();
+        }
+        return popDrawFrame(lib, ctx, ...args);
+    },
+};
+"""
+
+
+def inject_fps_hook(source: str) -> str:
+    """Pace visible LCD blits only, when an explicit 15/30/60 FPS hint exists."""
+    if source.count(EMULATOR_FPS_URL_ANCHOR) != 1 or source.count(EMULATOR_FPS_NATIVES_ANCHOR) != 1:
+        raise ValueError('Unsupported freej2me-web launcher version: FPS anchors changed')
+    source = source.replace(EMULATOR_FPS_URL_ANCHOR,
+                            EMULATOR_FPS_URL_ANCHOR + EMULATOR_FPS_STATE, 1)
+    return source.replace(EMULATOR_FPS_NATIVES_ANCHOR,
+                          EMULATOR_FPS_NATIVES_ANCHOR + '\n            ...popFpsNatives,', 1)
+
+
 def load_builds():
     path = ROOT / 'data' / 'catalogue.json'
     data = json.loads(path.read_text(encoding='utf-8'))
@@ -423,7 +463,7 @@ class AppHandler(BaseHTTPRequestHandler):
     def serve_emulator_launcher(self, head: bool = False):
         path = EMULATOR_ROOT / 'src' / 'main.js'
         try:
-            content = inject_numpad_hook(inject_resolution_hook(path.read_text(encoding='utf-8'))).encode('utf-8')
+            content = inject_fps_hook(inject_numpad_hook(inject_resolution_hook(path.read_text(encoding='utf-8')))).encode('utf-8')
         except (OSError, UnicodeError, ValueError) as exc:
             return self.respond_json(HTTPStatus.BAD_GATEWAY, {'error': str(exc)}, head)
         self.send_response(HTTPStatus.OK)

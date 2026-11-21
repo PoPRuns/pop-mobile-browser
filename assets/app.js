@@ -39,7 +39,7 @@
   let playTicket = 0;
   let jarStatusTimer = null;
   const JAR_STATUS_DURATION_MS = 5000;
-  const state = { data: null, buildMap: new Map(), groupMap: new Map(), currentGame: null, expandedBuilds: new Set(), selectedPlay: null, readyPlaySha: null, readyPlaySource: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null };
+  const state = { data: null, buildMap: new Map(), groupMap: new Map(), currentGame: null, expandedBuilds: new Set(), activeFamily: null, selectedPlay: null, readyPlaySha: null, readyPlaySource: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null };
   const NUMPAD_SETTING_KEY = 'pop-mobile-numpad-mode-v1';
   let numpadMode = 'phone';
   try { if (localStorage.getItem(NUMPAD_SETTING_KEY) === 'standard') numpadMode = 'standard'; }
@@ -86,6 +86,18 @@
     }
     state.buildMap = new Map(data.builds.map(b => [b.id, b]));
     state.groupMap = new Map(data.groups.map(g => [g.id, g]));
+    state.activeFamily = null;
+    const flagged = data.builds.some(b => b.unplayable);
+    $('filter-unplayable-wrap').hidden = !flagged;
+    $('filter-unplayable').checked = false;
+    $('filter-unplayable').addEventListener('change', render);
+    $('families').addEventListener('click', event => {
+      const button = event.target.closest('[data-family]');
+      if (!button) return;
+      state.activeFamily = button.dataset.family;
+      render();
+    });
+    $('family-back').addEventListener('click', () => {state.activeFamily = null; render();});
     fillSelect('filter-resolution', [...new Set(data.builds.map(b => b.resolution).filter(Boolean))].sort((a,b) => {
       const [aw, ah] = a.split('x').map(Number), [bw, bh] = b.split('x').map(Number);
       return (aw*ah)-(bw*bh);
@@ -156,9 +168,11 @@
     $('filter-search').value = '';
     $('filter-resolution').value = '';
     $('filter-language').value = '';
+    $('filter-unplayable').checked = false;
     render();
   }
   function matchesBuild(b) {
+    if (b.unplayable && !$('filter-unplayable').checked) return false;
     const q = $('filter-search').value.trim().toLocaleLowerCase();
     if ($('filter-resolution').value && b.resolution !== $('filter-resolution').value) return false;
     if ($('filter-language').value && b.language !== $('filter-language').value) return false;
@@ -167,15 +181,56 @@
     const searchText = [b.group, b.name, b.displayTitle, b.vendor, b.version, b.language, b.resolution, b.device, b.oldFilename, b.sourceFilenames, b.sha256, b.sha1, b.crc32, b.notesGeneral, b.notesGameplay, b.notesGameplay2, ...(g?.notes || [])].join(' ').toLocaleLowerCase();
     return q.split(/\s+/).every(term => searchText.includes(term));
   }
+  const FAMILY_LABELS = Object.freeze({
+    'HA-G01': 'Gameplay version 1',
+    'HA-G02': 'Gameplay version 2',
+    'HA-G03': 'Gameplay version 3'
+  });
+  const FAMILY_IMAGES = Object.freeze({
+    'HA-G01': 'assets/previews/harem-g01.png',
+    'HA-G02': 'assets/previews/harem-g02.png',
+    'HA-G03': 'assets/previews/harem-g03.png'
+  });
+  function renderFamilyCard(family, builds) {
+    const hidden = state.data.builds.filter(b => b.family === family.id && b.unplayable).length;
+    const all = state.data.builds.filter(b => b.family === family.id).length;
+    const image = FAMILY_IMAGES[family.id] || family.image;
+    return `<button class="family-card" type="button" data-family="${escape(family.id)}"
+      aria-label="Browse ${escape(FAMILY_LABELS[family.id] || family.id)}">
+      ${image ? `<img src="${escape(image)}" alt="First-level screenshot for ${escape(family.id)}" loading="lazy">` : `<div class="family-image-placeholder" aria-hidden="true">◇</div>`}
+      <span class="family-card-content"><span class="family-card-code">${escape(family.id)}</span>
+      <strong>${escape(FAMILY_LABELS[family.id] || family.id)}</strong>
+      <span>${builds.length} visible JAR builds${hidden ? ` · ${hidden} marked unplayable` : ''}</span></span>
+    </button>`;
+  }
   function render() {
     if (!state.data) return;
     const filteredBuilds = state.data.builds.filter(matchesBuild);
-    // Preserve the previous default group-number order without a sort control.
     filteredBuilds.sort((a,b) => a.group.localeCompare(b.group));
-    $('result-count').textContent = `SHOWING ${filteredBuilds.length} JAR BUILDS`;
-    $('results').className = 'jar-list';
-    $('results').innerHTML = filteredBuilds.map(renderJarRow).join('');
-    $('empty-state').hidden = filteredBuilds.length !== 0;
+    const families = state.data.families || [];
+    const hasFamilies = state.currentGame.id === 'harem-adventures' && families.length > 0;
+    $('families').hidden = !hasFamilies;
+    $('family-selection').hidden = !hasFamilies || !state.activeFamily;
+    if (hasFamilies && !state.activeFamily) {
+      const visibleFamilies = families.filter(f => filteredBuilds.some(b => b.family === f.id));
+      $('families').innerHTML = visibleFamilies.map(f =>
+        renderFamilyCard(f, filteredBuilds.filter(b => b.family === f.id))).join('');
+      $('results').replaceChildren();
+      $('results').hidden = true;
+      $('result-count').textContent = `${visibleFamilies.length} GAMEPLAY VERSIONS · ${filteredBuilds.length} VISIBLE JAR BUILDS`;
+      $('empty-state').hidden = visibleFamilies.length !== 0;
+    } else {
+      const shown = hasFamilies ? filteredBuilds.filter(b => b.family === state.activeFamily) : filteredBuilds;
+      $('results').hidden = false;
+      $('results').className = 'jar-list';
+      $('results').innerHTML = shown.map(renderJarRow).join('');
+      if (hasFamilies) {
+        $('family-selection-title').textContent = FAMILY_LABELS[state.activeFamily] || state.activeFamily;
+        $('families').hidden = true;
+      }
+      $('result-count').textContent = `SHOWING ${shown.length} JAR BUILDS`;
+      $('empty-state').hidden = shown.length !== 0;
+    }
   }
   function isAvailable(b) {
     // A visitor can supply any catalogue build through the verified JAR picker.
@@ -185,7 +240,7 @@
     const available = isAvailable(b);
     const expanded = state.expandedBuilds.has(b.id);
     const detailsId = `build-details-${b.id}`;
-    return `<article class="jar-row"><div class="jar-summary"><div class="jar-core"><div class="jar-eyebrow">${b.unclassified?'NEEDS REVIEW':escape(b.group)} <span aria-hidden="true">/</span> ${escape(b.resolution||'Screen unknown')} <span aria-hidden="true">/</span> ${escape(b.language || 'Unknown language')}</div><h3 class="jar-title">${escape(b.name || 'Untitled MIDlet')}</h3><div class="jar-sub">${escape(b.vendor||'Unknown vendor')} · v${escape(b.version||'?')} · ${fmtBytes(b.size)}</div><div class="jar-sha"><span>SHA-256</span><code tabindex="0" aria-label="SHA-256 checksum: ${escape(b.sha256)}">${escape(b.sha256)}</code></div></div><div class="jar-actions"><button type="button" data-action="details" data-build="${escape(b.id)}" aria-expanded="${expanded}" aria-controls="${escape(detailsId)}">${expanded ? 'Hide details' : 'Details'}</button><button type="button" data-action="play" data-build="${escape(b.id)}" class="jar-go" ${available?'':'disabled title="No matching local JAR"'}>Play</button></div></div><div class="inline-build-details" id="${escape(detailsId)}" ${expanded ? '' : 'hidden'}>${expanded ? renderBuildDetails(b) : ''}</div></article>`;
+    return `<article class="jar-row"><div class="jar-summary"><div class="jar-core"><div class="jar-eyebrow">${b.unclassified?'NEEDS REVIEW':escape(b.group)} <span aria-hidden="true">/</span> ${escape(b.resolution||'Screen unknown')} <span aria-hidden="true">/</span> ${escape(b.language || 'Unknown language')}</div><h3 class="jar-title">${escape(b.name || 'Untitled MIDlet')}${b.unplayable ? ' <span class="unplayable-badge">Unplayable</span>' : ''}</h3><div class="jar-sub">${b.fpsLimit ? `<span class="fps-badge">Limit ${Number(b.fpsLimit)} FPS</span> ` : ''}${escape(b.vendor||'Unknown vendor')} · v${escape(b.version||'?')} · ${fmtBytes(b.size)}</div><div class="jar-sha"><span>SHA-256</span><code tabindex="0" aria-label="SHA-256 checksum: ${escape(b.sha256)}">${escape(b.sha256)}</code></div></div><div class="jar-actions"><button type="button" data-action="details" data-build="${escape(b.id)}" aria-expanded="${expanded}" aria-controls="${escape(detailsId)}">${expanded ? 'Hide details' : 'Details'}</button><button type="button" data-action="play" data-build="${escape(b.id)}" class="jar-go" ${available?'':'disabled title="No matching local JAR"'}>Play</button></div></div><div class="inline-build-details" id="${escape(detailsId)}" ${expanded ? '' : 'hidden'}>${expanded ? renderBuildDetails(b) : ''}</div></article>`;
   }
   function handleResultAction(e) {
     const button = e.target.closest('button[data-action]'); if (!button) return;
@@ -220,7 +275,13 @@
     const sha = new URLSearchParams(location.search).get('sha256')?.toLowerCase();
     const match = /^#group\/([A-Za-z0-9_+.-]+)$/.exec(location.hash);
     const id = state.buildMap.has(sha) ? sha : (match && state.groupMap.get(match[1])?.buildIds[0]);
-    if (id) setBuildDetails(id, true, true);
+    if (id) {
+      const build = state.buildMap.get(id);
+      if (build?.unplayable) $('filter-unplayable').checked = true;
+      if (build?.family && state.data.families?.length) state.activeFamily = build.family;
+      render();
+      setBuildDetails(id, true, true);
+    }
   }
   function setBuildDetails(id, expanded, scroll = false) {
     const build = state.buildMap.get(id);
@@ -332,6 +393,7 @@
       `- Language: ${build.language || 'Not recorded'}`,
       `- Catalogued screen: ${build.resolution || 'Not recorded'}`,
       `- Emulator screen: ${screen ? `${screen.width}x${screen.height}` : 'Default'}`,
+      `- FPS limit: ${build.fpsLimit || 'None'}`,
       `- SHA-256: ${build.sha256}`,
       `- Catalogue: ${catalogueUrl.href}`,
     ].join('\n');
@@ -484,7 +546,8 @@
     // No mobile=1: that opt-in makes freej2me-web draw its virtual keypads.
     const build = state.buildMap.get(state.selectedPlay);
     const screen = build && playerResolution(build);
-    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode, v: 'native-restart-2', jarSource: state.readyPlaySource, jarSize: String(build.size)});
+    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode, v: 'family-fps-1', jarSource: state.readyPlaySource, jarSize: String(build.size)});
+    if ([15, 30, 60].includes(Number(build.fpsLimit))) params.set('fpsLimit', String(build.fpsLimit));
     if (screen) {
       params.set('screenWidth', String(screen.width));
       params.set('screenHeight', String(screen.height));
@@ -507,6 +570,7 @@
       const builds = entire.builds.filter(b => b.game === game.id);
       const groups = entire.groups.filter(g => g.game === game.id);
       const data = {game, allGames: entire.games, builds, groups,
+        families: (entire.families || []).filter(f => f.game === game.id),
         relatedFiles: (entire.relatedFiles || []).filter(f => f.game === game.id),
         stats: {builds:builds.length, groups:game.groups,
           resolutions:new Set(builds.map(b => b.resolution).filter(Boolean)).size,

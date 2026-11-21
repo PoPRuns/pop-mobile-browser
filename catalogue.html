@@ -8,9 +8,9 @@
   <meta name="description" content="Game-specific Prince of Persia Java ME catalogue, SHA-256-verified JAR metadata and browser emulation.">
   <title>PoP Mobile · JAR Catalogue</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/site.css?v=type-1">
+  <link rel="stylesheet" href="assets/site.css?v=family-1">
   <script defer src="assets/jar-library.js?v=jar-gate-2"></script>
-  <script defer src="assets/app.js?v=jar-gate-14"></script>
+  <script defer src="assets/app.js?v=harem-families-1"></script>
 </head>
 <body>
   <a class="skip-link" href="#catalogue">Skip to catalogue</a>
@@ -33,9 +33,12 @@
           <div class="filter-block"><label for="filter-search">SEARCH THE RECORDS</label><div class="search-box"><span aria-hidden="true">⌕</span><input id="filter-search" type="search" placeholder="Group, build, hash, note…" autocomplete="off"></div></div>
           <div class="filter-block"><label for="filter-resolution">SCREEN RESOLUTION</label><select id="filter-resolution"><option value="">All display sizes</option></select></div>
           <div class="filter-block"><label for="filter-language">LANGUAGE</label><select id="filter-language"><option value="">All languages</option></select></div>
+          <div class="filter-block filter-unplayable" id="filter-unplayable-wrap" hidden><label class="checkline" for="filter-unplayable"><input id="filter-unplayable" type="checkbox"> Show unplayable builds</label></div>
         </aside>
         <div class="results-area">
           <div class="results-toolbar"><div class="view-label" id="result-count" role="status" aria-live="polite">Loading catalogue…</div></div>
+          <div id="families" class="family-grid" hidden></div>
+          <div id="family-selection" class="family-selection" hidden><button type="button" id="family-back">← All gameplay versions</button><strong id="family-selection-title"></strong></div>
           <div id="results" class="jar-list" aria-live="polite"></div>
           <div id="empty-state" class="empty-state" hidden><span aria-hidden="true">◇</span><h3>No matches in this collection</h3><p>Try a different screen size, language or search term.</p><button type="button" class="btn btn-outline" id="empty-clear">Reset filters</button></div>
           <div class="results-footer"><span>THE ARCHIVE IS A WORK IN PROGRESS</span><span>·</span><span><span id="result-dataset">ALL RECORDED BUILDS</span></span></div>
