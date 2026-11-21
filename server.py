@@ -42,6 +42,54 @@ EMULATOR_RESTART_REPLACEMENT = """            async Java_pl_zb3_freej2me_bridge_
                 }
                 location.reload();
             },"""
+# Resolve imported game bytes directly from the same Cache Storage entry used
+# by the catalogue. CheerpJ /app/ uses HTTP requests, which can bypass a service
+# worker (e.g. after a hard reload); /str/ is a binary in-memory file system.
+EMULATOR_JAR_ARGS_ANCHOR = """        args = ['jar', cheerpjWebRoot+"/jar/" + (sp.get('jar') || "game.jar")];"""
+EMULATOR_JAR_ARGS_REPLACEMENT = r"""
+        try {
+            args = ['jar', await popGameJarPath(sp, cheerpjWebRoot)];
+        } catch (error) {
+            console.error('PoP Mobile: could not prepare verified JAR:', error);
+            document.getElementById('loading').textContent =
+                'Could not load cached JAR. Choose the matching JAR file again.';
+            if (window.parent !== window) {
+                window.parent.postMessage({type: 'pop-mobile:jar-error', error: String(error)}, location.origin);
+            }
+            return;
+        }
+"""
+EMULATOR_CACHED_JAR_HELPER = r"""
+async function popGameJarPath(params, webRoot) {
+    const filename = params.get('jar') || 'game.jar';
+    // Local preview and upstream standalone launcher retain the HTTP route.
+    if (params.get('jarSource') !== 'cache') return webRoot + '/jar/' + filename;
+    const sha = /^([a-f0-9]{64})\.jar$/.exec(filename)?.[1];
+    const size = Number(params.get('jarSize'));
+    if (!sha || !Number.isSafeInteger(size) || size < 4 || size > 8 * 1024 * 1024) {
+        throw new Error('Invalid cached JAR identity');
+    }
+    const cache = await caches.open('pop-mobile-verified-jars-v1');
+    const request = new Request(new URL('jar/' + filename, location.href).href);
+    const response = await cache.match(request);
+    if (!response?.ok || response.headers.get('X-PoP-Verified-SHA256') !== sha ||
+        Number(response.headers.get('X-PoP-JAR-Size')) !== size) {
+        throw new Error('Verified JAR is missing from browser storage');
+    }
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (bytes.length !== size || bytes[0] !== 80 || bytes[1] !== 75 || bytes[2] !== 3 || bytes[3] !== 4) {
+        throw new Error('Cached JAR size or ZIP signature is invalid');
+    }
+    const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)))
+        .map(n => n.toString(16).padStart(2, '0')).join('');
+    if (digest !== sha) throw new Error('Cached JAR SHA-256 mismatch');
+    const path = '/str/' + filename;
+    // CheerpJ 3 supports binary Uint8Array in /str/ after cheerpjInit resolves.
+    cheerpOSAddStringFile(path, bytes);
+    return path;
+}
+"""
+
 EMULATOR_RESOLUTION_HOOK = r"""
     // PoP Mobile: apply the catalogue-selected LCD unless this exact JAR has
     // a user override. FreeJ2ME's own settings file is keyed by MIDlet app ID,
@@ -75,7 +123,7 @@ EMULATOR_RESOLUTION_HOOK = r"""
             const MIDletLoader = await lib.org.recompile.mobile.MIDletLoader;
             const LauncherUtil = await lib.pl.zb3.freej2me.launcher.LauncherUtil;
             const Config = await lib.org.recompile.freej2me.Config;
-            const jarFile = await new File(cheerpjWebRoot + '/jar/' + popJar);
+            const jarFile = await new File(args[1]);
             const loader = await MIDletLoader.getMIDletLoader(jarFile);
             if (!loader) throw new Error('Could not open the JAR manifest');
             await LauncherUtil.ensureAppId(loader, await jarFile.getName());
@@ -180,7 +228,8 @@ def inject_numpad_hook(upstream_source: str) -> str:
 def inject_resolution_hook(upstream_source: str) -> str:
     """Inject once into the known upstream JS launcher (source stays unchanged)."""
     if upstream_source.count(EMULATOR_MAIN_ANCHOR) != 1 or \
-            upstream_source.count(EMULATOR_RESTART_ANCHOR) != 1 or not all(
+            upstream_source.count(EMULATOR_RESTART_ANCHOR) != 1 or \
+            upstream_source.count(EMULATOR_JAR_ARGS_ANCHOR) != 1 or not all(
         marker in upstream_source for marker in (
             'const sp = new URLSearchParams(location.search)',
             'const lib = await cheerpjRunLibrary(',
@@ -190,7 +239,8 @@ def inject_resolution_hook(upstream_source: str) -> str:
         raise ValueError('Unsupported freej2me-web launcher version: startup anchor has changed')
     source = upstream_source.replace(EMULATOR_RESTART_ANCHOR, EMULATOR_RESTART_REPLACEMENT, 1)
     source = source.replace('const sp = new URLSearchParams(location.search);',
-                            'const sp = new URLSearchParams(location.search);' + EMULATOR_RESOLUTION_STATE, 1)
+                            'const sp = new URLSearchParams(location.search);' + EMULATOR_RESOLUTION_STATE + EMULATOR_CACHED_JAR_HELPER, 1)
+    source = source.replace(EMULATOR_JAR_ARGS_ANCHOR, EMULATOR_JAR_ARGS_REPLACEMENT, 1)
     return source.replace(EMULATOR_MAIN_ANCHOR,
                           EMULATOR_RESOLUTION_HOOK + '\n' + EMULATOR_MAIN_ANCHOR, 1)
 

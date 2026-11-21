@@ -39,7 +39,7 @@
   let playTicket = 0;
   let jarStatusTimer = null;
   const JAR_STATUS_DURATION_MS = 5000;
-  const state = { data: null, buildMap: new Map(), groupMap: new Map(), currentGame: null, expandedBuilds: new Set(), selectedPlay: null, readyPlaySha: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null };
+  const state = { data: null, buildMap: new Map(), groupMap: new Map(), currentGame: null, expandedBuilds: new Set(), selectedPlay: null, readyPlaySha: null, readyPlaySource: null, emulatorReady: false, jarSource: 'local', localHashes: new Set(), staticSite: !!document.querySelector('meta[name="pop-mobile-static"]'), lastFocus: null };
   const NUMPAD_SETTING_KEY = 'pop-mobile-numpad-mode-v1';
   let numpadMode = 'phone';
   try { if (localStorage.getItem(NUMPAD_SETTING_KEY) === 'standard') numpadMode = 'standard'; }
@@ -114,6 +114,7 @@
       try {
         await jarLibrary.forget(build);
         state.readyPlaySha = null;
+        state.readyPlaySource = null;
         $('restart-play').disabled = true;
         setJarStatus('Removed the browser-cached JAR. The current game can continue, but select the JAR again before restarting.');
         $('jar-forget').hidden = true;
@@ -123,7 +124,12 @@
     window.addEventListener('message', (event) => {
       const frame = $('player-holder').querySelector('iframe');
       if (event.origin !== location.origin || !frame || event.source !== frame.contentWindow) return;
-      if (event.data?.type !== 'pop-mobile:resolution' || !state.selectedPlay) return;
+      if (!state.selectedPlay) return;
+      if (event.data?.type === 'pop-mobile:jar-error') {
+        setJarStatus('Could not load cached JAR: ' + event.data.error, true);
+        return;
+      }
+      if (event.data?.type !== 'pop-mobile:resolution') return;
       if (!event.data.ok) console.warn('Emulator display resolution could not be applied; use Esc for emulator settings.');
       else if ([event.data.width, event.data.height].every(n => Number.isInteger(n) && n >= 32 && n <= 1024)) {
         const build = state.buildMap.get(state.selectedPlay);
@@ -199,6 +205,7 @@
       setJarStatus(''); // Clear a pending notification and cancel its timer.
       ++playTicket; // Ignore delayed file validation after closing the dialog.
       state.readyPlaySha = null;
+      state.readyPlaySource = null;
       $('restart-play').disabled = true;
       if (document.fullscreenElement === $('player-stage')) {
         document.exitFullscreen().catch(() => {});
@@ -336,6 +343,7 @@
   function loadPlayerOnce(build, ticket, status, cachedCopy = false) {
     if (ticket !== playTicket || $('play-modal').hidden || state.selectedPlay !== build.sha256) return;
     state.readyPlaySha = build.sha256;
+    state.readyPlaySource = cachedCopy ? 'cache' : 'local';
     $('restart-play').disabled = false;
     setJarStatus(status);
     $('jar-forget').hidden = !cachedCopy;
@@ -349,6 +357,7 @@
       loadPlayerOnce(build, ticket, 'Using the SHA-256-verified local JAR from the preview server.');
     } else {
       state.readyPlaySha = null;
+      state.readyPlaySource = null;
       $('restart-play').disabled = true;
       setJarStatus('The local JAR is currently unavailable (' + check.reason + '). ' +
         'Choose the matching JAR file, or start the server with --jar-dir pointing to your JAR collection.', true);
@@ -404,6 +413,7 @@
     if (!state.emulatorReady) { showInfo(); return; }
     state.selectedPlay = sha;
     state.readyPlaySha = null;
+    state.readyPlaySource = null;
     $('restart-play').disabled = true;
     const ticket = ++playTicket;
     // Emulator-specific canvas sizes belong in the runtime, not the window title.
@@ -474,7 +484,7 @@
     // No mobile=1: that opt-in makes freej2me-web draw its virtual keypads.
     const build = state.buildMap.get(state.selectedPlay);
     const screen = build && playerResolution(build);
-    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode, v: 'resolution-cache-1'});
+    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode, v: 'jar-memory-1', jarSource: state.readyPlaySource, jarSize: String(build.size)});
     if (screen) {
       params.set('screenWidth', String(screen.width));
       params.set('screenHeight', String(screen.height));

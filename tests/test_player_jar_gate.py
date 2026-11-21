@@ -45,6 +45,8 @@ class TestPlayerJarGate(unittest.TestCase):
         lib = (ROOT / "assets/jar-library.js").read_text()
         self.assertIn("async function loadVerifiedLocal(build, ticket)", script)
         self.assertIn("async function reachableLocal(build)", lib)
+        self.assertIn("state.readyPlaySource = cachedCopy ? 'cache' : 'local'", script)
+        self.assertIn("jarSource: state.readyPlaySource, jarSize: String(build.size)", script)
         self.assertIn("return (await response.blob()).size === Number(build.size);",lib)
 
 if __name__ == "__main__":

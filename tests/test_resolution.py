@@ -39,6 +39,10 @@ const natives = {
 async function init() {
     const lib = await cheerpjRunLibrary("/app/freej2me-web.jar");
     const FreeJ2ME = await lib.org.recompile.freej2me.FreeJ2ME;
+    let args;
+    if (!sp.has('app')) {
+        args = ['jar', cheerpjWebRoot+"/jar/" + (sp.get('jar') || "game.jar")];
+    }
     FreeJ2ME.main(args).catch(e => {
         e.printStackTrace();
     });
@@ -54,6 +58,8 @@ class ResolutionTests(unittest.TestCase):
         self.assertLess(patched.index('await config.saveConfig()'), patched.index('FreeJ2ME.main(args)'))
         self.assertEqual(patched.count('PoP Mobile: apply the catalogue-selected'), 1)
         self.assertIn('await popRememberResolution()', patched)
+        self.assertLess(patched.index('await popGameJarPath(sp, cheerpjWebRoot)'), patched.index('await new File(args[1])'))
+        self.assertLess(patched.index('await new File(args[1])'), patched.index('FreeJ2ME.main(args)'))
         self.assertEqual(UPSTREAM_FIXTURE.count('pop-mobile:'), 0)
 
     def test_reject_unknown_upstream_source(self):
@@ -147,12 +153,13 @@ class ResolutionTests(unittest.TestCase):
             }
             const lib = {
               java:{io:{File:Promise.resolve(File)}},
-              org:{recompile:{mobile:{MIDletLoader:Promise.resolve({getMIDletLoader:async()=>({getAppId:async()=> 'Prince'})})},
+              org:{recompile:{mobile:{MIDletLoader:Promise.resolve({getMIDletLoader:async(file)=>{assert.equal(file.path, '/str/test.jar'); return {getAppId:async()=> 'Prince'};}})},
                  freej2me:{Config:Promise.resolve(Config)}}},
               pl:{zb3:{freej2me:{launcher:{LauncherUtil:Promise.resolve({ensureAppId:async()=>{}})}}}}
             };
             async function run() {
               const sp = new URLSearchParams('?jar=test.jar&screenWidth=128&screenHeight=160');
+              const args = ['jar', '/str/test.jar'];
         '''
         script += server.EMULATOR_RESOLUTION_HOOK
         script += r'''
@@ -167,6 +174,71 @@ class ResolutionTests(unittest.TestCase):
         result = subprocess.run(['node', '-e', script], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('hook completed', result.stdout)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node.js optional: browser logic checked when available')
+    def test_cached_jar_launch_without_service_worker(self):
+        # Run the actual injected cache helper and launch branch using real
+        # Web Crypto/Request/Response, with an in-memory Cache Storage mock.
+        # No HTTP request may be made even if the cache entry is missing.
+        script = r'''
+            const assert = require('node:assert/strict');
+            const crypto = require('node:crypto').webcrypto;
+            const bytes = new Uint8Array([80,75,3,4,5,6,7,8]);
+            const sha = require('node:crypto').createHash('sha256').update(bytes).digest('hex');
+            const filename = sha + '.jar';
+            const path = '/str/' + filename;
+            const location = {href:'https://example.com/pop-mobile-browser/emulator/run.html?x=1',
+                origin:'https://example.com'};
+            const cheerpjWebRoot = '/app/pop-mobile-browser/emulator';
+            let entry = 'valid', mounted = new Map(), launches = [], messages = [];
+            const window = {parent:{postMessage(message, origin){
+                assert.equal(origin, location.origin); messages.push(message);
+            }}};
+            const loading = {textContent:''};
+            const document = {getElementById(id){assert.equal(id,'loading');return loading;}};
+            const fetch = ()=>{throw new Error('Unexpected HTTP request');};
+            const caches = {async open(name){
+                assert.equal(name,'pop-mobile-verified-jars-v1');
+                return {async match(request){
+                    assert.equal(request.url, `https://example.com/pop-mobile-browser/emulator/jar/${filename}`);
+                    if(entry === 'missing') return undefined;
+                    const payload = bytes.slice();
+                    if(entry === 'corrupt') payload[4] ^= 1;
+                    return new Response(payload,{headers:{
+                        'X-PoP-Verified-SHA256':sha,'X-PoP-JAR-Size':String(bytes.length)
+                    }});
+                }};
+            }};
+            function cheerpOSAddStringFile(name, data){mounted.set(name, data.slice());}
+        ''' + server.EMULATOR_CACHED_JAR_HELPER + r'''
+            async function launch(sp){
+                let args;
+        ''' + server.EMULATOR_JAR_ARGS_REPLACEMENT + r'''
+                launches.push(args);
+            }
+            async function run(){
+                const params = new URLSearchParams({jar:filename,jarSource:'cache',jarSize:bytes.length});
+                await launch(params);
+                assert.deepEqual(launches.at(-1), ['jar',path]);
+                assert.deepEqual(mounted.get(path),bytes);
+                // A native reload clears /str/, then must remount the same data.
+                mounted.clear(); await launch(params);
+                assert.deepEqual(mounted.get(path),bytes);
+                assert.equal(launches.length,2);
+                // Never fall back to the missing /app/ HTTP path for cache mode.
+                entry='missing'; mounted.clear(); await launch(params);
+                assert.equal(launches.length,2); assert.equal(mounted.size,0);
+                assert.equal(messages.at(-1).type,'pop-mobile:jar-error');
+                entry='corrupt'; await launch(params);
+                assert.equal(launches.length,2); assert.match(messages.at(-1).error,/SHA-256 mismatch/);
+                const local = new URLSearchParams({jar:filename,jarSource:'local'});
+                await launch(local);
+                assert.deepEqual(launches.at(-1),['jar',cheerpjWebRoot+'/jar/'+filename]);
+            }
+            run().catch(e=>{console.error(e);process.exitCode=1;});
+        '''
+        result = subprocess.run(['node', '-e', script], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     @unittest.skipUnless(shutil.which('node'), 'Node.js optional: browser logic checked when available')
     def test_resolution_override_survives_native_and_site_restart(self):
@@ -206,6 +278,7 @@ class ResolutionTests(unittest.TestCase):
                 location = {origin:'https://example.com', href: url || `https://example.com/emulator/run.html?jar=${sha}.jar` +
                     (width ? `&screenWidth=${width}&screenHeight=${height}` : ''), reload(){reloads++;}};
                 sp = new URL(location.href).searchParams;
+                const args = ['jar', '/str/' + sp.get('jar')];
                 popRememberResolution = null;
         ''' + server.EMULATOR_RESOLUTION_HOOK + r'''
             }
