@@ -81,7 +81,7 @@ class FullCatalogueTests(unittest.TestCase):
   self.assertIn('class="hash-row"',details)
   self.assertIn('tabindex="0"',details)
   self.assertIn('data-copy="${escape(v)}"',details)
-  self.assertIn('grid-template-columns:54px minmax(0,1fr) auto',css)
+  self.assertIn('grid-template-columns:70px minmax(0,1fr) auto',css)
   self.assertIn('white-space:nowrap;overflow-x:auto',css)
  def test_summary_hash_scroll_and_responsive_details_grid(self):
   app=(ROOT/'assets/app.js').read_text()
@@ -92,7 +92,17 @@ class FullCatalogueTests(unittest.TestCase):
    self.assertIn(declaration,hash_rule)
   self.assertIn('.jar-summary .jar-core{width:100%}',css)
   self.assertIn('.inline-build-details .meta-grid{grid-template-columns:repeat(4,minmax(0,1fr))',css)
-  self.assertIn('@container (max-width:560px){.inline-build-details .meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}',css)
+  self.assertIn('@container (max-width:680px){.inline-build-details .meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}',css)
+ def test_readable_dm_sans_titles(self):
+  home=(ROOT/'assets/home.css').read_text()
+  css=(ROOT/'assets/site.css').read_text()
+  self.assertIn(".game-tile .tile-inner h3{font:600 38px/1.18 'DM Sans'",home)
+  self.assertIn('.jar-title{font:600 24px/1.25 var(--sans)',css)
+  self.assertIn('.modal-header h2{font:600 32px/1.25 var(--sans)',css)
+  self.assertNotIn('family=Playfair+Display',css)
+  self.assertIn('.jar-sub,.jar-sha{font-size:13px}',css)
+  self.assertIn('assets/home.css?v=type-1',(ROOT/'index.html').read_text())
+  self.assertIn('assets/site.css?v=type-1',(ROOT/'catalogue.html').read_text())
  def test_navigation_and_player_contract(self):
   home=(ROOT/'index.html').read_text()
   catalogue=(ROOT/'catalogue.html').read_text()
