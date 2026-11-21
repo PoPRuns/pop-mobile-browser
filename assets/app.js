@@ -27,6 +27,14 @@
       custom: !fitting.length };
   }
 
+  function playerResolution(build) {
+    try {
+      const saved = JSON.parse(localStorage.getItem('pop-mobile-resolution-v1:' + build.sha256));
+      if ([saved?.width, saved?.height].every(n => Number.isInteger(n) && n >= 32 && n <= 1024)) return saved;
+    } catch { /* Missing, corrupt or disabled browser storage. */ }
+    return chooseEmulatorResolution(build.resolution);
+  }
+
   const jarLibrary = window.PoPJarLibrary;
   let playTicket = 0;
   let jarStatusTimer = null;
@@ -117,6 +125,10 @@
       if (event.origin !== location.origin || !frame || event.source !== frame.contentWindow) return;
       if (event.data?.type !== 'pop-mobile:resolution' || !state.selectedPlay) return;
       if (!event.data.ok) console.warn('Emulator display resolution could not be applied; use Esc for emulator settings.');
+      else if ([event.data.width, event.data.height].every(n => Number.isInteger(n) && n >= 32 && n <= 1024)) {
+        const build = state.buildMap.get(state.selectedPlay);
+        if (build) $('player-report-issue').href = playerIssueUrl(build, event.data);
+      }
     });
 
     document.addEventListener('fullscreenchange', syncFullscreenButton);
@@ -291,12 +303,11 @@
       }, JAR_STATUS_DURATION_MS);
     }
   }
-  function playerIssueUrl(build) {
+  function playerIssueUrl(build, screen = playerResolution(build)) {
     const game = state.currentGame?.ungrouped ? 'Others' : (state.currentGame?.title || build.collection || build.game);
     const catalogueUrl = new URL('https://popruns.github.io/pop-mobile-browser/catalogue.html');
     catalogueUrl.searchParams.set('game', build.game);
     catalogueUrl.searchParams.set('sha256', build.sha256);
-    const screen = chooseEmulatorResolution(build.resolution);
     const body = [
       '### What went wrong?',
       'Describe the problem and the steps to reproduce it.',
@@ -462,8 +473,8 @@
     // status with a warning based on navigator.serviceWorker.controller.
     // No mobile=1: that opt-in makes freej2me-web draw its virtual keypads.
     const build = state.buildMap.get(state.selectedPlay);
-    const screen = build && chooseEmulatorResolution(build.resolution);
-    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode});
+    const screen = build && playerResolution(build);
+    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode, v: 'resolution-cache-1'});
     if (screen) {
       params.set('screenWidth', String(screen.width));
       params.set('screenHeight', String(screen.height));

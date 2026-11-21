@@ -32,6 +32,8 @@ class PagesBuildTests(unittest.TestCase):
             self.assertFalse((site / '.git').exists())
             self.assertEqual([x for x in site.rglob('*.jar')], [site / 'emulator/freej2me-web.jar'])
             self.assertIn('pop-mobile:resolution', main)
+            self.assertIn('await popRememberResolution()', main)
+            self.assertIn('src/main.js?v=resolution-cache-1', (site / 'emulator/run.html').read_text())
             for html_name in ('index.html','catalogue.html'):
                 self.assertIn('Built with CheerpJ', (site / html_name).read_text())
 

@@ -27,14 +27,43 @@ RANGE_RE = re.compile(r'bytes=(\d*)-(\d*)\Z')
 # The hook uses CheerpJ's documented Java library bridge, then invokes the
 # original FreeJ2ME.main. No rebuild and no game files added to the website.
 EMULATOR_MAIN_ANCHOR = '    FreeJ2ME.main(args).catch(e => {'
+EMULATOR_RESTART_ANCHOR = """            async Java_pl_zb3_freej2me_bridge_shell_Shell_restart(lib) {
+                location.reload();
+            },"""
+EMULATOR_RESOLUTION_STATE = r"""
+// Capture explicit changes before the emulator's native restart reloads this page.
+let popRememberResolution = null;
+"""
+EMULATOR_RESTART_REPLACEMENT = """            async Java_pl_zb3_freej2me_bridge_shell_Shell_restart(lib) {
+                try {
+                    if (popRememberResolution) await popRememberResolution();
+                } catch (error) {
+                    console.warn('PoP Mobile: could not remember screen size:', error);
+                }
+                location.reload();
+            },"""
 EMULATOR_RESOLUTION_HOOK = r"""
-    // PoP Mobile: apply the catalogue-selected LCD resolution before Java ME starts.
-    // FreeJ2ME stores per-app settings in [appId]/config/settings.conf, so
-    // updating its default alone would not override a previously played game.
-    const popW = Number(sp.get('screenWidth'));
-    const popH = Number(sp.get('screenHeight'));
-    if (!sp.has('app') && Number.isInteger(popW) && Number.isInteger(popH) &&
-        popW >= 32 && popW <= 1024 && popH >= 32 && popH <= 1024) {
+    // PoP Mobile: apply the catalogue-selected LCD unless this exact JAR has
+    // a user override. FreeJ2ME's own settings file is keyed by MIDlet app ID,
+    // which may be shared by different builds, so do not blindly reuse it.
+    const popValidSize = (width, height) => Number.isInteger(width) &&
+        Number.isInteger(height) && width >= 32 && width <= 1024 &&
+        height >= 32 && height <= 1024;
+    const popJar = sp.get('jar') || 'game.jar';
+    const popSha = /^([a-f0-9]{64})\.jar$/i.exec(popJar)?.[1].toLowerCase();
+    const popKey = popSha ? 'pop-mobile-resolution-v1:' + popSha : null;
+    let popW = Number(sp.get('screenWidth'));
+    let popH = Number(sp.get('screenHeight'));
+    if (popKey) {
+        try {
+            const saved = JSON.parse(localStorage.getItem(popKey));
+            if (popValidSize(saved?.width, saved?.height)) {
+                popW = saved.width;
+                popH = saved.height;
+            }
+        } catch { /* Missing, corrupt or disabled browser storage. */ }
+    }
+    if (!sp.has('app') && (popKey || popValidSize(popW, popH))) {
         const report = (ok, error) => {
             if (window.parent !== window) {
                 window.parent.postMessage({type: 'pop-mobile:resolution', ok,
@@ -46,7 +75,7 @@ EMULATOR_RESOLUTION_HOOK = r"""
             const MIDletLoader = await lib.org.recompile.mobile.MIDletLoader;
             const LauncherUtil = await lib.pl.zb3.freej2me.launcher.LauncherUtil;
             const Config = await lib.org.recompile.freej2me.Config;
-            const jarFile = await new File(cheerpjWebRoot + '/jar/' + (sp.get('jar') || 'game.jar'));
+            const jarFile = await new File(cheerpjWebRoot + '/jar/' + popJar);
             const loader = await MIDletLoader.getMIDletLoader(jarFile);
             if (!loader) throw new Error('Could not open the JAR manifest');
             await LauncherUtil.ensureAppId(loader, await jarFile.getName());
@@ -54,9 +83,37 @@ EMULATOR_RESOLUTION_HOOK = r"""
             if (!appId) throw new Error('No game ID could be determined');
             const config = await new Config();
             await config.init('./' + appId);
-            await config.appSettings.put('width', String(popW));
-            await config.appSettings.put('height', String(popH));
-            await config.saveConfig();
+            if (popValidSize(popW, popH)) {
+                await config.appSettings.put('width', String(popW));
+                await config.appSettings.put('height', String(popH));
+                await config.saveConfig();
+            } else {
+                // Unknown catalogue resolution: observe the emulator's initial size.
+                popW = await config.getWidth();
+                popH = await config.getHeight();
+            }
+            // ConfigScreen saves its selected dimensions before calling Shell.restart.
+            // Read a fresh Config, not the startup object's stale in-memory map.
+            popRememberResolution = async () => {
+                const current = await new Config();
+                await current.init('./' + appId);
+                const width = await current.getWidth();
+                const height = await current.getHeight();
+                if (!popValidSize(width, height) || (width === popW && height === popH)) return;
+                let persisted = false;
+                if (popKey) {
+                    try {
+                        localStorage.setItem(popKey, JSON.stringify({width, height}));
+                        persisted = true;
+                    } catch { /* Keep this restart working even without browser storage. */ }
+                }
+                if (!persisted) {
+                    const next = new URL(location.href);
+                    next.searchParams.set('screenWidth', String(width));
+                    next.searchParams.set('screenHeight', String(height));
+                    history.replaceState(null, '', next.href);
+                }
+            };
             console.info(`PoP Mobile: configured ${appId} for ${popW}x${popH}`);
             report(true);
         } catch (error) {
@@ -122,7 +179,8 @@ def inject_numpad_hook(upstream_source: str) -> str:
 
 def inject_resolution_hook(upstream_source: str) -> str:
     """Inject once into the known upstream JS launcher (source stays unchanged)."""
-    if upstream_source.count(EMULATOR_MAIN_ANCHOR) != 1 or not all(
+    if upstream_source.count(EMULATOR_MAIN_ANCHOR) != 1 or \
+            upstream_source.count(EMULATOR_RESTART_ANCHOR) != 1 or not all(
         marker in upstream_source for marker in (
             'const sp = new URLSearchParams(location.search)',
             'const lib = await cheerpjRunLibrary(',
@@ -130,8 +188,11 @@ def inject_resolution_hook(upstream_source: str) -> str:
         )
     ):
         raise ValueError('Unsupported freej2me-web launcher version: startup anchor has changed')
-    return upstream_source.replace(EMULATOR_MAIN_ANCHOR,
-                                   EMULATOR_RESOLUTION_HOOK + '\n' + EMULATOR_MAIN_ANCHOR, 1)
+    source = upstream_source.replace(EMULATOR_RESTART_ANCHOR, EMULATOR_RESTART_REPLACEMENT, 1)
+    source = source.replace('const sp = new URLSearchParams(location.search);',
+                            'const sp = new URLSearchParams(location.search);' + EMULATOR_RESOLUTION_STATE, 1)
+    return source.replace(EMULATOR_MAIN_ANCHOR,
+                          EMULATOR_RESOLUTION_HOOK + '\n' + EMULATOR_MAIN_ANCHOR, 1)
 
 
 def load_builds():

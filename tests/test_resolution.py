@@ -31,6 +31,11 @@ function setListeners() {
         e.preventDefault();
     }
 }
+const natives = {
+            async Java_pl_zb3_freej2me_bridge_shell_Shell_restart(lib) {
+                location.reload();
+            },
+};
 async function init() {
     const lib = await cheerpjRunLibrary("/app/freej2me-web.jar");
     const FreeJ2ME = await lib.org.recompile.freej2me.FreeJ2ME;
@@ -48,6 +53,7 @@ class ResolutionTests(unittest.TestCase):
         self.assertIn('await LauncherUtil.ensureAppId(', patched)
         self.assertLess(patched.index('await config.saveConfig()'), patched.index('FreeJ2ME.main(args)'))
         self.assertEqual(patched.count('PoP Mobile: apply the catalogue-selected'), 1)
+        self.assertIn('await popRememberResolution()', patched)
         self.assertEqual(UPSTREAM_FIXTURE.count('pop-mobile:'), 0)
 
     def test_reject_unknown_upstream_source(self):
@@ -127,6 +133,7 @@ class ResolutionTests(unittest.TestCase):
         # real CheerpJ/game execution still requires the user's Firefox runtime.
         script = r'''
             const assert = require('node:assert/strict');
+            let popRememberResolution = null;
             let writes = [];
             let parentMessages = [];
             const window = {parent: {postMessage: (message) => parentMessages.push(message)}};
@@ -160,6 +167,93 @@ class ResolutionTests(unittest.TestCase):
         result = subprocess.run(['node', '-e', script], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('hook completed', result.stdout)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node.js optional: browser logic checked when available')
+    def test_resolution_override_survives_native_and_site_restart(self):
+        # Model the real Java Config API: distinct instances read the same saved
+        # file. Two different JARs deliberately share the same MIDlet app ID.
+        script = r'''
+            const assert = require('node:assert/strict');
+            const values = new Map();
+            let blocked = false;
+            const localStorage = {
+                getItem(key) {if (blocked) throw Error('blocked'); return values.get(key) ?? null;},
+                setItem(key,val) {if (blocked) throw Error('blocked'); values.set(key,val);}
+            };
+            const A = 'a'.repeat(64), B = 'b'.repeat(64), C = 'c'.repeat(64);
+            const key = sha => 'pop-mobile-resolution-v1:' + sha;
+            let location, sp, reloads = 0, reports = [];
+            const history = {replaceState(_state,_title,url){location.href = url;}};
+            const window = {parent:{postMessage(msg){reports.push(msg);}}};
+            const cheerpjWebRoot = '/app/emulator';
+            let disk = {width:240,height:320};
+            class File {constructor(path){this.path=path;} async getName(){return this.path.split('/').pop();}}
+            class Config {
+                async init(path){assert.equal(path,'./Prince'); this.current={...disk};
+                    this.appSettings={put:async(k,v)=>{this.current[k]=Number(v);}};}
+                async saveConfig(){disk={...this.current};}
+                async getWidth(){return this.current.width;}
+                async getHeight(){return this.current.height;}
+            }
+            const lib = {
+                java:{io:{File:Promise.resolve(File)}},
+                org:{recompile:{mobile:{MIDletLoader:Promise.resolve({getMIDletLoader:async()=>({getAppId:async()=> 'Prince'})})},
+                   freej2me:{Config:Promise.resolve(Config)}}},
+                pl:{zb3:{freej2me:{launcher:{LauncherUtil:Promise.resolve({ensureAppId:async()=>{}})}}}}
+            };
+        ''' + server.EMULATOR_RESOLUTION_STATE + r'''
+            async function launch(sha, width, height, url) {
+                location = {origin:'https://example.com', href: url || `https://example.com/emulator/run.html?jar=${sha}.jar` +
+                    (width ? `&screenWidth=${width}&screenHeight=${height}` : ''), reload(){reloads++;}};
+                sp = new URL(location.href).searchParams;
+                popRememberResolution = null;
+        ''' + server.EMULATOR_RESOLUTION_HOOK + r'''
+            }
+            const natives = {
+        ''' + server.EMULATOR_RESTART_REPLACEMENT + r'''
+            };
+            const restart = () => natives.Java_pl_zb3_freej2me_bridge_shell_Shell_restart(lib);
+            async function select(width,height){const config = new Config(); await config.init('./Prince');
+                await config.appSettings.put('width',String(width)); await config.appSettings.put('height',String(height));
+                await config.saveConfig();}
+            async function run(){
+                await launch(A,128,128);
+                assert.deepEqual(disk,{width:128,height:128});
+                assert.equal(values.has(key(A)),false);
+                await restart(); // ordinary restart must not turn defaults into an override
+                assert.equal(values.has(key(A)),false);
+                await select(208,208); await restart();
+                assert.deepEqual(JSON.parse(values.get(key(A))),{width:208,height:208});
+                // Native reload keeps the old query params; the saved override wins.
+                await launch(A,128,128,location.href);
+                assert.deepEqual(disk,{width:208,height:208});
+                assert.equal(reports.at(-1).width,208);
+                // Fresh JAR, same app ID: own catalogue default, never A's override.
+                await launch(B,176,220);
+                assert.deepEqual(disk,{width:176,height:220});
+                await select(240,320); await restart();
+                await launch(A,128,128); // website Restart / reopen / new document
+                assert.deepEqual(disk,{width:208,height:208});
+                await launch(B,176,220);
+                assert.deepEqual(disk,{width:240,height:320});
+                // An unknown catalogue resolution can also gain an override.
+                await launch(C); await select(96,96); await restart();
+                await launch(C); assert.deepEqual(disk,{width:96,height:96});
+                // Corruption and disabled storage do not prevent launch or restart.
+                values.set(key(A),'bad JSON'); await launch(A,128,128);
+                assert.deepEqual(disk,{width:128,height:128});
+                values.set(key(A),JSON.stringify({width:0,height:99999})); await launch(A,128,128);
+                assert.deepEqual(disk,{width:128,height:128});
+                blocked=true; await launch(A,128,128); await select(208,208); await restart();
+                assert.equal(new URL(location.href).searchParams.get('screenWidth'),'208');
+                await launch(A,128,128,location.href);
+                assert.deepEqual(disk,{width:208,height:208});
+                assert.equal(reloads,5);
+            }
+            run().catch(e=>{console.error(e);process.exitCode=1;});
+        '''
+        result = subprocess.run(['node', '-e', script], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 if __name__ == '__main__':
