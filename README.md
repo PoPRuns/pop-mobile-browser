@@ -53,16 +53,6 @@ python3 tools/import_pop_workbook.py \
   data/catalogue.json
 ```
 
-The importer preserves experimental subgroup IDs (such as `HA-G01-a`) while
-assigning Harem Adventures builds to one of three preview families. Notes
-containing `Unplayable` mark individual JARs as unplayable; these are hidden by
-default but can be revealed in the catalogue. Notes containing `Limit FPS to
-15`, `Limit FPS to 30` or `Limit FPS to 60` are parsed as per-JAR FPS hints.
-
-FPS hints use experimental display-frame pacing rather than a guaranteed
-simulation-speed limit. The three Harem Adventures screenshots live in
-`assets/previews/` and can be replaced without editing the spreadsheet.
-
 ## Emulator source and licensing
 
 The bundled `libmidi.wasm` uses *PoP Mobile Original FM GM*, a procedurally generated General MIDI SoundFont, rather than the upstream sample bank. The generator is [`tools/generate_fm_soundfont.py`](tools/generate_fm_soundfont.py).
