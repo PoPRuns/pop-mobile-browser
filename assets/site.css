@@ -134,9 +134,10 @@
 }
 
 /* Show complete, selectable SHA-256 values in every catalogue card. */
-.jar-sha{margin-top:5px;color:#aebeb1;font:10px/1.55 var(--mono)}
-.jar-sha span{color:#d6bb82;white-space:nowrap;margin-right:6px}
-.jar-sha code{font:inherit;color:#b5c9bb;overflow-wrap:anywhere;word-break:break-all;user-select:text}
+.jar-sha{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;min-width:0;margin-top:5px;color:#aebeb1;font:10px/1.55 var(--mono)}
+.jar-sha span{color:#d6bb82;white-space:nowrap}
+.jar-sha code{font:inherit;color:#b5c9bb;display:block;min-width:0;max-width:100%;white-space:nowrap;overflow-x:auto;overflow-y:hidden;overflow-wrap:normal;word-break:normal;user-select:text;scrollbar-width:thin;padding:3px 0}
+.jar-sha code:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
 
 /* The player header no longer has an overline. */
 .play-dialog .modal-header h2 { margin-top:0; }
@@ -144,13 +145,15 @@
 /* Expand just the selected JAR's metadata, without a group modal. */
 .jar-row{display:block}
 .jar-summary{display:flex;align-items:center;justify-content:space-between;gap:15px;min-width:0}
-.inline-build-details{min-width:0;margin-top:16px;padding:18px;border:1px solid #435046;background:#19211e}
+.inline-build-details{container-type:inline-size;min-width:0;margin-top:16px;padding:18px;border:1px solid #435046;background:#19211e}
 /* Compact inline metadata: one horizontally scrollable checksum per row. */
-.inline-build-details .meta-grid{padding:0;border:0;gap:12px 18px}
+.inline-build-details .meta-grid{grid-template-columns:repeat(4,minmax(0,1fr));padding:0;border:0;gap:12px 18px}
+/* Keep two columns when the actual details panel is too narrow for four. */
+@container (max-width:560px){.inline-build-details .meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .inline-build-details .hash-fields{margin-top:12px;display:grid;gap:4px}
 .inline-build-details .hash-fields .hash-row{display:grid;grid-template-columns:54px minmax(0,1fr) auto;align-items:center;gap:8px;padding:0;border:0}
 .inline-build-details .hash-label{color:#93a99a;font:9px var(--mono);white-space:nowrap}
 .inline-build-details .hash-fields code{display:block;min-width:0;max-width:100%;white-space:nowrap;overflow-x:auto;overflow-y:hidden;overflow-wrap:normal;word-break:normal;user-select:text;scrollbar-width:thin;padding:3px 0}
 .inline-build-details .hash-fields code:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
 .inline-build-details .hash-fields button{justify-self:end;padding:4px 8px}
-@media(max-width:580px){.jar-summary{align-items:flex-start;flex-direction:column}.inline-build-details{padding:12px}.inline-build-details .hash-fields code{background:#121b17;border-radius:2px;padding-inline:4px}}
+@media(max-width:580px){.jar-summary{align-items:flex-start;flex-direction:column}.jar-summary .jar-core{width:100%}.inline-build-details{padding:12px}.inline-build-details .meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.jar-sha code,.inline-build-details .hash-fields code{background:#121b17;border-radius:2px;padding-inline:4px}}

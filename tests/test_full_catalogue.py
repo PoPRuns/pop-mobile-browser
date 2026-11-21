@@ -83,6 +83,16 @@ class FullCatalogueTests(unittest.TestCase):
   self.assertIn('data-copy="${escape(v)}"',details)
   self.assertIn('grid-template-columns:54px minmax(0,1fr) auto',css)
   self.assertIn('white-space:nowrap;overflow-x:auto',css)
+ def test_summary_hash_scroll_and_responsive_details_grid(self):
+  app=(ROOT/'assets/app.js').read_text()
+  css=(ROOT/'assets/site.css').read_text()
+  self.assertIn('<div class="jar-sha"><span>SHA-256</span><code tabindex="0"',app)
+  hash_rule=css.split('.jar-sha code{',1)[1].split('}',1)[0]
+  for declaration in ('min-width:0','white-space:nowrap','overflow-x:auto','word-break:normal'):
+   self.assertIn(declaration,hash_rule)
+  self.assertIn('.jar-summary .jar-core{width:100%}',css)
+  self.assertIn('.inline-build-details .meta-grid{grid-template-columns:repeat(4,minmax(0,1fr))',css)
+  self.assertIn('@container (max-width:560px){.inline-build-details .meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}',css)
  def test_navigation_and_player_contract(self):
   home=(ROOT/'index.html').read_text()
   catalogue=(ROOT/'catalogue.html').read_text()
