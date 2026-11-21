@@ -498,9 +498,12 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const entire = await response.json();
       if (!Array.isArray(entire.groups) || !Array.isArray(entire.builds) || !Array.isArray(entire.games)) throw new Error('Invalid full-catalogue format');
-      const requested = new URLSearchParams(location.search).get('game') || 'harem-adventures';
+      const requested = new URLSearchParams(location.search).get('game') ?? 'harem-adventures';
       const game = entire.games.find(g => g.id === requested);
-      if (!game) throw new Error('Unknown collection: ' + requested + '. Choose a game from the home page.');
+      if (!game) {
+        location.replace(new URL('index.html', location.href).href);
+        return;
+      }
       const builds = entire.builds.filter(b => b.game === game.id);
       const groups = entire.groups.filter(g => g.game === game.id);
       const data = {game, allGames: entire.games, builds, groups,
