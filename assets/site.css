@@ -38,10 +38,22 @@
 .player-controls-note { font:10px/1.5 var(--sans); color:#aab6aa; margin:9px 0 0; }
 /* Keep the reporting action centered even when the Controls help expands. */
 .player-footer { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:8px; align-items:start; margin-top:0; margin-bottom:14px; }
-.player-footer .player-controls { grid-column:1 / -1; grid-row:1; min-width:0; }
+/* Closed Controls must occupy only the left grid cell: a full-row hitbox
+   would intercept clicks on the report link and Restart button. */
+.player-footer .player-controls { grid-column:1; grid-row:1; min-width:0; }
+/* Expanded help may span the row, but the two actions remain on top and clickable. */
+.player-footer .player-controls[open] { grid-column:1 / -1; }
+.player-footer .player-report-issue, .player-footer #restart-play { position:relative; z-index:1; }
 .player-footer .player-report-issue { grid-column:2; grid-row:1; justify-self:center; color:var(--gold); padding:4px 0; text-decoration:none; white-space:nowrap; font:10px var(--mono); }
 .player-footer .player-report-issue:hover { text-decoration:underline; text-underline-offset:3px; }
 .player-footer #restart-play { grid-column:3; grid-row:1; justify-self:end; padding:4px 0; white-space:nowrap; }
+/* On narrow phones, give the actions their own space instead of squeezing
+   three hit targets into a single row. */
+@media(max-width:480px) {
+  .player-footer { grid-template-columns:minmax(0,1fr) auto; }
+  .player-footer .player-report-issue { grid-column:1 / -1; grid-row:2; justify-self:center; }
+  .player-footer #restart-play { grid-column:2; grid-row:1; }
+}
 @media(max-width:390px) { .player-footer .player-report-issue, .player-footer #restart-play { font-size:9px; } }
 .player-fullscreen { width:38px; height:38px; display:grid; place-items:center; gap:0; padding:0; }
 @media(max-width:580px) { .player-stage { height:62vh; } .player-fullscreen { top:7px; right:7px; } .player-controls-panel { grid-template-columns:1fr; } }

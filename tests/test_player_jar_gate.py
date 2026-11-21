@@ -32,6 +32,14 @@ class TestPlayerJarGate(unittest.TestCase):
         self.assertIn("$('play-heading').textContent = [build.name, build.resolution].filter(Boolean).join(' · ')", script)
         self.assertNotIn('→ ${screen.width}', script)
 
+    def test_player_toolbar_actions_are_not_covered_by_controls(self):
+        # The collapsed <details> must not span all three toolbar columns:
+        # its invisible hitbox intercepted clicks on Report issue and Restart.
+        css = (ROOT / "assets/site.css").read_text()
+        self.assertIn(".player-footer .player-controls { grid-column:1; grid-row:1;", css)
+        self.assertIn(".player-footer .player-controls[open] { grid-column:1 / -1;", css)
+        self.assertIn(".player-footer .player-report-issue, .player-footer #restart-play { position:relative; z-index:1;", css)
+
     def test_local_vs_browser_source_preflight(self):
         script = (ROOT / "assets/app.js").read_text()
         lib = (ROOT / "assets/jar-library.js").read_text()
