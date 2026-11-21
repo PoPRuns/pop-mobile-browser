@@ -7,7 +7,7 @@
 ## Play a game
 
 1. Open the [website](https://popruns.github.io/pop-mobile-browser/), select a game and a JAR build, and click *Play / Load*. If the build is already stored in your browser cache, it can launch directly.
-2. Otherwise, click *Find JAR on the J2ME index* to look up that build by SHA-256, then use *Choose JAR file...* to import your downloaded file.
+2. Otherwise, click *Find JAR on the J2ME index* to look up that build on [the J2ME search index](https://toca-1.github.io/new-j2me-software-archive-search/), then use *Choose JAR file...* to import your downloaded file.
 
 Controls include fullscreen, restart, automatic closest-fit emulated resolution, per-JAR browser-local screen size overrides (choose a size in the emulator settings and select Restart), and a persistent setting for phone-style versus standard numpad layout.
 
