@@ -145,8 +145,12 @@
 .jar-row{display:block}
 .jar-summary{display:flex;align-items:center;justify-content:space-between;gap:15px;min-width:0}
 .inline-build-details{min-width:0;margin-top:16px;padding:18px;border:1px solid #435046;background:#19211e}
-.inline-build-details .build-title,.inline-build-details .build-subtitle{overflow-wrap:anywhere}
-.inline-build-details .hash-fields>div>div{min-width:0}
-.inline-build-details .hash-fields>div:last-child{border-bottom:0;padding-bottom:0}
-.inline-build-details .hash-fields code{user-select:text;word-break:break-all}
-@media(max-width:580px){.jar-summary{align-items:flex-start;flex-direction:column}.inline-build-details{padding:12px}}
+/* Compact inline metadata: one horizontally scrollable checksum per row. */
+.inline-build-details .meta-grid{padding:0;border:0;gap:12px 18px}
+.inline-build-details .hash-fields{margin-top:12px;display:grid;gap:4px}
+.inline-build-details .hash-fields .hash-row{display:grid;grid-template-columns:54px minmax(0,1fr) auto;align-items:center;gap:8px;padding:0;border:0}
+.inline-build-details .hash-label{color:#93a99a;font:9px var(--mono);white-space:nowrap}
+.inline-build-details .hash-fields code{display:block;min-width:0;max-width:100%;white-space:nowrap;overflow-x:auto;overflow-y:hidden;overflow-wrap:normal;word-break:normal;user-select:text;scrollbar-width:thin;padding:3px 0}
+.inline-build-details .hash-fields code:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+.inline-build-details .hash-fields button{justify-self:end;padding:4px 8px}
+@media(max-width:580px){.jar-summary{align-items:flex-start;flex-direction:column}.inline-build-details{padding:12px}.inline-build-details .hash-fields code{background:#121b17;border-radius:2px;padding-inline:4px}}

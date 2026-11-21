@@ -72,6 +72,17 @@ class FullCatalogueTests(unittest.TestCase):
    self.assertIn(label,details)
   for label in ('Archive references','EXTERNAL ARCHIVE SOURCES','RESEARCH NOTES','SOURCE FILENAME','CATALOGUED ARCHIVE PATHS','SELECT A RECORDED JAR BUILD'):
    self.assertNotIn(label,details)
+ def test_inline_details_are_compact_and_hashes_scroll(self):
+  app=(ROOT/'assets/app.js').read_text()
+  css=(ROOT/'assets/site.css').read_text()
+  details=app.split('  function renderBuildDetails(b) {',1)[1].split('  async function copyText',1)[0]
+  for removed in ('build-title','build-subtitle'):
+   self.assertNotIn(removed,details)
+  self.assertIn('class="hash-row"',details)
+  self.assertIn('tabindex="0"',details)
+  self.assertIn('data-copy="${escape(v)}"',details)
+  self.assertIn('grid-template-columns:54px minmax(0,1fr) auto',css)
+  self.assertIn('white-space:nowrap;overflow-x:auto',css)
  def test_navigation_and_player_contract(self):
   home=(ROOT/'index.html').read_text()
   catalogue=(ROOT/'catalogue.html').read_text()

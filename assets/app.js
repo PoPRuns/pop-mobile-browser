@@ -228,10 +228,8 @@
       ['Applet version', b.version], ['In-game version', b.aboutVersion],
       ['In-game author', b.aboutAuthor], ['File size', fmtBytes(b.size)]
     ];
-    return `<h4 class="build-title">${escape(b.name || 'Untitled MIDlet')}</h4>
-      <div class="build-subtitle">${escape(b.unclassified ? 'Others' : b.group)} · ${escape(b.version || '?')} · ${escape(b.vendor || 'Unknown vendor')}</div>
-      <div class="meta-grid">${fields.map(([k,v]) => `<div class="meta-field"><span>${escape(k.toUpperCase())}</span><strong>${escape(v || 'Not recorded')}</strong></div>`).join('')}</div>
-      <div class="hash-fields">${[['CRC32',b.crc32],['SHA-1',b.sha1],['SHA-256',b.sha256]].map(([k,v]) => `<div><div><label>${k}</label><code>${escape(v || 'Not recorded')}</code></div>${v ? `<button type="button" data-action="copy" data-copy="${escape(v)}" aria-label="Copy ${k}">Copy</button>` : ''}</div>`).join('')}</div>`;
+    return `<div class="meta-grid">${fields.map(([k,v]) => `<div class="meta-field"><span>${escape(k.toUpperCase())}</span><strong>${escape(v || 'Not recorded')}</strong></div>`).join('')}</div>
+      <div class="hash-fields">${[['CRC32',b.crc32],['SHA-1',b.sha1],['SHA-256',b.sha256]].map(([k,v]) => `<div class="hash-row"><span class="hash-label">${k}</span><code tabindex="0" aria-label="${k} checksum: ${escape(v || 'Not recorded')}">${escape(v || 'Not recorded')}</code>${v ? `<button type="button" data-action="copy" data-copy="${escape(v)}" aria-label="Copy ${k}">Copy</button>` : ''}</div>`).join('')}</div>`;
   }
   async function copyText(text) {
     try { await navigator.clipboard.writeText(text); toast('Copied to clipboard'); }
