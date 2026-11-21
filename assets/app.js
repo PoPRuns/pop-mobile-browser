@@ -484,7 +484,7 @@
     // No mobile=1: that opt-in makes freej2me-web draw its virtual keypads.
     const build = state.buildMap.get(state.selectedPlay);
     const screen = build && playerResolution(build);
-    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode, v: 'jar-memory-1', jarSource: state.readyPlaySource, jarSize: String(build.size)});
+    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode, v: 'native-restart-2', jarSource: state.readyPlaySource, jarSize: String(build.size)});
     if (screen) {
       params.set('screenWidth', String(screen.width));
       params.set('screenHeight', String(screen.height));

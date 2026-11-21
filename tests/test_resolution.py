@@ -57,7 +57,8 @@ class ResolutionTests(unittest.TestCase):
         self.assertIn('await LauncherUtil.ensureAppId(', patched)
         self.assertLess(patched.index('await config.saveConfig()'), patched.index('FreeJ2ME.main(args)'))
         self.assertEqual(patched.count('PoP Mobile: apply the catalogue-selected'), 1)
-        self.assertIn('await popRememberResolution()', patched)
+        self.assertIn("next.searchParams.set('popNativeRestart', '1')", patched)
+        self.assertNotIn('await popRememberResolution()', patched)
         self.assertLess(patched.index('await popGameJarPath(sp, cheerpjWebRoot)'), patched.index('await new File(args[1])'))
         self.assertLess(patched.index('await new File(args[1])'), patched.index('FreeJ2ME.main(args)'))
         self.assertEqual(UPSTREAM_FIXTURE.count('pop-mobile:'), 0)
@@ -139,7 +140,6 @@ class ResolutionTests(unittest.TestCase):
         # real CheerpJ/game execution still requires the user's Firefox runtime.
         script = r'''
             const assert = require('node:assert/strict');
-            let popRememberResolution = null;
             let writes = [];
             let parentMessages = [];
             const window = {parent: {postMessage: (message) => parentMessages.push(message)}};
@@ -259,9 +259,10 @@ class ResolutionTests(unittest.TestCase):
             const window = {parent:{postMessage(msg){reports.push(msg);}}};
             const cheerpjWebRoot = '/app/emulator';
             let disk = {width:240,height:320};
+            let inNative = false;
             class File {constructor(path){this.path=path;} async getName(){return this.path.split('/').pop();}}
             class Config {
-                async init(path){assert.equal(path,'./Prince'); this.current={...disk};
+                async init(path){assert.equal(inNative,false,'Java bridge reentry during native restart'); assert.equal(path,'./Prince'); this.current={...disk};
                     this.appSettings={put:async(k,v)=>{this.current[k]=Number(v);}};}
                 async saveConfig(){disk={...this.current};}
                 async getWidth(){return this.current.width;}
@@ -273,19 +274,23 @@ class ResolutionTests(unittest.TestCase):
                    freej2me:{Config:Promise.resolve(Config)}}},
                 pl:{zb3:{freej2me:{launcher:{LauncherUtil:Promise.resolve({ensureAppId:async()=>{}})}}}}
             };
-        ''' + server.EMULATOR_RESOLUTION_STATE + r'''
             async function launch(sha, width, height, url) {
                 location = {origin:'https://example.com', href: url || `https://example.com/emulator/run.html?jar=${sha}.jar` +
                     (width ? `&screenWidth=${width}&screenHeight=${height}` : ''), reload(){reloads++;}};
                 sp = new URL(location.href).searchParams;
                 const args = ['jar', '/str/' + sp.get('jar')];
-                popRememberResolution = null;
         ''' + server.EMULATOR_RESOLUTION_HOOK + r'''
             }
             const natives = {
         ''' + server.EMULATOR_RESTART_REPLACEMENT + r'''
             };
-            const restart = () => natives.Java_pl_zb3_freej2me_bridge_shell_Shell_restart(lib);
+            const restart = async () => {
+                inNative=true;
+                try {await natives.Java_pl_zb3_freej2me_bridge_shell_Shell_restart(
+                    new Proxy({}, {get(){throw Error('Do not call Java during native restart');}}));}
+                finally {inNative=false;}
+                assert.equal(new URL(location.href).searchParams.get('popNativeRestart'),'1');
+            };
             async function select(width,height){const config = new Config(); await config.init('./Prince');
                 await config.appSettings.put('width',String(width)); await config.appSettings.put('height',String(height));
                 await config.saveConfig();}
@@ -294,23 +299,28 @@ class ResolutionTests(unittest.TestCase):
                 assert.deepEqual(disk,{width:128,height:128});
                 assert.equal(values.has(key(A)),false);
                 await restart(); // ordinary restart must not turn defaults into an override
+                await launch(A,128,128,location.href);
                 assert.equal(values.has(key(A)),false);
                 await select(208,208); await restart();
-                assert.deepEqual(JSON.parse(values.get(key(A))),{width:208,height:208});
-                // Native reload keeps the old query params; the saved override wins.
+                assert.equal(values.has(key(A)),false); // native does not read Java
+                // Adopt saved settings on the fresh boot, before any config writes.
                 await launch(A,128,128,location.href);
+                assert.deepEqual(JSON.parse(values.get(key(A))),{width:208,height:208});
+                assert.equal(new URL(location.href).searchParams.has('popNativeRestart'),false);
                 assert.deepEqual(disk,{width:208,height:208});
                 assert.equal(reports.at(-1).width,208);
                 // Fresh JAR, same app ID: own catalogue default, never A's override.
                 await launch(B,176,220);
                 assert.deepEqual(disk,{width:176,height:220});
                 await select(240,320); await restart();
+                await launch(B,176,220,location.href);
                 await launch(A,128,128); // website Restart / reopen / new document
                 assert.deepEqual(disk,{width:208,height:208});
                 await launch(B,176,220);
                 assert.deepEqual(disk,{width:240,height:320});
                 // An unknown catalogue resolution can also gain an override.
                 await launch(C); await select(96,96); await restart();
+                await launch(C,0,0,location.href);
                 await launch(C); assert.deepEqual(disk,{width:96,height:96});
                 // Corruption and disabled storage do not prevent launch or restart.
                 values.set(key(A),'bad JSON'); await launch(A,128,128);
@@ -318,7 +328,9 @@ class ResolutionTests(unittest.TestCase):
                 values.set(key(A),JSON.stringify({width:0,height:99999})); await launch(A,128,128);
                 assert.deepEqual(disk,{width:128,height:128});
                 blocked=true; await launch(A,128,128); await select(208,208); await restart();
+                await launch(A,128,128,location.href);
                 assert.equal(new URL(location.href).searchParams.get('screenWidth'),'208');
+                assert.equal(new URL(location.href).searchParams.has('popNativeRestart'),false);
                 await launch(A,128,128,location.href);
                 assert.deepEqual(disk,{width:208,height:208});
                 assert.equal(reloads,5);

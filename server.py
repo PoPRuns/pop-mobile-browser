@@ -30,15 +30,19 @@ EMULATOR_MAIN_ANCHOR = '    FreeJ2ME.main(args).catch(e => {'
 EMULATOR_RESTART_ANCHOR = """            async Java_pl_zb3_freej2me_bridge_shell_Shell_restart(lib) {
                 location.reload();
             },"""
-EMULATOR_RESOLUTION_STATE = r"""
-// Capture explicit changes before the emulator's native restart reloads this page.
-let popRememberResolution = null;
-"""
 EMULATOR_RESTART_REPLACEMENT = """            async Java_pl_zb3_freej2me_bridge_shell_Shell_restart(lib) {
-                try {
-                    if (popRememberResolution) await popRememberResolution();
-                } catch (error) {
-                    console.warn('PoP Mobile: could not remember screen size:', error);
+                // Never call back into Java from this Java-invoked native.
+                // ConfigScreen already saved its settings; read them on the
+                // next boot, once the library bridge is idle again.
+                if (!sp.has('app') && /^[a-f0-9]{64}\\.jar$/i.test(sp.get('jar') || '')) {
+                    try {
+                        const next = new URL(location.href);
+                        next.searchParams.set('popNativeRestart', '1');
+                        history.replaceState(null, '', next.href);
+                        console.info('PoP Mobile: native restart requested');
+                    } catch (error) {
+                        console.warn('PoP Mobile: could not mark native restart:', error);
+                    }
                 }
                 location.reload();
             },"""
@@ -131,6 +135,29 @@ EMULATOR_RESOLUTION_HOOK = r"""
             if (!appId) throw new Error('No game ID could be determined');
             const config = await new Config();
             await config.init('./' + appId);
+            // A native restart is the only time we adopt the emulator's saved
+            // dimensions in preference to the per-build default/override.
+            // Read before writing anything to its shared app-ID config file.
+            if (popKey && sp.get('popNativeRestart') === '1') {
+                const width = await config.getWidth();
+                const height = await config.getHeight();
+                const next = new URL(location.href);
+                next.searchParams.delete('popNativeRestart');
+                if (popValidSize(width, height) && (width !== popW || height !== popH)) {
+                    popW = width;
+                    popH = height;
+                    try {
+                        localStorage.setItem(popKey, JSON.stringify({width, height}));
+                    } catch {
+                        // Preserve this choice within the iframe if storage is blocked.
+                        next.searchParams.set('screenWidth', String(width));
+                        next.searchParams.set('screenHeight', String(height));
+                    }
+                    console.info(`PoP Mobile: remembered ${width}x${height} after native restart`);
+                }
+                history.replaceState(null, '', next.href);
+                sp.delete('popNativeRestart');
+            }
             if (popValidSize(popW, popH)) {
                 await config.appSettings.put('width', String(popW));
                 await config.appSettings.put('height', String(popH));
@@ -140,28 +167,6 @@ EMULATOR_RESOLUTION_HOOK = r"""
                 popW = await config.getWidth();
                 popH = await config.getHeight();
             }
-            // ConfigScreen saves its selected dimensions before calling Shell.restart.
-            // Read a fresh Config, not the startup object's stale in-memory map.
-            popRememberResolution = async () => {
-                const current = await new Config();
-                await current.init('./' + appId);
-                const width = await current.getWidth();
-                const height = await current.getHeight();
-                if (!popValidSize(width, height) || (width === popW && height === popH)) return;
-                let persisted = false;
-                if (popKey) {
-                    try {
-                        localStorage.setItem(popKey, JSON.stringify({width, height}));
-                        persisted = true;
-                    } catch { /* Keep this restart working even without browser storage. */ }
-                }
-                if (!persisted) {
-                    const next = new URL(location.href);
-                    next.searchParams.set('screenWidth', String(width));
-                    next.searchParams.set('screenHeight', String(height));
-                    history.replaceState(null, '', next.href);
-                }
-            };
             console.info(`PoP Mobile: configured ${appId} for ${popW}x${popH}`);
             report(true);
         } catch (error) {
@@ -239,7 +244,7 @@ def inject_resolution_hook(upstream_source: str) -> str:
         raise ValueError('Unsupported freej2me-web launcher version: startup anchor has changed')
     source = upstream_source.replace(EMULATOR_RESTART_ANCHOR, EMULATOR_RESTART_REPLACEMENT, 1)
     source = source.replace('const sp = new URLSearchParams(location.search);',
-                            'const sp = new URLSearchParams(location.search);' + EMULATOR_RESOLUTION_STATE + EMULATOR_CACHED_JAR_HELPER, 1)
+                            'const sp = new URLSearchParams(location.search);' + EMULATOR_CACHED_JAR_HELPER, 1)
     source = source.replace(EMULATOR_JAR_ARGS_ANCHOR, EMULATOR_JAR_ARGS_REPLACEMENT, 1)
     return source.replace(EMULATOR_MAIN_ANCHOR,
                           EMULATOR_RESOLUTION_HOOK + '\n' + EMULATOR_MAIN_ANCHOR, 1)
