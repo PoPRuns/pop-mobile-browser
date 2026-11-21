@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Convert the author-supplied PoP XLSM research catalogue to static website JSON.
 
-Uses artifact_tool; no Excel macros, JAR files, or binaries are embedded.
+Uses openpyxl; no Excel macros, JAR files, or binaries are embedded.
 """
 import argparse, collections, json, re
 from pathlib import Path
-from artifact_tool import Blob, SpreadsheetFile
+from openpyxl import load_workbook
 
 COLLECTIONS = [
  ('Harem Adventures','harem-adventures','Prince of Persia: Harem Adventures','2003–2004','Early mobile Prince of Persia editions and device variants.'),
@@ -29,12 +29,12 @@ def as_text(value):
     return '' if value is None else str(value).strip()
 
 def convert(input_path, output):
-    w=SpreadsheetFile.import_xlsx(Blob.load(str(input_path)))
+    w=load_workbook(input_path, read_only=True, data_only=True)
     games=[]; builds=[]; groups=[]; related_files=[]; hashes=set(); errors=[]
     for sheet_name,slug,title,year,description in COLLECTIONS:
-        s=w.worksheets.get_item(sheet_name)
-        rows=s.get_range('A1:X210').values
-        headers={as_text(v).lower():i for i,v in enumerate(rows[0]) if v}
+        s=w[sheet_name]
+        rows=s.iter_rows(values_only=True)
+        headers={as_text(v).lower():i for i,v in enumerate(next(rows)) if v}
         col={
           'group':'Gameplay Group (experimental)', 'name':'Applet Name', 'displayTitle':'Title Screen Name',
           'version':'Applet Version','vendor':'Applet Author','cldc':'CLDC','midp':'MIDP',
@@ -47,10 +47,10 @@ def convert(input_path, output):
           'crc32':'CRC32','sha1':'SHA-1','sha256':'SHA-256'}
         def cell(row,field):
             idx=headers.get(col[field].lower())
-            return as_text(row[idx]) if idx is not None else ''
+            return as_text(row[idx]) if idx is not None and idx < len(row) else ''
         assert 'sha-256' in headers, (sheet_name,'Unexpected sheet header')
         gbuilds=collections.OrderedDict(); game_builds=[]
-        for sheet_row,row in enumerate(rows[1:],2):
+        for sheet_row,row in enumerate(rows,2):
             if not any(as_text(x) for x in row): continue
             sha=cell(row,'sha256').lower(); sha1=cell(row,'sha1').lower()
             if not sha:
@@ -69,7 +69,10 @@ def convert(input_path, output):
             hashes.add(sha)
             source=cell(row,'urls'); urls=list(dict.fromkeys(URL.findall(source)))
             size=cell(row,'size').replace(',','')
-            if not size.isdigit() or int(size)<4:
+            # Excel may return whole byte counts as floats (e.g. 89208.0).
+            if re.fullmatch(r'[0-9]+(?:\.0+)?', size):
+                size=size.split('.',1)[0]
+            if not re.fullmatch(r'[0-9]+', size) or int(size)<4:
                 errors.append(f'{sheet_name}!U{sheet_row}: invalid byte size {size}'); continue
             values={field:cell(row,field) for field in FIELDS if field not in ('urls','size')}
             values.update(id=sha, sha256=sha, sha1=sha1, game=slug, collection=sheet_name,
@@ -95,8 +98,9 @@ def convert(input_path, output):
                       'resolutions':len(set(r['resolution'] for r in game_builds if r['resolution'])),
                       'languages':len(set(r['language'] for r in game_builds if r['language'])),
                       'ungrouped': sheet_name=='Needs review'})
+    w.close()
     if errors: raise ValueError('\n'.join(errors[:100]))
-    result={'schemaVersion':3,'source':'PoP Java Games (2026 database)(1).xlsm',
+    result={'schemaVersion':3,'source':input_path.name,
             'notice':'Research classifications including experimental gameplay groups are reproduced from the supplied workbook. No JAR files are bundled.',
             'games':games, 'collections':[c[0] for c in COLLECTIONS],
             'stats':{'builds':len(builds),'groups':sum(not g['unclassified'] for g in groups),'games':len(games),

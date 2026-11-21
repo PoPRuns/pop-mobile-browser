@@ -43,23 +43,15 @@ python3 server.py --jar-dir '/PATH/TO/YOUR/JAR collection'
 
 The original JAR-inspection and gameplay-fingerprinting research utilities are intentionally not part of this slim website repository.
 
-## Development and deployment
+## Update the site's data
 
-Run the automated checks with Python and Node.js:
-
-```sh
-python3 -m unittest discover -s tests -p 'test_*.py'
-node tests/test_jar_library.cjs
-node tests/test_pages_sw.cjs
-```
-
-Generate a static site locally:
+If the [research spreadsheet](https://docs.google.com/spreadsheets/d/1hBohTK19FVDa8wyGCd-a4xfeli0SKkFb) has been updated, the site's underlying data can be updated as follows -- assuming that Openpyxl is installed (`sudo apt install python3-openpyxl`). Assuming the updated spreadsheet sits in Downloads, run the following command in the terminal from the location of your local repository:
 
 ```sh
-python3 tools/build_pages.py
+python3 tools/import_pop_workbook.py \
+  "$HOME/Downloads/PoP Java Games (2026 database).xlsm" \
+  data/catalogue.json
 ```
-
-This creates `_site/` for GitHub Pages. The build applies PoP Mobile's screen-resolution and numpad adapters to a generated emulator launcher without changing the vendored upstream JavaScript. GitHub Actions deploys changes affecting the website or build process; documentation-only and test-only pushes do not trigger redeployment. Manual deployment remains available through Actions.
 
 ## Emulator source and licensing
 
