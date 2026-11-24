@@ -209,15 +209,17 @@
     filteredBuilds.sort((a,b) => a.group.localeCompare(b.group));
     const families = state.data.families || [];
     const hasFamilies = state.currentGame.id === 'harem-adventures' && families.length > 0;
+    const overviewMode = hasFamilies && !state.activeFamily;
+    document.body.classList.toggle('family-overview-mode', overviewMode);
     $('families').hidden = !hasFamilies;
     $('family-selection').hidden = !hasFamilies || !state.activeFamily;
-    if (hasFamilies && !state.activeFamily) {
+    if (overviewMode) {
       const visibleFamilies = families.filter(f => filteredBuilds.some(b => b.family === f.id));
       $('families').innerHTML = visibleFamilies.map(f =>
         renderFamilyCard(f, filteredBuilds.filter(b => b.family === f.id))).join('');
       $('results').replaceChildren();
       $('results').hidden = true;
-      $('result-count').textContent = `${visibleFamilies.length} GAMEPLAY VERSIONS · ${filteredBuilds.length} VISIBLE JAR BUILDS`;
+      $('result-count').textContent = '';
       $('empty-state').hidden = visibleFamilies.length !== 0;
     } else {
       const shown = hasFamilies ? filteredBuilds.filter(b => b.family === state.activeFamily) : filteredBuilds;

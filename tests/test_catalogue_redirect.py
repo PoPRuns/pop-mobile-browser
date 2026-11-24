@@ -22,7 +22,8 @@ function expectedCount(game) {
   const families = (data.families || []).filter(f =>
     f.game === game.id && visible.some(b => b.family === f.id));
   if (game.id === 'harem-adventures' && families.length) {
-    return `${families.length} GAMEPLAY VERSIONS · ${visible.length} VISIBLE JAR BUILDS`;
+    // The family overview deliberately has no build-count heading.
+    return '';
   }
   return `SHOWING ${visible.length} JAR BUILDS`;
 }
@@ -36,7 +37,11 @@ async function run(url, response = {ok:true, json:async()=>data}) {
   const parsed = new URL(url);
   const redirects = [];
   let workerCalls = 0;
-  const document = {getElementById:get, querySelector(){return null;},
+  const classes = new Set();
+  const document = {body:{classList:{
+      toggle(name, enabled){ if (enabled) classes.add(name); else classes.delete(name); },
+      contains(name){ return classes.has(name); }
+    }}, getElementById:get, querySelector(){return null;},
     createElement:()=>({}), addEventListener(){}, baseURI:url};
   const window = {PoPJarLibrary:{ensureWorker(){workerCalls++;return Promise.resolve();}}, addEventListener(){}};
   const location = {href:url, search:parsed.search, hash:parsed.hash, origin:parsed.origin,
@@ -45,7 +50,8 @@ async function run(url, response = {ok:true, json:async()=>data}) {
     localStorage:{getItem(){return null;},setItem(){}}, console,
     fetch:async path=>path==='data/catalogue.json'?response:{ok:false}});
   await new Promise(resolve=>setImmediate(resolve));
-  return {redirects, count:get('result-count').textContent, workerCalls};
+  return {redirects, count:get('result-count').textContent, workerCalls,
+    familyOverview:classes.has('family-overview-mode')};
 }
 (async()=>{
   for (const root of ['https://popruns.github.io/pop-mobile-browser/', 'http://localhost:8000/']) {
@@ -59,10 +65,13 @@ async function run(url, response = {ok:true, json:async()=>data}) {
       const result = await run(root+'catalogue.html?game='+encodeURIComponent(game.id));
       assert.deepEqual(result.redirects,[]);
       assert.equal(result.count,expectedCount(game));
+      assert.equal(result.familyOverview,
+        game.id === 'harem-adventures' && (data.families || []).some(f => f.game === game.id));
       assert.equal(result.workerCalls,1);
     }
     const defaultGame = await run(root+'catalogue.html');
     assert.equal(defaultGame.count,expectedCount(data.games.find(g => g.id === 'harem-adventures')));
+    assert.equal(defaultGame.familyOverview,true);
     assert.deepEqual(defaultGame.redirects,[]);
     const failure = await run(root+'catalogue.html?game=unknown',{ok:false,status:503});
     assert.equal(failure.count,'COULD NOT LOAD CATALOGUE');
