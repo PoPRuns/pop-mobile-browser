@@ -54,11 +54,22 @@ class SandsOfTimeFamilyTests(unittest.TestCase):
 
     def test_ui_displays_sot_previews_and_preserves_harem(self):
         js = (ROOT / 'assets/app.js').read_text(encoding='utf-8')
-        self.assertIn("'SoT-G01': 'Gameplay version 1'", js)
-        self.assertIn("'SoT-G02': 'Gameplay version 2'", js)
+        self.assertIn("'SoT-G01': 'Standard Edition'", js)
+        self.assertIn("'SoT-G02': 'Compact Edition'", js)
         self.assertIn("'SoT-G01': 'assets/previews/sot-g01.png'", js)
         self.assertIn("'SoT-G02': 'assets/previews/sot-g02.png'", js)
         self.assertIn("'HA-G01': 'assets/previews/harem-g01.png'", js)
+        for family, label in (
+            ('HA-G01', 'Standard Edition'),
+            ('HA-G02', 'Compact Edition'),
+            ('HA-G03', 'Alternate Edition'),
+            ('SoT-G01', 'Standard Edition'),
+            ('SoT-G02', 'Compact Edition'),
+        ):
+            self.assertIn(f"'{family}': '{label}'", js)
+        card_renderer = js.split('  function renderFamilyCard(family, builds) {', 1)[1].split('  function render() {', 1)[0]
+        self.assertNotIn('family-card-code', card_renderer)
+        self.assertIn("data.game.id === 'sands-of-time' ? 'Sands of Time' : data.game.sheet.toUpperCase()", js)
         self.assertIn('const hasFamilies = families.length > 0;', js)
         self.assertIn('family-overview-mode', js)
         for name in ('sot-g01.png', 'sot-g02.png'):

@@ -77,7 +77,7 @@
     const currentGameTitle = data.game.ungrouped ? 'Others' : data.game.title;
     document.title = `PoP Mobile · ${currentGameTitle}`;
     $('game-title').textContent = currentGameTitle;
-    $('result-dataset').textContent = data.game.sheet.toUpperCase();
+    $('result-dataset').textContent = data.game.id === 'sands-of-time' ? 'Sands of Time' : data.game.sheet.toUpperCase();
     if (data.relatedFiles.length) {
       $('related-files-container').hidden = false;
       $('related-files-count').textContent = `(${data.relatedFiles.length})`;
@@ -192,11 +192,11 @@
     return q.split(/\s+/).every(term => searchText.includes(term));
   }
   const FAMILY_LABELS = Object.freeze({
-    'HA-G01': 'Gameplay version 1',
-    'HA-G02': 'Gameplay version 2',
-    'HA-G03': 'Gameplay version 3',
-    'SoT-G01': 'Gameplay version 1',
-    'SoT-G02': 'Gameplay version 2'
+    'HA-G01': 'Standard Edition',
+    'HA-G02': 'Compact Edition',
+    'HA-G03': 'Alternate Edition',
+    'SoT-G01': 'Standard Edition',
+    'SoT-G02': 'Compact Edition'
   });
   const FAMILY_IMAGES = Object.freeze({
     'HA-G01': 'assets/previews/harem-g01.png',
@@ -207,12 +207,11 @@
   });
   function renderFamilyCard(family, builds) {
     const hidden = state.data.builds.filter(b => b.family === family.id && b.unplayable).length;
-    const all = state.data.builds.filter(b => b.family === family.id).length;
     const image = FAMILY_IMAGES[family.id] || family.image;
     return `<button class="family-card" type="button" data-family="${escape(family.id)}"
       aria-label="Browse ${escape(FAMILY_LABELS[family.id] || family.id)}">
-      ${image ? `<img src="${escape(image)}" alt="First-level screenshot for ${escape(family.id)}" loading="lazy">` : `<div class="family-image-placeholder" aria-hidden="true">◇</div>`}
-      <span class="family-card-content"><span class="family-card-code">${escape(family.id)}</span>
+      ${image ? `<img src="${escape(image)}" alt="First-level screenshot for ${escape(FAMILY_LABELS[family.id] || family.id)}" loading="lazy">` : `<div class="family-image-placeholder" aria-hidden="true">◇</div>`}
+      <span class="family-card-content">
       <strong>${escape(FAMILY_LABELS[family.id] || family.id)}</strong>
       <span>${builds.length} visible JAR builds${hidden ? ` · ${hidden} marked unplayable` : ''}</span></span>
     </button>`;
