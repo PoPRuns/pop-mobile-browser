@@ -21,7 +21,7 @@ function expectedCount(game) {
   const visible = data.builds.filter(b => b.game === game.id && !b.unplayable);
   const families = (data.families || []).filter(f =>
     f.game === game.id && visible.some(b => b.family === f.id));
-  if (game.id === 'harem-adventures' && families.length) {
+  if (families.length) {
     // The family overview deliberately has no build-count heading.
     return '';
   }
@@ -66,12 +66,13 @@ async function run(url, response = {ok:true, json:async()=>data}) {
       assert.deepEqual(result.redirects,[]);
       assert.equal(result.count,expectedCount(game));
       assert.equal(result.familyOverview,
-        game.id === 'harem-adventures' && (data.families || []).some(f => f.game === game.id));
+        (data.families || []).some(f => f.game === game.id));
       assert.equal(result.workerCalls,1);
     }
     const defaultGame = await run(root+'catalogue.html');
     assert.equal(defaultGame.count,expectedCount(data.games.find(g => g.id === 'harem-adventures')));
-    assert.equal(defaultGame.familyOverview,true);
+    assert.equal(defaultGame.familyOverview,
+      (data.families || []).some(f => f.game === 'harem-adventures'));
     assert.deepEqual(defaultGame.redirects,[]);
     const failure = await run(root+'catalogue.html?game=unknown',{ok:false,status:503});
     assert.equal(failure.count,'COULD NOT LOAD CATALOGUE');

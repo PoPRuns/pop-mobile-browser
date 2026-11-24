@@ -194,12 +194,16 @@
   const FAMILY_LABELS = Object.freeze({
     'HA-G01': 'Gameplay version 1',
     'HA-G02': 'Gameplay version 2',
-    'HA-G03': 'Gameplay version 3'
+    'HA-G03': 'Gameplay version 3',
+    'SoT-G01': 'Gameplay version 1',
+    'SoT-G02': 'Gameplay version 2'
   });
   const FAMILY_IMAGES = Object.freeze({
     'HA-G01': 'assets/previews/harem-g01.png',
     'HA-G02': 'assets/previews/harem-g02.png',
-    'HA-G03': 'assets/previews/harem-g03.png'
+    'HA-G03': 'assets/previews/harem-g03.png',
+    'SoT-G01': 'assets/previews/sot-g01.png',
+    'SoT-G02': 'assets/previews/sot-g02.png'
   });
   function renderFamilyCard(family, builds) {
     const hidden = state.data.builds.filter(b => b.family === family.id && b.unplayable).length;
@@ -218,9 +222,10 @@
     const filteredBuilds = state.data.builds.filter(matchesBuild);
     filteredBuilds.sort((a,b) => a.group.localeCompare(b.group));
     const families = state.data.families || [];
-    const hasFamilies = state.currentGame.id === 'harem-adventures' && families.length > 0;
+    const hasFamilies = families.length > 0;
     const overviewMode = hasFamilies && !state.activeFamily;
     document.body.classList.toggle('family-overview-mode', overviewMode);
+    document.body.classList.toggle('sot-overview-mode', overviewMode && state.currentGame.id === 'sands-of-time');
     $('families').hidden = !hasFamilies;
     $('family-selection').hidden = !hasFamilies || !state.activeFamily;
     if (overviewMode) {

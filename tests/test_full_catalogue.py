@@ -102,7 +102,7 @@ class FullCatalogueTests(unittest.TestCase):
   self.assertNotIn('family=Playfair+Display',css)
   self.assertIn('.jar-sub,.jar-sha{font-size:13px}',css)
   self.assertIn('assets/home.css?v=type-1',(ROOT/'index.html').read_text())
-  self.assertIn('assets/site.css?v=family-1',(ROOT/'catalogue.html').read_text())
+  self.assertRegex((ROOT/'catalogue.html').read_text(), r'href="assets/site\.css\?v=[^"]+"')
  def test_navigation_and_player_contract(self):
   home=(ROOT/'index.html').read_text()
   catalogue=(ROOT/'catalogue.html').read_text()

@@ -41,7 +41,7 @@ def build_site(output: Path):
     if marker in html:
         raise ValueError('Unexpected duplicate static marker')
     html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n  ' + marker, 1)
-    html = html.replace('assets/app.js?v=harem-families-2', 'assets/app.js?v=pages-harem-families-2')
+    html = html.replace('assets/app.js?v=sot-families-1', 'assets/app.js?v=pages-sot-families-1')
     catalogue.write_text(html, encoding='utf-8')
 
     vendor = ROOT / 'vendor/freej2me-web/web'

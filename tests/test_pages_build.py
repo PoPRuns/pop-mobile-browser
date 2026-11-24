@@ -20,7 +20,7 @@ class PagesBuildTests(unittest.TestCase):
             self.assertTrue((site / 'emulator/freej2me-web.jar').is_file())
             html = (site / 'catalogue.html').read_text()
             self.assertIn('name="pop-mobile-static"', html)
-            self.assertIn('assets/app.js?v=pages-harem-families-2', html)
+            self.assertIn('assets/app.js?v=pages-sot-families-1', html)
             main = (site / 'emulator/src/main.js').read_text()
             upstream = (ROOT / 'vendor/freej2me-web/web/src/main.js').read_text()
             self.assertNotIn('popMapNumpadKey(', upstream)

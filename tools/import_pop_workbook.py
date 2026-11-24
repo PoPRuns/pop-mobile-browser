@@ -27,10 +27,15 @@ URL=re.compile(r'https?://[^\s\r\n]+')
 FPS_NOTE = re.compile(r'\blimit\s+fps\s+to\s+(15|30|60)\b', re.IGNORECASE)
 UNPLAYABLE_NOTE = re.compile(r'\bunplayable\b', re.IGNORECASE)
 HAREM_FAMILY = re.compile(r'^(HA-G[0-9]{2})(?:-([a-z]+))?$', re.IGNORECASE)
+SOT_FAMILY = re.compile(r'^(SoT-G0[12])(?:-([a-z]+))?$', re.IGNORECASE)
 HAREM_PREVIEWS = {
     'HA-G01': 'assets/previews/harem-g01.png',
     'HA-G02': 'assets/previews/harem-g02.png',
     'HA-G03': 'assets/previews/harem-g03.png',
+}
+SOT_PREVIEWS = {
+    'SoT-G01': 'assets/previews/sot-g01.png',
+    'SoT-G02': 'assets/previews/sot-g02.png',
 }
 
 def classify_notes(notes):
@@ -113,11 +118,13 @@ def convert(input_path, output):
                 values['unplayable'], values['fpsLimit'] = classify_notes(notes)
             except ValueError as error:
                 errors.append(f'{sheet_name} row {sheet_row}: {error}'); continue
-            if sheet_name == 'Harem Adventures':
-                match = HAREM_FAMILY.fullmatch(values['group'])
+            if sheet_name in ('Harem Adventures', 'SoT'):
+                pattern = HAREM_FAMILY if sheet_name == 'Harem Adventures' else SOT_FAMILY
+                match = pattern.fullmatch(values['group'])
                 if not match:
                     errors.append(f'{sheet_name}!A{sheet_row}: unrecognized gameplay family {values["group"]!r}'); continue
-                values['family'] = match.group(1).upper()
+                prefix = 'HA-G' if sheet_name == 'Harem Adventures' else 'SoT-G'
+                values['family'] = prefix + match.group(1)[-2:]
                 values['variant'] = (match.group(2) or '').lower()
             game_builds.append(values); builds.append(values)
             if values['group']: gbuilds.setdefault(values['group'], []).append(values)
@@ -130,9 +137,10 @@ def convert(input_path, output):
                            'resolutions':distinct('resolution'),'languages':distinct('language'),
                            'devices':distinct('device'),'vendors':distinct('vendor'),
                            'notes':notes})
-        if sheet_name == 'Harem Adventures':
+        if sheet_name in ('Harem Adventures', 'SoT'):
+            previews = HAREM_PREVIEWS if sheet_name == 'Harem Adventures' else SOT_PREVIEWS
             for fid in dict.fromkeys(b['family'] for b in game_builds):
-                preview = HAREM_PREVIEWS.get(fid, '')
+                preview = previews.get(fid, '')
                 members = [b for b in game_builds if b.get('family') == fid]
                 if members:
                     families.append({'id':fid, 'game':slug, 'image':preview,
