@@ -77,7 +77,7 @@
     const currentGameTitle = data.game.ungrouped ? 'Others' : data.game.title;
     document.title = `PoP Mobile · ${currentGameTitle}`;
     $('game-title').textContent = currentGameTitle;
-    $('result-dataset').textContent = data.game.id === 'sands-of-time' ? 'Sands of Time' : data.game.sheet.toUpperCase();
+    $('result-dataset').textContent = data.game.id === 'sands-of-time' ? 'SANDS OF TIME' : data.game.sheet.toUpperCase();
     if (data.relatedFiles.length) {
       $('related-files-container').hidden = false;
       $('related-files-count').textContent = `(${data.relatedFiles.length})`;
