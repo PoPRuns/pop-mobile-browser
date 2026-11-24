@@ -1,0 +1,20 @@
+name: Label playback reports
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  label-playback:
+    if: startsWith(github.event.issue.title, '[Playback]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add broken-game label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: gh issue edit "$ISSUE_NUMBER" --add-label broken-game
