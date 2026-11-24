@@ -563,7 +563,13 @@
     // No mobile=1: that opt-in makes freej2me-web draw its virtual keypads.
     const build = state.buildMap.get(state.selectedPlay);
     const screen = build && playerResolution(build);
-    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode, v: 'family-fps-1', jarSource: state.readyPlaySource, jarSize: String(build.size)});
+    const params = new URLSearchParams({jar: state.selectedPlay + '.jar', fractionScale: '1', numpad: numpadMode, v: 'phone-profile-1', jarSource: state.readyPlaySource, jarSize: String(build.size)});
+    // Older catalogues without the derived field retain the native settings.
+    if (Object.prototype.hasOwnProperty.call(build, 'phoneType')) {
+      const profile = ['Nokia', 'Siemens', 'Motorola', 'SonyEricsson'].includes(build.phoneType)
+        ? build.phoneType : 'Nokia';
+      params.set('phoneType', profile);
+    }
     if ([15, 30, 60].includes(Number(build.fpsLimit))) params.set('fpsLimit', String(build.fpsLimit));
     if (screen) {
       params.set('screenWidth', String(screen.width));

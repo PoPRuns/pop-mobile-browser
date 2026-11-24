@@ -56,6 +56,7 @@ class FamilyTests(unittest.TestCase):
             record[1] = 'Prince of Persia'
             record[3:5] = ['1.0', 'Gameloft']
             record[7:9] = ['128x128', 'English']
+            record[16] = ['Siemens S55', 'Nokia Series 60', 'LG U880', 'Sony Ericsson T610'][i-1]
             record[17:20] = notes
             record[20] = 89208.0
             record[23] = f'{i:064x}'
@@ -69,6 +70,8 @@ class FamilyTests(unittest.TestCase):
             self.assertEqual([g['count'] for g in result['families']], [2, 1, 1])
             self.assertEqual([b['family'] for b in result['builds']], ['HA-G01','HA-G01','HA-G02','HA-G03'])
             self.assertEqual([b['variant'] for b in result['builds']], ['a','b','',''])
+            self.assertEqual([b['phoneType'] for b in result['builds']], ['Siemens','Nokia',None,'SonyEricsson'])
+            self.assertEqual(result['builds'][0]['device'], 'Siemens S55')
             self.assertEqual([b['fpsLimit'] for b in result['builds']], [None,15,None,30])
             self.assertEqual([b['unplayable'] for b in result['builds']], [False,False,True,False])
             self.assertEqual(json.loads(output.read_text())['families'][0]['count'], 2)

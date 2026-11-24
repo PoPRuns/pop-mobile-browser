@@ -20,12 +20,13 @@ class PagesBuildTests(unittest.TestCase):
             self.assertTrue((site / 'emulator/freej2me-web.jar').is_file())
             html = (site / 'catalogue.html').read_text()
             self.assertIn('name="pop-mobile-static"', html)
-            self.assertIn('assets/app.js?v=pages-playback-form-1', html)
+            self.assertIn('assets/app.js?v=pages-phone-profile-1', html)
             main = (site / 'emulator/src/main.js').read_text()
             upstream = (ROOT / 'vendor/freej2me-web/web/src/main.js').read_text()
             self.assertNotIn('popMapNumpadKey(', upstream)
             self.assertIn('popMapNumpadKey(', main)
             self.assertIn('await config.saveConfig()', main)
+            self.assertIn("await config.appSettings.put('phone', popPhone)", main)
             self.assertIn('cheerpOSAddStringFile(path, bytes)', main)
             self.assertIn('await new File(args[1])', main)
             self.assertFalse((site / 'server.py').exists())
@@ -37,7 +38,7 @@ class PagesBuildTests(unittest.TestCase):
             self.assertIn('pop-mobile:resolution', main)
             self.assertIn("next.searchParams.set('popNativeRestart', '1')", main)
             self.assertIn('...popFpsNatives', main)
-            self.assertIn('src/main.js?v=family-fps-1', (site / 'emulator/run.html').read_text())
+            self.assertIn('src/main.js?v=phone-profile-1', (site / 'emulator/run.html').read_text())
             for html_name in ('index.html','catalogue.html'):
                 self.assertIn('Built with CheerpJ', (site / html_name).read_text())
 

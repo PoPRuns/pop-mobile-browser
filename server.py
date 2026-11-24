@@ -104,6 +104,17 @@ EMULATOR_RESOLUTION_HOOK = r"""
     const popJar = sp.get('jar') || 'game.jar';
     const popSha = /^([a-f0-9]{64})\.jar$/i.exec(popJar)?.[1].toLowerCase();
     const popKey = popSha ? 'pop-mobile-resolution-v1:' + popSha : null;
+    // Only manage phone settings for launchers opting in with a valid profile.
+    const popPhoneTypes = ['Standard', 'Nokia', 'Siemens', 'Motorola', 'SonyEricsson'];
+    let popPhone = sp.get('phoneType');
+    if (!popPhoneTypes.includes(popPhone)) popPhone = null;
+    const popPhoneKey = popSha && popPhone ? 'pop-mobile-phone-v1:' + popSha : null;
+    if (popPhoneKey) {
+        try {
+            const saved = localStorage.getItem(popPhoneKey);
+            if (popPhoneTypes.includes(saved)) popPhone = saved;
+        } catch { /* Browser storage may be disabled. */ }
+    }
     let popW = Number(sp.get('screenWidth'));
     let popH = Number(sp.get('screenHeight'));
     if (popKey) {
@@ -115,7 +126,7 @@ EMULATOR_RESOLUTION_HOOK = r"""
             }
         } catch { /* Missing, corrupt or disabled browser storage. */ }
     }
-    if (!sp.has('app') && (popKey || popValidSize(popW, popH))) {
+    if (!sp.has('app') && (popKey || popPhone || popValidSize(popW, popH))) {
         const report = (ok, error) => {
             if (window.parent !== window) {
                 window.parent.postMessage({type: 'pop-mobile:resolution', ok,
@@ -155,18 +166,44 @@ EMULATOR_RESOLUTION_HOOK = r"""
                     }
                     console.info(`PoP Mobile: remembered ${width}x${height} after native restart`);
                 }
+                // The built-in Phone type menu saves to the shared config.
+                // Adopt its selection only on an explicit native restart.
+                if (popPhoneKey) {
+                    try {
+                        const value = await config.appSettings.get('phone');
+                        const phone = typeof value === 'string' ? value : await value?.toString();
+                        if (popPhoneTypes.includes(phone) && phone !== popPhone) {
+                            popPhone = phone;
+                            try {
+                                localStorage.setItem(popPhoneKey, phone);
+                            } catch {
+                                next.searchParams.set('phoneType', phone);
+                            }
+                            console.info(`PoP Mobile: remembered phone type ${phone} after native restart`);
+                        }
+                    } catch (error) {
+                        console.warn('PoP Mobile: could not read saved phone type:', error);
+                    }
+                }
                 history.replaceState(null, '', next.href);
                 sp.delete('popNativeRestart');
+            }
+            const popWriteSize = popValidSize(popW, popH);
+            if (popPhone) {
+                await config.appSettings.put('phone', popPhone);
             }
             if (popValidSize(popW, popH)) {
                 await config.appSettings.put('width', String(popW));
                 await config.appSettings.put('height', String(popH));
-                await config.saveConfig();
             } else {
                 // Unknown catalogue resolution: observe the emulator's initial size.
                 popW = await config.getWidth();
                 popH = await config.getHeight();
             }
+            if (popPhone || popWriteSize) {
+                await config.saveConfig();
+            }
+            if (popPhone) console.info(`PoP Mobile: phone type ${popPhone} for ${appId}`);
             console.info(`PoP Mobile: configured ${appId} for ${popW}x${popH}`);
             report(true);
         } catch (error) {

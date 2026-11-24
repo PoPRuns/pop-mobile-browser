@@ -11,6 +11,10 @@
 
 Controls include fullscreen, restart, automatic closest-fit emulated resolution, per-JAR browser-local screen size overrides (choose a size in the emulator settings and select Restart), and a persistent setting for phone-style versus standard numpad layout.
 
+The catalogue importer derives a `phoneType` hint from the workbook's `Device(s)` column. Recognized single-manufacturer entries select Nokia, Siemens, Motorola or SonyEricsson; unknown, unsupported and mixed entries use the emulator's Nokia default. This is a compatibility hint, not full hardware emulation. The original device text remains unchanged.
+
+To override the detected profile, open the emulator settings (Esc), change **Phone type**, and complete the emulator's own Restart prompt before closing the player. The override is remembered in browser storage for that JAR's SHA-256, independently of other builds. Existing catalogues without `phoneType` retain the emulator's previous behavior until reimported. Manual settings from before this feature are not automatically migrated because the emulator's old settings can be shared by multiple builds.
+
 ## Start a local preview
 
 Requirements: Python 3.10+ and a current browser supporting Service Workers, Cache Storage, and Web Crypto.

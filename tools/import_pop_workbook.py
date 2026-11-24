@@ -50,6 +50,34 @@ FAMILY_CONFIG = {
     'WW': (WW_FAMILY, 'WW-G', WW_PREVIEWS),
 }
 
+# Manufacturer names explicitly supported by the bundled FreeJ2ME phone menu.
+# Unsupported brands are recognized to avoid choosing a profile for mixed lists.
+PHONE_TYPES = {
+    'Nokia': r'\bnokia\b',
+    'Siemens': r'\bsiemens\b',
+    'Motorola': r'\bmotorola\b',
+    'SonyEricsson': r'\bsony[\s-]*ericsson\b',
+}
+OTHER_MANUFACTURERS = re.compile(
+    r'\b(?:samsung|lg|alcatel|sagem|sharp|panasonic|philips|nec|benq|'
+    r'blackberry|htc|huawei|zte|sanyo|toshiba|kyocera|pantech|'
+    r'vodafone|fujitsu|mitsubishi|ericsson|sony)\b', re.IGNORECASE)
+
+
+def classify_device(device):
+    """Infer a single supported manufacturer, not a particular phone model."""
+    text = device or ''
+    matches = [name for name, pattern in PHONE_TYPES.items()
+               if re.search(pattern, text, re.IGNORECASE)]
+    # Remove recognized brands before checking unsupported names, so Sony
+    # Ericsson is not mistaken for separate Sony and Ericsson manufacturers.
+    for pattern in PHONE_TYPES.values():
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+    if len(matches) == 1 and not OTHER_MANUFACTURERS.search(text):
+        return matches[0]
+    return None
+
+
 def classify_notes(notes):
     """Extract playback hints from all three free-text Notes fields."""
     joined = '\n'.join(n for n in notes if n)
@@ -124,6 +152,7 @@ def convert(input_path, output):
                 values['unclassified']=True
             elif not values['group']:
                 errors.append(f'{sheet_name}!A{sheet_row}: missing gameplay group'); continue
+            values['phoneType'] = classify_device(values['device'])
             # These are independent build-level flags, never inherited from a group.
             notes = [values[k] for k in ('notesGeneral', 'notesGameplay', 'notesGameplay2')]
             try:

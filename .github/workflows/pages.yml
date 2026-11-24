@@ -14,6 +14,9 @@ on:
       - 'data/**'
       - 'vendor/freej2me-web/**'
       - 'tests/**'
+      - 'server.py'
+      - 'tools/build_pages.py'
+      - 'tools/import_pop_workbook.py'
   workflow_dispatch:           # manual deployments are always possible
 
 # Upload the generated site first; deployment is a separate job so it can
