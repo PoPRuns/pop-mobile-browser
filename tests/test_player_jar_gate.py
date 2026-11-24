@@ -27,7 +27,8 @@ class TestPlayerJarGate(unittest.TestCase):
         self.assertIn('target="_blank" rel="noopener noreferrer"', html)
         for field in ('build.sha256', 'build.sourceFilenames', 'build.vendor', 'build.version', 'build.size', 'build.game'):
             self.assertIn(field, script)
-        self.assertIn("issueUrl.searchParams.set('body', body)", script)
+        self.assertIn("issueUrl.searchParams.set('template', 'broken-game.yml')", script)
+        self.assertIn("issueUrl.searchParams.set('jar_build_details', jarBuildDetails)", script)
         self.assertIn("$('player-report-issue').href = playerIssueUrl(build)", script)
         self.assertIn("$('play-heading').textContent = [build.name, build.resolution].filter(Boolean).join(' · ')", script)
         self.assertNotIn('→ ${screen.width}', script)

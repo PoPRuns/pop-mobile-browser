@@ -1,0 +1,31 @@
+name: Report a broken game
+description: Report a problem playing a specific Prince of Persia Java ME build
+title: '[Playback] '
+labels: ['broken-game']
+body:
+  - type: markdown
+    attributes:
+      value: Please describe the problem with this JAR build. The build metadata below is prefilled by the website.
+  - type: textarea
+    id: what_went_wrong
+    attributes:
+      label: What went wrong?
+      description: Describe what happened and how to reproduce it.
+      placeholder: Describe the problem and the steps to reproduce it.
+    validations:
+      required: true
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      placeholder: Describe what should happen.
+    validations:
+      required: false
+  - type: textarea
+    id: jar_build_details
+    attributes:
+      label: JAR build details
+      description: Filled automatically by the Report issue button. Please keep the SHA-256 and catalogue link.
+      placeholder: This field is filled automatically when reporting from the player.
+    validations:
+      required: true

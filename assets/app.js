@@ -396,14 +396,7 @@
     const catalogueUrl = new URL('https://popruns.github.io/pop-mobile-browser/catalogue.html');
     catalogueUrl.searchParams.set('game', build.game);
     catalogueUrl.searchParams.set('sha256', build.sha256);
-    const body = [
-      '### What went wrong?',
-      'Describe the problem and the steps to reproduce it.',
-      '',
-      '### Expected behavior',
-      'Describe what should happen.',
-      '',
-      '### JAR build details',
+    const jarBuildDetails = [
       `- Collection: ${game}`,
       `- Game / JAR title: ${build.name}`,
       `- Source filename: ${build.sourceFilenames || build.oldFilename || 'Not recorded'}`,
@@ -418,8 +411,12 @@
       `- Catalogue: ${catalogueUrl.href}`,
     ].join('\n');
     const issueUrl = new URL('https://github.com/PoPRuns/pop-mobile-browser/issues/new');
+    // GitHub assigns the label through the issue form, independently of the
+    // issue title and without requiring visitors to have label permissions.
+    // Custom issue-form fields are prefilled by their `id`, not `body`.
+    issueUrl.searchParams.set('template', 'broken-game.yml');
     issueUrl.searchParams.set('title', `[Playback] ${game}: ${build.name}`);
-    issueUrl.searchParams.set('body', body);
+    issueUrl.searchParams.set('jar_build_details', jarBuildDetails);
     return issueUrl.href;
   }
   function loadPlayerOnce(build, ticket, status, cachedCopy = false) {
