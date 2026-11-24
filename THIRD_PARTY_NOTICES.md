@@ -15,17 +15,21 @@ The emulator includes third-party dependencies with additional licensing require
 
 Binary SHA-256 identifiers for this release (FreeJ2ME `c19416e`, with PoP Mobile MIDI replacement):
 
-- `web/freej2me-web.jar`: `08ffc41af9e1bf815012a03d87e0af0e894eb98181f42b2302a2febf12b343eb`
+- `web/freej2me-web.jar`: `70d84f5335e16842cdda59249af83e98dfa18c1da713a0a12364715b6f4961ce`
 - `web/libmidi/libmidi.wasm`: `cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98`
 - `web/libmedia/transcode/transcode.wasm`: `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b`
 
-The static build adds the PoP Mobile resolution and numpad adapters using `tools/build_pages.py` and the hook source in `server.py`. Build output is not the unmodified upstream `main.js`.
+The static build adds the PoP Mobile resolution, phone profile, FPS and numpad adapters using `tools/build_pages.py` and the hook source in `server.py`. Build output is not the unmodified upstream `main.js`.
 
 **Complete corresponding source (v0.1.0):** [Download the source archive](https://github.com/PoPRuns/pop-mobile-browser/releases/download/v0.1.0/pop-mobile-emulator-corresponding-source-v1.tar.gz)
 
 SHA-256: `ad711845e72f1fbbd0491c3642bd2e35b98f4dfd959444e580a88b331cc3fcd9`
 
 The archive contains pinned FreeJ2ME source, modified FluidSynth 2.4.0 source, the PoP Mobile original FM General MIDI SoundFont and its generator, FFmpeg 7.1.1, the pinned x264 source and patch, applicable license texts, build scripts and PoP Mobile adapters. The MIDI replacement was rebuilt and tested in Firefox. The original FreeJ2ME Java and media binaries have documented source/build inputs but were not independently reproduced from source.
+
+### Updated Java emulator (issue #11)
+
+The current Java binary includes the [Chapter 1 compatibility source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-11-busy-wait.patch). The patch is also distributed at `emulator/source-patches/issue-11-busy-wait.patch` on the deployed site. Use the v0.1.0 corresponding-source archive above as the base, together with this patch and the current site adapter source ([repository](https://github.com/PoPRuns/pop-mobile-browser)). Apply the patch to the pinned FreeJ2ME source and run `ant -Dant.build.javac.source=1.8` with OpenJDK 17. The original game JAR is not modified. The MIDI and media binaries are unchanged.
 
 ## MIDI replacement and FluidSynth
 

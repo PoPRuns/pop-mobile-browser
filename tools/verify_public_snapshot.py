@@ -16,12 +16,14 @@ EXPECTED = {
     'vendor/freej2me-web/web/libmidi/libmidi.wasm':
         'cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98',
     'vendor/freej2me-web/web/freej2me-web.jar':
-        '08ffc41af9e1bf815012a03d87e0af0e894eb98181f42b2302a2febf12b343eb',
+        '70d84f5335e16842cdda59249af83e98dfa18c1da713a0a12364715b6f4961ce',
     'vendor/freej2me-web/web/libmedia/transcode/transcode.wasm':
         'a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b',
 }
 EMULATOR_JAR = 'vendor/freej2me-web/web/freej2me-web.jar'
 MIDI_PATH = 'vendor/freej2me-web/web/libmidi/libmidi.wasm'
+# The original Java binary is still approved in historical commits.
+HISTORICAL_JAVA_SHA256 = {'08ffc41af9e1bf815012a03d87e0af0e894eb98181f42b2302a2febf12b343eb', EXPECTED[EMULATOR_JAR]}
 
 
 def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
@@ -91,7 +93,8 @@ def validate() -> None:
                 # not hide it after making the repository public.
                 for rel, wanted in EXPECTED.items():
                     stored = git('show', f'{commit}:{rel}', check=False)
-                    if stored.returncode or digest(stored.stdout) != wanted:
+                    approved = HISTORICAL_JAVA_SHA256 if rel == EMULATOR_JAR else {wanted}
+                    if stored.returncode or digest(stored.stdout) not in approved:
                         problems.append(f'Unexpected emulator binary in commit {commit[:12]}: {rel}')
                 tree = git('ls-tree', '-r', '--name-only', commit, check=False)
                 if tree.returncode:

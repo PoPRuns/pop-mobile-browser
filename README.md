@@ -63,6 +63,7 @@ The bundled `libmidi.wasm` uses *PoP Mobile Original FM GM*, a procedurally gene
 
 - [Emulator source, build provenance, and MIDI details](docs/EMULATOR_SOURCE.md)
 - [Complete emulator corresponding-source archive (v0.1.0)](https://github.com/PoPRuns/pop-mobile-browser/releases/download/v0.1.0/pop-mobile-emulator-corresponding-source-v1.tar.gz)
+- [Chapter 1 runtime compatibility source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-11-busy-wait.patch)
 - [Third-party notices and credits](THIRD_PARTY_NOTICES.md)
 - [GPL-3.0-or-later license for original PoP Mobile code](LICENSE)
 
