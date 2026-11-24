@@ -13,6 +13,7 @@ on:
       - 'assets/**'
       - 'data/**'
       - 'vendor/freej2me-web/**'
+      - 'tests/**'
   workflow_dispatch:           # manual deployments are always possible
 
 # Upload the generated site first; deployment is a separate job so it can
