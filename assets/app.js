@@ -77,7 +77,7 @@
     const currentGameTitle = data.game.ungrouped ? 'Others' : data.game.title;
     document.title = `PoP Mobile · ${currentGameTitle}`;
     $('game-title').textContent = currentGameTitle;
-    $('result-dataset').textContent = data.game.id === 'sands-of-time' ? 'SANDS OF TIME' : data.game.sheet.toUpperCase();
+    $('result-dataset').textContent = ({'sands-of-time': 'SANDS OF TIME', 'warrior-within': 'WARRIOR WITHIN'})[data.game.id] || data.game.sheet.toUpperCase();
     if (data.relatedFiles.length) {
       $('related-files-container').hidden = false;
       $('related-files-count').textContent = `(${data.relatedFiles.length})`;
@@ -196,14 +196,18 @@
     'HA-G02': 'Compact Edition',
     'HA-G03': 'Alternate Edition',
     'SoT-G01': 'Standard Edition',
-    'SoT-G02': 'Compact Edition'
+    'SoT-G02': 'Compact Edition',
+    'WW-G01': 'Standard Edition',
+    'WW-G02': 'Compact Edition'
   });
   const FAMILY_IMAGES = Object.freeze({
     'HA-G01': 'assets/previews/harem-g01.png',
     'HA-G02': 'assets/previews/harem-g02.png',
     'HA-G03': 'assets/previews/harem-g03.png',
     'SoT-G01': 'assets/previews/sot-g01.png',
-    'SoT-G02': 'assets/previews/sot-g02.png'
+    'SoT-G02': 'assets/previews/sot-g02.png',
+    'WW-G01': 'assets/previews/ww-g01.png',
+    'WW-G02': 'assets/previews/ww-g02.png'
   });
   function renderFamilyCard(family, builds) {
     const hidden = state.data.builds.filter(b => b.family === family.id && b.unplayable).length;
@@ -224,7 +228,7 @@
     const hasFamilies = families.length > 0;
     const overviewMode = hasFamilies && !state.activeFamily;
     document.body.classList.toggle('family-overview-mode', overviewMode);
-    document.body.classList.toggle('sot-overview-mode', overviewMode && state.currentGame.id === 'sands-of-time');
+    document.body.classList.toggle('two-family-overview-mode', overviewMode && families.length === 2);
     $('families').hidden = !hasFamilies;
     $('family-selection').hidden = !hasFamilies || !state.activeFamily;
     if (overviewMode) {

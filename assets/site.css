@@ -250,6 +250,6 @@ body.family-overview-mode .results-footer{margin-top:auto;padding-top:28px}
   body.family-overview-mode .results-footer{padding-top:22px}
 }
 
-/* Two SoT screenshots share the full-width version overview. */
-body.sot-overview-mode .family-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media(max-width:650px){body.sot-overview-mode .family-grid{grid-template-columns:minmax(0,1fr)}}
+/* Reviewed collections with two editions share the full-width layout. */
+body.two-family-overview-mode .family-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:650px){body.two-family-overview-mode .family-grid{grid-template-columns:minmax(0,1fr)}}

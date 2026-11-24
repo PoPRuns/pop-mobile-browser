@@ -28,6 +28,7 @@ FPS_NOTE = re.compile(r'\blimit\s+fps\s+to\s+(15|30|60)\b', re.IGNORECASE)
 UNPLAYABLE_NOTE = re.compile(r'\bunplayable\b', re.IGNORECASE)
 HAREM_FAMILY = re.compile(r'^(HA-G[0-9]{2})(?:-([a-z]+))?$', re.IGNORECASE)
 SOT_FAMILY = re.compile(r'^(SoT-G0[12])(?:-([a-z]+))?$', re.IGNORECASE)
+WW_FAMILY = re.compile(r'^(WW-G0[12])(?:-([a-z]+))?$', re.IGNORECASE)
 HAREM_PREVIEWS = {
     'HA-G01': 'assets/previews/harem-g01.png',
     'HA-G02': 'assets/previews/harem-g02.png',
@@ -36,6 +37,17 @@ HAREM_PREVIEWS = {
 SOT_PREVIEWS = {
     'SoT-G01': 'assets/previews/sot-g01.png',
     'SoT-G02': 'assets/previews/sot-g02.png',
+}
+WW_PREVIEWS = {
+    'WW-G01': 'assets/previews/ww-g01.png',
+    'WW-G02': 'assets/previews/ww-g02.png',
+}
+# Only these collections have reviewed gameplay families and preview images.
+# Letter-suffixed group IDs remain independent research subgroup IDs.
+FAMILY_CONFIG = {
+    'Harem Adventures': (HAREM_FAMILY, 'HA-G', HAREM_PREVIEWS),
+    'SoT': (SOT_FAMILY, 'SoT-G', SOT_PREVIEWS),
+    'WW': (WW_FAMILY, 'WW-G', WW_PREVIEWS),
 }
 
 def classify_notes(notes):
@@ -118,12 +130,11 @@ def convert(input_path, output):
                 values['unplayable'], values['fpsLimit'] = classify_notes(notes)
             except ValueError as error:
                 errors.append(f'{sheet_name} row {sheet_row}: {error}'); continue
-            if sheet_name in ('Harem Adventures', 'SoT'):
-                pattern = HAREM_FAMILY if sheet_name == 'Harem Adventures' else SOT_FAMILY
+            if sheet_name in FAMILY_CONFIG:
+                pattern, prefix, _previews = FAMILY_CONFIG[sheet_name]
                 match = pattern.fullmatch(values['group'])
                 if not match:
                     errors.append(f'{sheet_name}!A{sheet_row}: unrecognized gameplay family {values["group"]!r}'); continue
-                prefix = 'HA-G' if sheet_name == 'Harem Adventures' else 'SoT-G'
                 values['family'] = prefix + match.group(1)[-2:]
                 values['variant'] = (match.group(2) or '').lower()
             game_builds.append(values); builds.append(values)
@@ -137,8 +148,8 @@ def convert(input_path, output):
                            'resolutions':distinct('resolution'),'languages':distinct('language'),
                            'devices':distinct('device'),'vendors':distinct('vendor'),
                            'notes':notes})
-        if sheet_name in ('Harem Adventures', 'SoT'):
-            previews = HAREM_PREVIEWS if sheet_name == 'Harem Adventures' else SOT_PREVIEWS
+        if sheet_name in FAMILY_CONFIG:
+            previews = FAMILY_CONFIG[sheet_name][2]
             for fid in dict.fromkeys(b['family'] for b in game_builds):
                 preview = previews.get(fid, '')
                 members = [b for b in game_builds if b.get('family') == fid]
