@@ -52,8 +52,16 @@ def convert(input_path, output):
         s=w[sheet_name]
         rows=s.iter_rows(values_only=True)
         headers={as_text(v).lower():i for i,v in enumerate(next(rows)) if v}
+        # Gameplay Group is a column name, not a fixed label.  For example,
+        # both 'Gameplay Group' and 'Gameplay Group (experimental)' are valid.
+        group_headers=[name for name in headers if name.startswith('gameplay group')]
+        if sheet_name != 'Needs review':
+            if not group_headers:
+                raise ValueError(f'{sheet_name}: missing column whose header starts with Gameplay Group')
+            if len(group_headers) > 1:
+                raise ValueError(f'{sheet_name}: ambiguous Gameplay Group columns: {group_headers}')
         col={
-          'group':'Gameplay Group (experimental)', 'name':'Applet Name', 'displayTitle':'Title Screen Name',
+          'group':group_headers[0] if group_headers else 'Gameplay Group', 'name':'Applet Name', 'displayTitle':'Title Screen Name',
           'version':'Applet Version','vendor':'Applet Author','cldc':'CLDC','midp':'MIDP',
           'resolution':'Screen Dimension','language':'Language','aboutName':'About section Name',
           'aboutVersion':'About section Version','aboutAuthor':'About section Author',
