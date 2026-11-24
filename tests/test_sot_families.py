@@ -69,7 +69,7 @@ class SandsOfTimeFamilyTests(unittest.TestCase):
             self.assertIn(f"'{family}': '{label}'", js)
         card_renderer = js.split('  function renderFamilyCard(family, builds) {', 1)[1].split('  function render() {', 1)[0]
         self.assertNotIn('family-card-code', card_renderer)
-        self.assertIn("data.game.id === 'sands-of-time' ? 'Sands of Time' : data.game.sheet.toUpperCase()", js)
+        self.assertIn("data.game.id === 'sands-of-time' ? 'SANDS OF TIME' : data.game.sheet.toUpperCase()", js)
         self.assertIn('const hasFamilies = families.length > 0;', js)
         self.assertIn('family-overview-mode', js)
         for name in ('sot-g01.png', 'sot-g02.png'):
