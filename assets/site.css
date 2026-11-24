@@ -99,10 +99,11 @@
 .jar-file-name span{color:#d9b579;margin-right:4px}
 
 /* PoP Mobile: visible emulator licensing and credits in both page footers. */
-.footer-credits{display:flex;flex-direction:column;align-items:flex-end;gap:7px;text-align:right;line-height:1.5}
+.footer-credits{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;text-align:right;line-height:1.5}
+.footer-credits>a{white-space:nowrap}
 .footer-credits a{color:#d6bd86;text-underline-offset:3px;text-decoration:underline}
 .footer-credits a:hover,.footer-credits a:focus-visible{color:#fff0c6}
-@media(max-width:600px){.footer-credits{align-items:flex-start;text-align:left;margin-top:12px}}
+@media(max-width:600px){.footer-credits{justify-content:flex-start;text-align:left;margin-top:12px}}
 
 /* The filters panel should end immediately after the Language dropdown. */
 .filters .filter-block:last-child{margin-bottom:0}
@@ -120,7 +121,7 @@
 .site-footer{background:#080d10;border-top:0;padding:30px}
 .site-footer .footer-inner{max-width:1220px;width:100%;min-height:0;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;font:10px/1.5 'DM Sans',system-ui,sans-serif;letter-spacing:.1em;color:#8e999a}
 .site-footer .footer-inner > .footer-disclaimer{font:inherit;letter-spacing:inherit;text-align:left;color:#8e999a}
-.site-footer .footer-credits{display:flex;flex-direction:column;align-items:flex-end;gap:7px;text-align:right;line-height:1.5}
+.site-footer .footer-credits{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;text-align:right;line-height:1.5}
 @media(max-width:700px){
   .compact-header-inner{grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;padding:13px 18px}
   .compact-header .site-title{font-size:12px}
@@ -130,7 +131,7 @@
 @media(max-width:600px){
   .catalogue-section{padding-top:18px!important}
   .site-footer .footer-inner{display:block}
-  .site-footer .footer-credits{align-items:flex-start;text-align:left;margin-top:12px}
+  .site-footer .footer-credits{justify-content:flex-start;text-align:left;margin-top:12px}
 }
 
 /* Show complete, selectable SHA-256 values in every catalogue card. */

@@ -10,10 +10,11 @@
 @media(max-width:600px){.topbar-inner{padding:13px 18px;align-items:flex-start}.topbar nav{font-size:11px;justify-content:flex-end}.topbar nav a{font-size:11px}.wordmark{font-size:16px}.wordmark small{font-size:8px}.sigil{width:37px;height:37px}.intro-inner{padding:60px 20px 45px}.intro h1{font-size:3.2rem}.intro-foot{line-height:2}.metrics-inner{flex-wrap:wrap;padding:12px 18px}.metrics-inner>div:not(.metrics-right){flex:0 0 50%;margin:0;border:0;padding:10px}.collection{padding:18px 18px 65px}.game-grid{grid-template-columns:1fr;gap:14px}.game-tile{height:258px}.approach{padding:48px 20px}.approach-inner{display:block}.footer-inner{display:block}.footer-inner>div{margin-bottom:10px}}
 
 /* PoP Mobile: visible emulator licensing and credits in both page footers. */
-.footer-credits{display:flex;flex-direction:column;align-items:flex-end;gap:7px;text-align:right;line-height:1.5}
+.footer-credits{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;text-align:right;line-height:1.5}
+.footer-credits>a{white-space:nowrap}
 .footer-credits a{color:#d6bd86;text-underline-offset:3px;text-decoration:underline}
 .footer-credits a:hover,.footer-credits a:focus-visible{color:#fff0c6}
-@media(max-width:600px){.footer-credits{align-items:flex-start;text-align:left;margin-top:12px}}
+@media(max-width:600px){.footer-credits{justify-content:flex-start;text-align:left;margin-top:12px}}
 
 .footer-disclaimer{color:#8e999a}
 
