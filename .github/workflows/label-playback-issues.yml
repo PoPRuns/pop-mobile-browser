@@ -1,4 +1,4 @@
-name: Label playback reports
+name: Label playback and site reports
 
 on:
   issues:
@@ -18,3 +18,14 @@ jobs:
           GH_REPO: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: gh issue edit "$ISSUE_NUMBER" --add-label broken-game
+
+  label-site:
+    if: startsWith(github.event.issue.title, '[Site]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add site-bug label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: gh issue edit "$ISSUE_NUMBER" --add-label site-bug
