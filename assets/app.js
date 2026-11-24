@@ -177,8 +177,18 @@
     if ($('filter-resolution').value && b.resolution !== $('filter-resolution').value) return false;
     if ($('filter-language').value && b.language !== $('filter-language').value) return false;
     if (!q) return true;
-    const g = state.groupMap.get(b.group);
-    const searchText = [b.group, b.name, b.displayTitle, b.vendor, b.version, b.language, b.resolution, b.device, b.oldFilename, b.sourceFilenames, b.sha256, b.sha1, b.crc32, b.notesGeneral, b.notesGameplay, b.notesGameplay2, ...(g?.notes || [])].join(' ').toLocaleLowerCase();
+    // An exact checksum identifies a build, even if other builds' notes refer
+    // to it (e.g. 'Same gameplay as CRC32: 4F113839'). Prioritize full hashes.
+    const checksumField = /^[0-9a-f]{8}$/.test(q) ? 'crc32'
+      : /^[0-9a-f]{40}$/.test(q) ? 'sha1'
+      : /^[0-9a-f]{64}$/.test(q) ? 'sha256' : null;
+    if (checksumField && state.data.builds.some(record =>
+      String(record[checksumField] || '').toLocaleLowerCase() === q)) {
+      return String(b[checksumField] || '').toLocaleLowerCase() === q;
+    }
+    // Search this JAR's own fields, not aggregated group notes. A note about
+    // one build must never make its entire gameplay family match a query.
+    const searchText = [b.group, b.name, b.displayTitle, b.vendor, b.version, b.language, b.resolution, b.device, b.oldFilename, b.sourceFilenames, b.sha256, b.sha1, b.crc32, b.notesGeneral, b.notesGameplay, b.notesGameplay2].join(' ').toLocaleLowerCase();
     return q.split(/\s+/).every(term => searchText.includes(term));
   }
   const FAMILY_LABELS = Object.freeze({
