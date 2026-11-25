@@ -63,8 +63,6 @@ The site uses FreeJ2ME-Web and [CheerpJ](https://cheerpj.com/). Source code, bui
 - [Third-party notices and credits](THIRD_PARTY_NOTICES.md)
 - [GPL-3.0 license for original PoP Mobile code](LICENSE)
 
-Built with CheerpJ.
-
 The Prince of Persia games and associated intellectual property belong to their respective rights holders. This is an independent archival and research project, without affiliation or endorsement.
 
 ## Usage of AI
