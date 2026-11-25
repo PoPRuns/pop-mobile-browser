@@ -1,0 +1,115 @@
+diff --git a/src/org/recompile/mobile/BusyWaitCompat.java b/src/org/recompile/mobile/BusyWaitCompat.java
+index c23228e..0aec0b5 100644
+--- a/src/org/recompile/mobile/BusyWaitCompat.java
++++ b/src/org/recompile/mobile/BusyWaitCompat.java
+@@ -7,6 +7,7 @@ import org.objectweb.asm.ClassAdapter;
+ import org.objectweb.asm.MethodVisitor;
+ import org.objectweb.asm.MethodAdapter;
+ import org.objectweb.asm.Opcodes;
++import org.objectweb.asm.Label;
+ 
+ /** Runtime compatibility fixes for verified legacy busy-wait loops. */
+ final class BusyWaitCompat implements Opcodes {
+@@ -16,6 +17,13 @@ final class BusyWaitCompat implements Opcodes {
+     private static final String SOT_AUDIO_SHA256 =
+         "72d1f8021547cb6344f72638ed4189ec53e4d2b2928b34af5a7653169d763fd8";
+ 
++    private static final String HA_AUDIO_SHA256 =
++        "a3fe692bcc7c311647ab48f60f6fa22dc59ec57e4cddd6e8e7e9a4997a28b925";
++    private static final String HA_AUDIO_PAUSE = "popIssue13Pause";
++    private static final String HA_STARTUP_SHA256 =
++        "d25f3aab077ae78d16edf0fe1a3e05895503337782e55cee59b8448a92083bb1";
++    private static final String HA_STARTUP_PAUSED = "popIssue13Paused";
++
+     private static boolean matches(ClassReader reader, String className,
+             String fingerprint) throws Exception {
+         if (!className.equals(reader.getClassName())) return false;
+@@ -32,15 +40,87 @@ final class BusyWaitCompat implements Opcodes {
+     static ClassVisitor wrap(ClassVisitor downstream, ClassReader reader) throws Exception {
+         final boolean chapter1 = matches(reader, "prince/l", CLASS_SHA256);
+         final boolean sotAudio = matches(reader, "F", SOT_AUDIO_SHA256);
+-        if (!chapter1 && !sotAudio) return downstream;
++        final boolean haAudio = matches(reader, "L", HA_AUDIO_SHA256);
++        final boolean haStartup = matches(reader, "F", HA_STARTUP_SHA256);
++        if (!chapter1 && !sotAudio && !haAudio && !haStartup) return downstream;
+         return new ClassAdapter(downstream) {
++            private boolean haAudioPatched;
++            private boolean haStartupPatched;
++
++            public void visitEnd() {
++                if (haAudioPatched || haStartupPatched) {
++                    // Equivalent to the diagnostic B helper, but defined in L
++                    // itself: no extra game class or emulator dependency.
++                    MethodVisitor method = super.visitMethod(
++                            ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
++                            HA_AUDIO_PAUSE, "()V", null, null);
++                    Label start = new Label(), end = new Label(), handler = new Label();
++                    method.visitCode();
++                    method.visitTryCatchBlock(start, end, handler, "java/lang/InterruptedException");
++                    method.visitLabel(start);
++                    method.visitInsn(LCONST_1);
++                    method.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "sleep", "(J)V");
++                    method.visitLabel(end);
++                    method.visitInsn(RETURN);
++                    method.visitLabel(handler);
++                    method.visitInsn(POP);
++                    method.visitInsn(RETURN);
++                    method.visitMaxs(2, 0);
++                    method.visitEnd();
++                }
++                if (haStartupPatched) {
++                    // Sample the original paused flag once; sleep only when
++                    // true, then return that same value (diagnostic E).
++                    MethodVisitor method = super.visitMethod(
++                            ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
++                            HA_STARTUP_PAUSED, "()Z", null, null);
++                    Label done = new Label();
++                    method.visitCode();
++                    method.visitFieldInsn(GETSTATIC, "F", "addRecord", "Z");
++                    method.visitInsn(DUP);
++                    method.visitJumpInsn(IFEQ, done);
++                    method.visitMethodInsn(INVOKESTATIC, "F", HA_AUDIO_PAUSE, "()V");
++                    method.visitLabel(done);
++                    method.visitInsn(IRETURN);
++                    method.visitMaxs(2, 0);
++                    method.visitEnd();
++                }
++                super.visitEnd();
++            }
++
+             public MethodVisitor visitMethod(int access, String name, String desc,
+                     String signature, String[] exceptions) {
+                 MethodVisitor target = super.visitMethod(access, name, desc, signature, exceptions);
+                 if (!"run".equals(name) || !"()V".equals(desc)) return target;
+                 return new MethodAdapter(target) {
+                     private int clockReads;
++                    private int haAudioYields;
++                    public void visitFieldInsn(int opcode, String owner, String name, String desc) {
++                        // Only the paused-flag read in the fingerprinted F.run(),
++                        // original offset 14. Do not alter the 83 ms frame loop.
++                        if (haStartup && opcode == GETSTATIC && "F".equals(owner)
++                                && "addRecord".equals(name) && "Z".equals(desc)) {
++                            if (haStartupPatched) throw new IllegalStateException("Unexpected second pause read");
++                            super.visitMethodInsn(INVOKESTATIC, "F", HA_STARTUP_PAUSED, "()Z");
++                            haStartupPatched = true;
++                            System.out.println("[POP-COMPAT] Applied Harem Adventures issue #13 startup busy-wait fix");
++                            return;
++                        }
++                        super.visitFieldInsn(opcode, owner, name, desc);
++                    }
+                     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
++                        // Issue #13: keep the yield under the queue monitor.
++                        // Replace only the second yield (original offset 102),
++                        // after monitorexit, as in the successful B experiment.
++                        if (haAudio && opcode == INVOKESTATIC
++                                && "java/lang/Thread".equals(owner)
++                                && "yield".equals(name) && "()V".equals(desc)
++                                && ++haAudioYields == 2) {
++                            super.visitMethodInsn(INVOKESTATIC, "L", HA_AUDIO_PAUSE, "()V");
++                            haAudioPatched = true;
++                            System.out.println("[POP-COMPAT] Applied Harem Adventures issue #13 audio busy-wait fix");
++                            return;
++                        }
+                         // Issue #5: the verified F.run() has one idle yield.
+                         // Its existing catch (Exception) covers this call and
+                         // resumes the loop on InterruptedException. The original

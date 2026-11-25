@@ -1,6 +1,6 @@
 # Emulator source, build provenance and MIDI sound bank
 
-This site bundles a reduced freej2me-web runtime, based on upstream commit [`c19416e75cbc15f9a27f7e967ee81cb108761e30`](https://github.com/zb3/freej2me-web/tree/c19416e75cbc15f9a27f7e967ee81cb108761e30). Its Java build uses upstream sources plus the Chapter 1 patch described below, and its media build uses upstream sources and tools; its MIDI module was rebuilt with an original synthesized SoundFont (to avoid using the runtime's old, Roland-identified MIDI sound bank). See the repository's [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) and [`LICENSE`](../LICENSE) for applicable licenses and attributions.
+This site bundles a reduced freej2me-web runtime, based on upstream commit [`c19416e75cbc15f9a27f7e967ee81cb108761e30`](https://github.com/zb3/freej2me-web/tree/c19416e75cbc15f9a27f7e967ee81cb108761e30). Its Java build uses upstream sources plus the Chapter 1, Sands of Time and Harem Adventures (issue #13) patches described below, and its media build uses upstream sources and tools; its MIDI module was rebuilt with an original synthesized SoundFont (to avoid using the runtime's old, Roland-identified MIDI sound bank). See the repository's [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) and [`LICENSE`](../LICENSE) for applicable licenses and attributions.
 
 ## Corresponding source for v0.1.0
 
@@ -8,21 +8,33 @@ This site bundles a reduced freej2me-web runtime, based on upstream commit [`c19
 
 ## Chapter 1 runtime compatibility fix (issue #11)
 
-The current Java emulator adds the [Chapter 1 source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-11-busy-wait.patch) to the pinned upstream Java source above. It matches the exact SHA-256 of the affected `prince/l` class and inserts a 1 ms sleep into its busy-wait loop at class load time, leaving the original game JAR and its 110 ms frame target unchanged. Precise timing equivalence has not been established. The MIDI and media WebAssembly builds are unchanged. The v0.1.0 archive remains the base corresponding-source bundle; use it together with this patch and the current site adapter source in this repository.
+The current Java emulator adds the [Chapter 1 source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-11-busy-wait.patch) to the pinned upstream Java source above. It matches the exact SHA-256 of the affected `prince/l` class and inserts a 1 ms sleep into its busy-wait loop at class load time, leaving the original game JAR and its 110 ms frame target unchanged. Precise timing equivalence has not been established. The MIDI and media WebAssembly builds are unchanged. The v0.1.0 archive remains the base corresponding-source bundle; use it together with all three Java patches listed below and the current site adapter source in this repository.
 
-Rebuild the Java component from a clean checkout of the pinned upstream commit using OpenJDK 17 and Apache Ant: apply the patch with `git apply /path/to/issue-11-busy-wait.patch`, then apply the issue #5 patch described below and run `ant -Dant.build.javac.source=1.8`. Copy only `web/freej2me-web.jar` into the site vendor directory.
+Rebuild the Java component using OpenJDK 17 and Apache Ant, following the ordered patch instructions in the issue #13 section below. Copy only `web/freej2me-web.jar` into the site vendor directory.
 
 ## Sands of Time audio-thread compatibility fix (issue #5)
 
 The current Java emulator additionally includes the [issue #5 source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-5-audio-busy-wait.patch). It matches the exact SHA-256 fingerprint of the shared `F` class in the affected Sands of Time builds (CRC32 `0EF5CEC7`, `2EEAAC68`, `6E013D91`). In `F.run()`, the idle audio polling call to `Thread.yield()` becomes `Thread.sleep(1)`. The main game loop, frame interval target and original game JARs are unchanged. Exact timing equivalence has not been established.
 
-For the current Java build, apply the issue #11 patch to the pinned upstream source first, then run `git apply /path/to/issue-5-audio-busy-wait.patch` before the Ant build. Both patches and the base corresponding-source archive are required; MIDI and media WebAssembly binaries are unchanged.
+The issue #11 and issue #5 patches are prerequisites for the issue #13 patch described below. All three patches and the base corresponding-source archive are required; MIDI and media WebAssembly binaries are unchanged.
+
+## Harem Adventures startup and audio compatibility fix (issue #13)
+
+The current Java emulator includes the [issue #13 source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-13-startup-audio-busy-wait.patch). It recognizes the exact SHA-256 fingerprints of the affected `F` and `L` classes. It adds a 1 ms sleep while the game thread is paused and replaces the second `Thread.yield()` in the audio thread with a 1 ms sleep outside the queue monitor. Both helpers handle `InterruptedException`. The normal game frame loop and its 83 ms target, the original game JARs, and MIDI/media binaries are unchanged. Precise timing equivalence has not been established. The patch does not change launcher storage or the original game shutdown logic.
+
+To rebuild the current Java component, apply these patches to the pinned upstream revision in this exact order with `git apply`, then run `ant -Dant.build.javac.source=1.8` with OpenJDK 17:
+
+1. `issue-11-busy-wait.patch`
+2. `issue-5-audio-busy-wait.patch`
+3. `issue-13-startup-audio-busy-wait.patch`
+
+The v0.1.0 base corresponding-source archive, all three patches, and current site adapter sources together describe the current release.
 
 ## Published binary fingerprints
 
 | Component | SHA-256 |
 | --- | --- |
-| `vendor/freej2me-web/web/freej2me-web.jar` | `9c291d8d25159181d103c5e3bfc78a74dffe6661378af7601a9141c669528d43` |
+| `vendor/freej2me-web/web/freej2me-web.jar` | `ee54975540c927e2978c51dcb47e9828aa5f52a1e0900927a84cc175bfede4a6` |
 | `vendor/freej2me-web/web/libmidi/libmidi.wasm` | `cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98` |
 | `vendor/freej2me-web/web/libmedia/transcode/transcode.wasm` | `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b` |
 | Generated `gm.sf2` within source bundle | `5b1f4a3873294197ee492a182ec955780b495db2ddfeb9635a4faef278cad34e` |

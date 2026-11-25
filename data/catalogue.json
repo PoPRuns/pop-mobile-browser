@@ -10,7 +10,7 @@
    "year": "2003–2004",
    "description": "Early mobile Prince of Persia editions and device variants.",
    "count": 57,
-   "groups": 18,
+   "groups": 19,
    "resolutions": 8,
    "languages": 7,
    "ungrouped": false
@@ -125,7 +125,7 @@
  ],
  "stats": {
   "builds": 950,
-  "groups": 393,
+  "groups": 394,
   "games": 9,
   "resolutions": 59,
   "languages": 10,
@@ -313,7 +313,6 @@
     "Gameloft SA by dedomil.net"
    ],
    "notes": [
-    "Unplayable (New game works but takes forever, also delay in all inputs)",
     "-"
    ]
   },
@@ -499,9 +498,7 @@
    "vendors": [
     "Gameloft SA"
    ],
-   "notes": [
-    "Unplayable, text broken"
-   ]
+   "notes": []
   },
   {
    "id": "HA-G01-n",
@@ -631,30 +628,50 @@
    ]
   },
   {
-   "id": "HA-G03",
+   "id": "HA-G03-a",
    "game": "harem-adventures",
    "collection": "Harem Adventures",
    "title": "Prince of Persia: Harem Adventures",
    "unclassified": false,
    "buildIds": [
-    "9fcc990a2ffd5906f821cbd8c572ad400c8ccfe149f0c038beda81e8d85b2b5a",
+    "9fcc990a2ffd5906f821cbd8c572ad400c8ccfe149f0c038beda81e8d85b2b5a"
+   ],
+   "count": 1,
+   "resolutions": [
+    "96x65"
+   ],
+   "languages": [
+    "English"
+   ],
+   "devices": [
+    "Nokia handset (model unverified)"
+   ],
+   "vendors": [
+    "Gameloft SA"
+   ],
+   "notes": []
+  },
+  {
+   "id": "HA-G03-b",
+   "game": "harem-adventures",
+   "collection": "Harem Adventures",
+   "title": "Prince of Persia: Harem Adventures",
+   "unclassified": false,
+   "buildIds": [
     "f14695f89339ea49d436c14f91040eb931fba9bd2f05dd1f16c7865ffba15c03",
     "d3be5996e7e51266493cbf977afb2b8d311d1a4f470d63c2f1876fa6e4197210"
    ],
-   "count": 3,
+   "count": 2,
    "resolutions": [
-    "96x65",
     "128x128"
    ],
    "languages": [
     "English"
    ],
    "devices": [
-    "Nokia handset (model unverified)",
     "Siemens handset (model unverified)"
    ],
    "vendors": [
-    "Gameloft SA",
     "Gameloft S.A."
    ],
    "notes": [
@@ -11585,8 +11602,8 @@
    "oldFilename": "128x160 (s40v2a, N7600).jar",
    "archivePaths": "Prince of Persia/Prince Of Persia (Gameloft SA by dedomil.net) (1.0.9) (CLDC-1.0, MIDP-1.0) (61512544).jar Prince Of Persia/Prince Of Persia (Gameloft SA by dedomil.net) (1.0.9) (CLDC-1.0, MIDP-1.0) (CMIDlet) (30c7fe2bf29838b0ea1f08de6a44ecde855c35b6b66bf528640ddfa25e62df88).jar",
    "device": "Nokia s40v2a, N7600",
-   "notesGeneral": "Author doesn’t match, manifest file probably modded",
-   "notesGameplay": "Unplayable (New game works but takes forever, also delay in all inputs)",
+   "notesGeneral": "Features an unconventional control scheme consistent with the Nokia 7600 keypad layout",
+   "notesGameplay": "",
    "notesGameplay2": "-",
    "crc32": "61512544",
    "sha1": "948051795a8400f9391e3f1ded4f603040f41212",
@@ -11601,7 +11618,7 @@
    "size": 78150,
    "sheetRow": 25,
    "phoneType": "Nokia",
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "HA-G01",
    "variant": "f"
@@ -12191,7 +12208,7 @@
    "archivePaths": "PrinceOfPersia/PrinceOfPersia (Gameloft SA) (1.1.5) (CLDC-1.0, MIDP-2.0) (PrinceOfPersia) (0b0f621eb44a3af7b5810300ccf7c4b6d5a8c646af76219372fdcd349e09ff61).jar",
    "device": "",
    "notesGeneral": "",
-   "notesGameplay": "Unplayable, text broken",
+   "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "7839BFD2",
    "sha1": "228f98c433c69408331590bfa22ceac82342fdd6",
@@ -12205,7 +12222,7 @@
    "size": 114914,
    "sheetRow": 41,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "HA-G01",
    "variant": "m"
@@ -12737,7 +12754,7 @@
    "variant": ""
   },
   {
-   "group": "HA-G03",
+   "group": "HA-G03-a",
    "name": "PrinceofPersia",
    "displayTitle": "Prince of Persia",
    "version": "1.0.12",
@@ -12772,10 +12789,10 @@
    "unplayable": false,
    "fpsLimit": null,
    "family": "HA-G03",
-   "variant": ""
+   "variant": "a"
   },
   {
-   "group": "HA-G03",
+   "group": "HA-G03-b",
    "name": "Prince of Persia - chapter 1",
    "displayTitle": "Prince of Persia: Harem Adventures",
    "version": "1.0.3",
@@ -12810,10 +12827,10 @@
    "unplayable": false,
    "fpsLimit": null,
    "family": "HA-G03",
-   "variant": ""
+   "variant": "b"
   },
   {
-   "group": "HA-G03",
+   "group": "HA-G03-b",
    "name": "Prince of Persia - chapter 1",
    "displayTitle": "Prince of Persia: Harem Adventures",
    "version": "1.0.3",
@@ -12848,7 +12865,7 @@
    "unplayable": false,
    "fpsLimit": null,
    "family": "HA-G03",
-   "variant": ""
+   "variant": "b"
   },
   {
    "group": "SoT-G01-a",
@@ -13575,7 +13592,7 @@
    "oldFilename": "",
    "archivePaths": "Prince-SOT/Prince-SOT (Gameloft SA) (1.0.2) (CLDC-1.0, MIDP-2.0) (0EF5CEC7).jar\nPrince-SOT/Prince-SOT (Gameloft SA) (1.0.2) (CLDC-1.0, MIDP-2.0) (Pop2MIDlet) (bc4b5359f98498b22c9f6376bc4cbde8f85c1c92d8601425b6e881c77abd8246).jar",
    "device": "",
-   "notesGeneral": "Unplayable",
+   "notesGeneral": "",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "0EF5CEC7",
@@ -13591,7 +13608,7 @@
    "size": 143276,
    "sheetRow": 21,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "SoT-G01",
    "variant": "b"
@@ -13991,7 +14008,7 @@
    "oldFilename": "",
    "archivePaths": "Prince Of Persia - Sands Of Time/Prince Of Persia - Sands Of Time (Gameloft SA) (1.0.5) (CLDC-1.0, MIDP-2.0) (Pop2MIDlet) (919181cab8d651d98b99c3987aba8377380a5fec8a67c8f1b046a24ecc69b2f3).jar",
    "device": "",
-   "notesGeneral": "Unplayable",
+   "notesGeneral": "",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "2EEAAC68",
@@ -14006,7 +14023,7 @@
    "size": 146685,
    "sheetRow": 32,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "SoT-G01",
    "variant": "b"
@@ -14028,7 +14045,7 @@
    "oldFilename": "",
    "archivePaths": "Prince-SOT/Prince-SOT (Gameloft SA) (1.0.5) (CLDC-1.0, MIDP-2.0) (6E013D91).jar\nPrince-SOT/Prince-SOT (Gameloft SA) (1.0.5) (CLDC-1.0, MIDP-2.0) (Pop2MIDlet) (15034bb73ceac6a56d5d83b7d530f53a171468c392c1ebb334bb959e5c5191c7).jar",
    "device": "",
-   "notesGeneral": "Unplayable",
+   "notesGeneral": "",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "6E013D91",
@@ -14044,7 +14061,7 @@
    "size": 146684,
    "sheetRow": 33,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "SoT-G01",
    "variant": "b"
