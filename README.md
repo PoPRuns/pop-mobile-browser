@@ -11,9 +11,7 @@
 
 Controls include fullscreen, restart, automatic closest-fit emulated resolution, per-JAR browser-local screen size overrides (choose a size in the emulator settings and select Restart), and a persistent setting for phone-style versus standard numpad layout.
 
-The catalogue importer derives a `phoneType` hint from the workbook's `Device(s)` column. Recognized single-manufacturer entries select Nokia, Siemens, Motorola or SonyEricsson; unknown, unsupported and mixed entries use the emulator's Nokia default. This is a compatibility hint, not full hardware emulation. The original device text remains unchanged.
-
-To override the detected profile, open the emulator settings (Esc), change **Phone type**, and complete the emulator's own Restart prompt before closing the player. The override is remembered in browser storage for that JAR's SHA-256, independently of other builds. Existing catalogues without `phoneType` retain the emulator's previous behavior until reimported. Manual settings from before this feature are not automatically migrated because the emulator's old settings can be shared by multiple builds.
+The emulator automatically selects a supported phone profile from the catalogue's device information. To override it, open the emulator settings (Esc), change **Phone type**, and restart using the emulator's own prompt. The override is saved per JAR in browser storage.
 
 ## Start a local preview
 
@@ -25,7 +23,7 @@ python3 server.py
 
 Open <http://127.0.0.1:8000/>. Do not open `index.html` via `file://`.
 
-To use a local collection: of JAR files:
+To use a local collection of JAR files:
 
 ```sh
 python3 server.py --jar-dir '/PATH/TO/YOUR/JAR collection'
@@ -59,16 +57,13 @@ python3 tools/import_pop_workbook.py \
 
 ## Emulator source and licensing
 
-The bundled emulator includes targeted compatibility fixes to address playback issues in certain game builds.
+The site uses FreeJ2ME-Web and [CheerpJ](https://cheerpj.com/). Source code, build instructions, licenses and credits are available here:
 
-The bundled `libmidi.wasm` uses *PoP Mobile Original FM GM*, a procedurally generated General MIDI SoundFont, rather than the upstream sample bank. The generator is [`tools/generate_fm_soundfont.py`](tools/generate_fm_soundfont.py).
-
-- [Emulator source, build provenance, and MIDI details](docs/EMULATOR_SOURCE.md)
-- [Complete emulator corresponding-source archive (v0.1.0)](https://github.com/PoPRuns/pop-mobile-browser/releases/download/v0.1.0/pop-mobile-emulator-corresponding-source-v1.tar.gz)
+- [Emulator source and build documentation](docs/EMULATOR_SOURCE.md)
 - [Third-party notices and credits](THIRD_PARTY_NOTICES.md)
 - [GPL-3.0 license for original PoP Mobile code](LICENSE)
 
-The original FreeJ2ME runtime, FluidSynth, FFmpeg, x264, and other dependencies retain their own licenses and notices. PoP Mobile uses [CheerpJ](https://cheerpj.com/) from its official CDN and displays *Built with CheerpJ* attribution.
+Built with CheerpJ.
 
 The Prince of Persia games and associated intellectual property belong to their respective rights holders. This is an independent archival and research project, without affiliation or endorsement.
 

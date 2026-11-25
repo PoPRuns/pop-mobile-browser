@@ -37,6 +37,8 @@ The v0.1.0 corresponding-source archive, the patches above and the current site 
 | `vendor/freej2me-web/web/libmedia/transcode/transcode.wasm` | `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b` |
 | Generated `gm.sf2` within source bundle | `5b1f4a3873294197ee492a182ec955780b495db2ddfeb9635a4faef278cad34e` |
 
+The base archive predates the Java compatibility patches. Use the patches listed above and the current adapter sources when reproducing the bundled runtime. The original upstream media binary has documented source/build inputs but has not been independently reproduced by this project.
+
 ## Original FM General MIDI SoundFont
 
 The *PoP Mobile Original FM GM* SoundFont and generated PCM samples are licensed GPL-3.0-or-later by PoP Mobile contributors. Source: [`tools/generate_fm_soundfont.py`](../tools/generate_fm_soundfont.py).
@@ -47,7 +49,13 @@ python3 tools/generate_fm_soundfont.py PoP-Mobile-FM-GM.sf2
 sha256sum PoP-Mobile-FM-GM.sf2
 ```
 
-The expected output SHA-256 is the `gm.sf2` fingerprint above. The SoundFont is compiled into `libmidi.wasm` using generated `gm.h`; it is not downloaded at runtime. Its Emscripten/FluidSynth build inputs are included in the release source archive. Running the Python generator alone does not rebuild Wasm.
+The expected output SHA-256 is the `gm.sf2` fingerprint above. The SoundFont is compiled into `libmidi.wasm` using generated `gm.h`; it is not downloaded at runtime. Its Emscripten/FluidSynth build inputs are included in the release source archive. Running the Python generator alone does not rebuild Wasm. The rebuilt MIDI module was tested in Firefox. The earlier Roland-identified MIDI binary and SoundFont must not be published, including through Git history.
+
+## Phone profile selection
+
+The catalogue importer derives a `phoneType` hint from the workbook's `Device(s)` column. Recognized single-manufacturer entries select Nokia, Siemens, Motorola or SonyEricsson; unknown, unsupported and mixed entries use the emulator's Nokia default. This is a compatibility hint, not full hardware emulation. The original device text remains unchanged.
+
+The player's manual phone profile override is saved in browser storage per JAR SHA-256. Existing catalogues without `phoneType` retain the emulator's previous behavior until reimported. Older manual settings are not automatically migrated because they may be shared by multiple builds.
 
 ## Pages build and validation
 
