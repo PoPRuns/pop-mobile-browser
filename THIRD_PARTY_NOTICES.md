@@ -27,17 +27,7 @@ SHA-256: `ad711845e72f1fbbd0491c3642bd2e35b98f4dfd959444e580a88b331cc3fcd9`
 
 The archive contains pinned FreeJ2ME source, modified FluidSynth 2.4.0 source, the PoP Mobile original FM General MIDI SoundFont and its generator, FFmpeg 7.1.1, the pinned x264 source and patch, applicable license texts, build scripts and PoP Mobile adapters. The MIDI replacement was rebuilt and tested in Firefox. The original FreeJ2ME Java and media binaries have documented source/build inputs but were not independently reproduced from source.
 
-### Updated Java emulator (issue #11)
-
-The current Java binary includes the [Chapter 1 compatibility source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-11-busy-wait.patch). The patch is also distributed at `emulator/source-patches/issue-11-busy-wait.patch` on the deployed site. Use the v0.1.0 corresponding-source archive above as the base, together with all three Java patches and the current site adapter source ([repository](https://github.com/PoPRuns/pop-mobile-browser)). Apply the issue #11, issue #5 and issue #13 patches in that order to the pinned FreeJ2ME source and run `ant -Dant.build.javac.source=1.8` with OpenJDK 17. The original game JAR is not modified. The MIDI and media binaries are unchanged.
-
-### Additional Java emulator update (issue #5)
-
-The current Java binary also includes the [Sands of Time audio busy-wait source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-5-audio-busy-wait.patch). It is distributed at `emulator/source-patches/issue-5-audio-busy-wait.patch`. Apply the issue #11 patch first and then the issue #5 patch to the pinned upstream Java source, followed by the issue #13 patch below. Use all three Java patches with the base corresponding-source archive and the current repository adapter sources. Original game JARs and the MIDI and media WebAssembly binaries are unchanged.
-
-### Updated Java emulator (issue #13)
-
-The current Java binary additionally includes the [Harem Adventures startup and audio compatibility source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-13-startup-audio-busy-wait.patch). It is distributed at `emulator/source-patches/issue-13-startup-audio-busy-wait.patch` on the deployed site. Apply it after the Chapter 1 and Sands of Time patches and before building with Ant. All three patches are required for the current Java build. The original game JARs and MIDI/media binaries remain unchanged.
+The bundled Java emulator includes playback compatibility modifications; the corresponding source patches and build instructions are documented in [EMULATOR_SOURCE.md](https://github.com/PoPRuns/pop-mobile-browser/blob/main/docs/EMULATOR_SOURCE.md).
 
 ## MIDI replacement and FluidSynth
 
