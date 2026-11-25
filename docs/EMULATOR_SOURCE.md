@@ -10,13 +10,19 @@ This site bundles a reduced freej2me-web runtime, based on upstream commit [`c19
 
 The current Java emulator adds the [Chapter 1 source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-11-busy-wait.patch) to the pinned upstream Java source above. It matches the exact SHA-256 of the affected `prince/l` class and inserts a 1 ms sleep into its busy-wait loop at class load time, leaving the original game JAR and its 110 ms frame target unchanged. Precise timing equivalence has not been established. The MIDI and media WebAssembly builds are unchanged. The v0.1.0 archive remains the base corresponding-source bundle; use it together with this patch and the current site adapter source in this repository.
 
-Rebuild the Java component from a clean checkout of the pinned upstream commit using OpenJDK 17 and Apache Ant: apply the patch with `git apply /path/to/issue-11-busy-wait.patch`, then run `ant -Dant.build.javac.source=1.8`. Copy only `web/freej2me-web.jar` into the site vendor directory.
+Rebuild the Java component from a clean checkout of the pinned upstream commit using OpenJDK 17 and Apache Ant: apply the patch with `git apply /path/to/issue-11-busy-wait.patch`, then apply the issue #5 patch described below and run `ant -Dant.build.javac.source=1.8`. Copy only `web/freej2me-web.jar` into the site vendor directory.
+
+## Sands of Time audio-thread compatibility fix (issue #5)
+
+The current Java emulator additionally includes the [issue #5 source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-5-audio-busy-wait.patch). It matches the exact SHA-256 fingerprint of the shared `F` class in the affected Sands of Time builds (CRC32 `0EF5CEC7`, `2EEAAC68`, `6E013D91`). In `F.run()`, the idle audio polling call to `Thread.yield()` becomes `Thread.sleep(1)`. The main game loop, frame interval target and original game JARs are unchanged. Exact timing equivalence has not been established.
+
+For the current Java build, apply the issue #11 patch to the pinned upstream source first, then run `git apply /path/to/issue-5-audio-busy-wait.patch` before the Ant build. Both patches and the base corresponding-source archive are required; MIDI and media WebAssembly binaries are unchanged.
 
 ## Published binary fingerprints
 
 | Component | SHA-256 |
 | --- | --- |
-| `vendor/freej2me-web/web/freej2me-web.jar` | `70d84f5335e16842cdda59249af83e98dfa18c1da713a0a12364715b6f4961ce` |
+| `vendor/freej2me-web/web/freej2me-web.jar` | `9c291d8d25159181d103c5e3bfc78a74dffe6661378af7601a9141c669528d43` |
 | `vendor/freej2me-web/web/libmidi/libmidi.wasm` | `cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98` |
 | `vendor/freej2me-web/web/libmedia/transcode/transcode.wasm` | `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b` |
 | Generated `gm.sf2` within source bundle | `5b1f4a3873294197ee492a182ec955780b495db2ddfeb9635a4faef278cad34e` |

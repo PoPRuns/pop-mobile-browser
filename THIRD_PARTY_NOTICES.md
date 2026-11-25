@@ -15,7 +15,7 @@ The emulator includes third-party dependencies with additional licensing require
 
 Binary SHA-256 identifiers for this release (FreeJ2ME `c19416e`, with PoP Mobile MIDI replacement):
 
-- `web/freej2me-web.jar`: `70d84f5335e16842cdda59249af83e98dfa18c1da713a0a12364715b6f4961ce`
+- `web/freej2me-web.jar`: `9c291d8d25159181d103c5e3bfc78a74dffe6661378af7601a9141c669528d43`
 - `web/libmidi/libmidi.wasm`: `cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98`
 - `web/libmedia/transcode/transcode.wasm`: `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b`
 
@@ -29,7 +29,11 @@ The archive contains pinned FreeJ2ME source, modified FluidSynth 2.4.0 source, t
 
 ### Updated Java emulator (issue #11)
 
-The current Java binary includes the [Chapter 1 compatibility source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-11-busy-wait.patch). The patch is also distributed at `emulator/source-patches/issue-11-busy-wait.patch` on the deployed site. Use the v0.1.0 corresponding-source archive above as the base, together with this patch and the current site adapter source ([repository](https://github.com/PoPRuns/pop-mobile-browser)). Apply the patch to the pinned FreeJ2ME source and run `ant -Dant.build.javac.source=1.8` with OpenJDK 17. The original game JAR is not modified. The MIDI and media binaries are unchanged.
+The current Java binary includes the [Chapter 1 compatibility source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-11-busy-wait.patch). The patch is also distributed at `emulator/source-patches/issue-11-busy-wait.patch` on the deployed site. Use the v0.1.0 corresponding-source archive above as the base, together with this patch and the current site adapter source ([repository](https://github.com/PoPRuns/pop-mobile-browser)). Apply the issue #11 patch, then the issue #5 patch described below, to the pinned FreeJ2ME source and run `ant -Dant.build.javac.source=1.8` with OpenJDK 17. The original game JAR is not modified. The MIDI and media binaries are unchanged.
+
+### Additional Java emulator update (issue #5)
+
+The current Java binary also includes the [Sands of Time audio busy-wait source patch](https://github.com/PoPRuns/pop-mobile-browser/blob/main/vendor/freej2me-web/web/source-patches/issue-5-audio-busy-wait.patch). It is distributed at `emulator/source-patches/issue-5-audio-busy-wait.patch`. Apply the issue #11 patch first and then the issue #5 patch to the pinned upstream Java source, before rebuilding with OpenJDK 17 and Ant. Use both patches with the base corresponding-source archive and the current repository adapter sources. Original game JARs and the MIDI and media WebAssembly binaries are unchanged.
 
 ## MIDI replacement and FluidSynth
 

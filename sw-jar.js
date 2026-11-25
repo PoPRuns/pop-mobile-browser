@@ -4,7 +4,7 @@
  */
 'use strict';
 const CACHE_NAME = 'pop-mobile-verified-jars-v1';
-const RUNTIME_CACHE = 'pop-mobile-emulator-runtime-c19416e-v2';
+const RUNTIME_CACHE = 'pop-mobile-emulator-runtime-c19416e-v3';
 const PATH_RE = /\/emulator\/jar\/([a-f0-9]{64})\.jar$/;
 const EMULATOR_JAR = '/emulator/freej2me-web.jar';
 let runtimeJarFlight = null; // Share a single download across parallel CheerpJ Range requests.

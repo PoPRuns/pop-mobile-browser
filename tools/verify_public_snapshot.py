@@ -16,14 +16,14 @@ EXPECTED = {
     'vendor/freej2me-web/web/libmidi/libmidi.wasm':
         'cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98',
     'vendor/freej2me-web/web/freej2me-web.jar':
-        '70d84f5335e16842cdda59249af83e98dfa18c1da713a0a12364715b6f4961ce',
+        '9c291d8d25159181d103c5e3bfc78a74dffe6661378af7601a9141c669528d43',
     'vendor/freej2me-web/web/libmedia/transcode/transcode.wasm':
         'a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b',
 }
 EMULATOR_JAR = 'vendor/freej2me-web/web/freej2me-web.jar'
 MIDI_PATH = 'vendor/freej2me-web/web/libmidi/libmidi.wasm'
 # The original Java binary is still approved in historical commits.
-HISTORICAL_JAVA_SHA256 = {'08ffc41af9e1bf815012a03d87e0af0e894eb98181f42b2302a2febf12b343eb', EXPECTED[EMULATOR_JAR]}
+HISTORICAL_JAVA_SHA256 = {'08ffc41af9e1bf815012a03d87e0af0e894eb98181f42b2302a2febf12b343eb', '70d84f5335e16842cdda59249af83e98dfa18c1da713a0a12364715b6f4961ce', EXPECTED[EMULATOR_JAR]}
 
 
 def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
