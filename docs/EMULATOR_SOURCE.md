@@ -16,6 +16,7 @@ The bundled Java emulator includes the following patches to address playback and
 | [#5](https://github.com/PoPRuns/pop-mobile-browser/issues/5) | Sands of Time | Added a 1 ms sleep to audio polling in `F.run()`. |
 | [#13](https://github.com/PoPRuns/pop-mobile-browser/issues/13) | Harem Adventures | Added 1 ms sleeps to paused-state polling in `F.run()` and audio polling in `L.run()`. |
 | [#6](https://github.com/PoPRuns/pop-mobile-browser/issues/6) | Sands of Time (Sharp GX10) | Remapped CJSP sound references in `pop2/e` to the Vodafone sound API. Startup works; SMAF/MMF playback remains unsupported. |
+| [#7](https://github.com/PoPRuns/pop-mobile-browser/issues/7) | Sands of Time | Restored standard key callbacks and corrected inherited repaint method references in the CanvasPlus-based `pop2/e` class. |
 
 All fixes are applied at class load time using exact SHA-256 class fingerprints. Original game JARs, frame interval targets and MIDI/media binaries remain unchanged. Precise timing equivalence has not been established.
 
@@ -25,6 +26,7 @@ To rebuild the current Java component, apply the following patches to the pinned
 2. [issue-5-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-5-audio-busy-wait.patch)
 3. [issue-13-startup-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-13-startup-audio-busy-wait.patch)
 4. [issue-6-cjsp-sound-api.patch](../vendor/freej2me-web/web/source-patches/issue-6-cjsp-sound-api.patch)
+5. [issue-7-input-callback.patch](../vendor/freej2me-web/web/source-patches/issue-7-input-callback.patch)
 
 Build using OpenJDK 17 and Apache Ant (`ant -Dant.build.javac.source=1.8`), then copy `web/freej2me-web.jar` into the site vendor directory.
 
@@ -34,7 +36,7 @@ The v0.1.0 corresponding-source archive, the patches above and the current site 
 
 | Component | SHA-256 |
 | --- | --- |
-| `vendor/freej2me-web/web/freej2me-web.jar` | `f25a8e1b768a97c10c5578228d29fd271d41ec60bdacbbd1ac5ef7554915b62a` |
+| `vendor/freej2me-web/web/freej2me-web.jar` | `e58d8999c99328bf55f9c1af05d03a1eeec0bd99a193f66ed114698c0855cd29` |
 | `vendor/freej2me-web/web/libmidi/libmidi.wasm` | `cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98` |
 | `vendor/freej2me-web/web/libmedia/transcode/transcode.wasm` | `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b` |
 | Generated `gm.sf2` within source bundle | `5b1f4a3873294197ee492a182ec955780b495db2ddfeb9635a4faef278cad34e` |
