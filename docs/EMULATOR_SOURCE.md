@@ -18,7 +18,7 @@ The bundled Java emulator includes the following patches to address playback and
 | [#6](https://github.com/PoPRuns/pop-mobile-browser/issues/6) | Sands of Time (Sharp GX10) | Remapped CJSP sound references in `pop2/e` to the Vodafone sound API. Startup works; SMAF/MMF playback remains unsupported. |
 | [#7](https://github.com/PoPRuns/pop-mobile-browser/issues/7) | Sands of Time | Restored standard key callbacks and corrected inherited repaint method references in the CanvasPlus-based `pop2/e` class. |
 | [#31](https://github.com/PoPRuns/pop-mobile-browser/issues/31) | Sands of Time | Extended the issue #5 audio polling workaround to another verified `F.class` fingerprint. |
-| [#8](https://github.com/PoPRuns/pop-mobile-browser/issues/8) | Sands of Time | Added a null fallback for the `MIDlet-Jar-URL` lookup in the verified `d.c()` method. |
+| [#8](https://github.com/PoPRuns/pop-mobile-browser/issues/8) | Sands of Time | Added a null fallback for the `MIDlet-Jar-URL` lookup in the verified `d.c()` method across three class fingerprints (four JAR builds). |
 
 All fixes are applied at class load time using exact SHA-256 class fingerprints. Original game JARs, frame interval targets and MIDI/media binaries remain unchanged. Precise timing equivalence has not been established.
 
@@ -31,6 +31,7 @@ To rebuild the current Java component, apply the following patches to the pinned
 5. [issue-7-input-callback.patch](../vendor/freej2me-web/web/source-patches/issue-7-input-callback.patch)
 6. [issue-31-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-31-audio-busy-wait.patch)
 7. [issue-8-missing-jad-url.patch](../vendor/freej2me-web/web/source-patches/issue-8-missing-jad-url.patch)
+8. [issue-8-additional-jad-url-builds.patch](../vendor/freej2me-web/web/source-patches/issue-8-additional-jad-url-builds.patch)
 
 Build using OpenJDK 17 and Apache Ant (`ant -Dant.build.javac.source=1.8`), then copy `web/freej2me-web.jar` into the site vendor directory.
 
@@ -40,7 +41,7 @@ The v0.1.0 corresponding-source archive, the patches above and the current site 
 
 | Component | SHA-256 |
 | --- | --- |
-| `vendor/freej2me-web/web/freej2me-web.jar` | `e05be2358db534de1836212851e9dc6de10b74fa647292793ded94df7c59a53c` |
+| `vendor/freej2me-web/web/freej2me-web.jar` | `4dcd5c7720dcb9d2b00d82e5d6a991e9383151b699be71afd42c398a66e5a5b9` |
 | `vendor/freej2me-web/web/libmidi/libmidi.wasm` | `cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98` |
 | `vendor/freej2me-web/web/libmedia/transcode/transcode.wasm` | `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b` |
 | Generated `gm.sf2` within source bundle | `5b1f4a3873294197ee492a182ec955780b495db2ddfeb9635a4faef278cad34e` |

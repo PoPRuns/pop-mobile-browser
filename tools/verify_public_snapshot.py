@@ -16,14 +16,14 @@ EXPECTED = {
     'vendor/freej2me-web/web/libmidi/libmidi.wasm':
         'cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98',
     'vendor/freej2me-web/web/freej2me-web.jar':
-        'e05be2358db534de1836212851e9dc6de10b74fa647292793ded94df7c59a53c',
+        '4dcd5c7720dcb9d2b00d82e5d6a991e9383151b699be71afd42c398a66e5a5b9',
     'vendor/freej2me-web/web/libmedia/transcode/transcode.wasm':
         'a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b',
 }
 EMULATOR_JAR = 'vendor/freej2me-web/web/freej2me-web.jar'
 MIDI_PATH = 'vendor/freej2me-web/web/libmidi/libmidi.wasm'
 # The original Java binary is still approved in historical commits.
-HISTORICAL_JAVA_SHA256 = {'08ffc41af9e1bf815012a03d87e0af0e894eb98181f42b2302a2febf12b343eb', '70d84f5335e16842cdda59249af83e98dfa18c1da713a0a12364715b6f4961ce', EXPECTED[EMULATOR_JAR], '9c291d8d25159181d103c5e3bfc78a74dffe6661378af7601a9141c669528d43', 'ee54975540c927e2978c51dcb47e9828aa5f52a1e0900927a84cc175bfede4a6', 'f25a8e1b768a97c10c5578228d29fd271d41ec60bdacbbd1ac5ef7554915b62a', 'e58d8999c99328bf55f9c1af05d03a1eeec0bd99a193f66ed114698c0855cd29', '7db76f1595018e40942beddfe94b395d05b48b341c4dc2b1b95f945814dcd7e5'}
+HISTORICAL_JAVA_SHA256 = {'08ffc41af9e1bf815012a03d87e0af0e894eb98181f42b2302a2febf12b343eb', '70d84f5335e16842cdda59249af83e98dfa18c1da713a0a12364715b6f4961ce', EXPECTED[EMULATOR_JAR], '9c291d8d25159181d103c5e3bfc78a74dffe6661378af7601a9141c669528d43', 'ee54975540c927e2978c51dcb47e9828aa5f52a1e0900927a84cc175bfede4a6', 'f25a8e1b768a97c10c5578228d29fd271d41ec60bdacbbd1ac5ef7554915b62a', 'e58d8999c99328bf55f9c1af05d03a1eeec0bd99a193f66ed114698c0855cd29', '7db76f1595018e40942beddfe94b395d05b48b341c4dc2b1b95f945814dcd7e5', 'e05be2358db534de1836212851e9dc6de10b74fa647292793ded94df7c59a53c'}
 
 
 def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
