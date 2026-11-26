@@ -13578,7 +13578,7 @@
    "oldFilename": "",
    "archivePaths": "PrinceSOT/PrinceSOT (Gameloft SA) (1.0.6) (CLDC-1.0, MIDP-2.0) (Pop2MIDlet) (53b8293fd5791dbd14067719157d14556d7e9952b3b4ae66dffba4ad6f20bf8c).jar",
    "device": "",
-   "notesGeneral": "Unplayable",
+   "notesGeneral": "",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "79090C1C",
@@ -13593,7 +13593,7 @@
    "size": 146867,
    "sheetRow": 21,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "SoT-G01",
    "variant": "b"
