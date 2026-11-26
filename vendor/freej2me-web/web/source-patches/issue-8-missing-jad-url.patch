@@ -1,0 +1,86 @@
+diff --git a/src/org/recompile/mobile/JarUrlCompat.java b/src/org/recompile/mobile/JarUrlCompat.java
+new file mode 100644
+index 0000000..6de7af5
+--- /dev/null
++++ b/src/org/recompile/mobile/JarUrlCompat.java
+@@ -0,0 +1,67 @@
++package org.recompile.mobile;
++
++import java.security.MessageDigest;
++import org.objectweb.asm.ClassReader;
++import org.objectweb.asm.ClassWriter;
++import org.objectweb.asm.ClassAdapter;
++import org.objectweb.asm.MethodAdapter;
++import org.objectweb.asm.MethodVisitor;
++import org.objectweb.asm.Label;
++import org.objectweb.asm.Opcodes;
++
++/** Issue #8: tolerate a missing JAD URL in the verified game class only. */
++final class JarUrlCompat implements Opcodes {
++    private static final String CLASS_SHA256 =
++        "71531b4e5c155a77320809ec6762926c254b7a2e51be97b4f1de1adf8542ced4";
++
++    static ClassReader remap(ClassReader reader) throws Exception {
++        if (!"d".equals(reader.getClassName())) return reader;
++        StringBuilder hex = new StringBuilder();
++        for (byte b : MessageDigest.getInstance("SHA-256").digest(reader.b)) {
++            int n = b & 255;
++            if (n < 16) hex.append('0');
++            hex.append(Integer.toHexString(n));
++        }
++        if (!CLASS_SHA256.equals(hex.toString())) return reader;
++
++        // Preserve all unmodified methods; only c() needs a null fallback.
++        ClassWriter writer = new ClassWriter(reader, 0);
++        final int[] changed = {0};
++        reader.accept(new ClassAdapter(writer) {
++            public MethodVisitor visitMethod(int access, String name, String desc,
++                    String signature, String[] exceptions) {
++                MethodVisitor target = super.visitMethod(access, name, desc, signature, exceptions);
++                if (!"c".equals(name) || !"()V".equals(desc)) return target;
++                return new MethodAdapter(target) {
++                    private boolean urlKey;
++                    public void visitLdcInsn(Object value) {
++                        urlKey = "MIDlet-Jar-URL".equals(value);
++                        super.visitLdcInsn(value);
++                    }
++                    public void visitMethodInsn(int opcode, String owner, String name, String desc) {
++                        super.visitMethodInsn(opcode, owner, name, desc);
++                        if (urlKey && opcode == INVOKEVIRTUAL
++                                && "javax/microedition/midlet/MIDlet".equals(owner)
++                                && "getAppProperty".equals(name)
++                                && "(Ljava/lang/String;)Ljava/lang/String;".equals(desc)) {
++                            // The original call already needs two stack slots;
++                            // DUP therefore needs no increase in max_stack.
++                            Label present = new Label();
++                            mv.visitInsn(DUP);
++                            mv.visitJumpInsn(IFNONNULL, present);
++                            mv.visitInsn(POP);
++                            mv.visitLdcInsn("");
++                            mv.visitLabel(present);
++                            changed[0]++;
++                        }
++                        urlKey = false;
++                    }
++                };
++            }
++        }, 0);
++        if (changed[0] != 1) throw new IllegalStateException("Unexpected JAD lookup count: " + changed[0]);
++        ClassReader result = new ClassReader(writer.toByteArray());
++        System.out.println("[POP-COMPAT] Applied Sands of Time issue #8 missing JAD URL fix");
++        return result;
++    }
++}
+diff --git a/src/org/recompile/mobile/MIDletLoader.java b/src/org/recompile/mobile/MIDletLoader.java
+index ea917d9..67b7f4b 100644
+--- a/src/org/recompile/mobile/MIDletLoader.java
++++ b/src/org/recompile/mobile/MIDletLoader.java
+@@ -502,7 +502,7 @@ public class MIDletLoader extends URLClassLoader {
+ 	 */
+ 
+ 	private byte[] instrument(InputStream stream) throws Exception {
+-		ClassReader reader = CanvasInputCompat.remap(CjspSoundCompat.remap(new ClassReader(stream)));
++		ClassReader reader = JarUrlCompat.remap(CanvasInputCompat.remap(CjspSoundCompat.remap(new ClassReader(stream))));
+ 		ClassWriter writer = new ClassWriter(0);
+ 		ClassVisitor visitor = new ASMVisitor(writer);
+ 		reader.accept(BusyWaitCompat.wrap(visitor, reader), ClassReader.SKIP_DEBUG);
