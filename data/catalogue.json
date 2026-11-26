@@ -14512,7 +14512,7 @@
    "oldFilename": "Prince_Of_Persia-Sands_Of_Time.jar",
    "archivePaths": "PrinceSOT/PrinceSOT (Gameloft SA) (1.1.0) (CLDC-1.0, MIDP-2.0) (CFBBE441).jar PrinceSOT/PrinceSOT (Gameloft SA) (1.1.0) (CLDC-1.0, MIDP-2.0) (Pop2MIDlet) (f483d5cd85af12523073a069b24b0e894525ec6886184e1a9247015cbbc10cea).jar",
    "device": "-",
-   "notesGeneral": "Unplayable",
+   "notesGeneral": "",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "CFBBE441",
@@ -14528,7 +14528,7 @@
    "size": 112657,
    "sheetRow": 46,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "SoT-G02",
    "variant": "b"
