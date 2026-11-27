@@ -1,0 +1,81 @@
+diff --git a/src/org/recompile/mobile/MIDletLoader.java b/src/org/recompile/mobile/MIDletLoader.java
+index 67b7f4b..5c99184 100644
+--- a/src/org/recompile/mobile/MIDletLoader.java
++++ b/src/org/recompile/mobile/MIDletLoader.java
+@@ -502,7 +502,7 @@ public class MIDletLoader extends URLClassLoader {
+ 	 */
+ 
+ 	private byte[] instrument(InputStream stream) throws Exception {
+-		ClassReader reader = JarUrlCompat.remap(CanvasInputCompat.remap(CjspSoundCompat.remap(new ClassReader(stream))));
++		ClassReader reader = TextEncodingCompat.remap(JarUrlCompat.remap(CanvasInputCompat.remap(CjspSoundCompat.remap(new ClassReader(stream)))));
+ 		ClassWriter writer = new ClassWriter(0);
+ 		ClassVisitor visitor = new ASMVisitor(writer);
+ 		reader.accept(BusyWaitCompat.wrap(visitor, reader), ClassReader.SKIP_DEBUG);
+diff --git a/src/org/recompile/mobile/TextEncodingCompat.java b/src/org/recompile/mobile/TextEncodingCompat.java
+new file mode 100644
+index 0000000..6f84595
+--- /dev/null
++++ b/src/org/recompile/mobile/TextEncodingCompat.java
+@@ -0,0 +1,62 @@
++package org.recompile.mobile;
++
++import java.security.MessageDigest;
++import org.objectweb.asm.ClassReader;
++import org.objectweb.asm.ClassWriter;
++import org.objectweb.asm.ClassAdapter;
++import org.objectweb.asm.MethodAdapter;
++import org.objectweb.asm.MethodVisitor;
++import org.objectweb.asm.Opcodes;
++
++/** Issue #17: preserve single-byte text in the verified German WW decoder. */
++final class TextEncodingCompat implements Opcodes {
++    private static final String CLASS_SHA256 =
++        "80b92b5855f45f9fd5f73e06b06af97880179d074d8591bc6371e1324e99c828";
++
++    static ClassReader remap(ClassReader reader) throws Exception {
++        if (!"c".equals(reader.getClassName())) return reader;
++        StringBuilder hex = new StringBuilder();
++        for (byte b : MessageDigest.getInstance("SHA-256").digest(reader.b)) {
++            int n = b & 255;
++            if (n < 16) hex.append('0');
++            hex.append(Integer.toHexString(n));
++        }
++        if (!CLASS_SHA256.equals(hex.toString())) return reader;
++
++        ClassWriter writer = new ClassWriter(reader, 0);
++        final int[] changed = {0};
++        reader.accept(new ClassAdapter(writer) {
++            public MethodVisitor visitMethod(int access, String name, String desc,
++                    String signature, String[] exceptions) {
++                MethodVisitor target = super.visitMethod(access, name, desc, signature, exceptions);
++                if (!"a".equals(name) || !"(I[B[B)Z".equals(desc)) return target;
++                return new MethodAdapter(target) {
++                    public void visitMethodInsn(int opcode, String owner, String name, String desc) {
++                        if (opcode == INVOKESPECIAL && "java/lang/String".equals(owner)
++                                && "<init>".equals(name) && "([BII)V".equals(desc)) {
++                            // Stack suffix: bytes, offset, length.
++                            // Insert zero high byte before the two int arguments.
++                            // String(bytes, 0, offset, length) is the same mapping
++                            // tested in diagnostic B, independent of default charset.
++                            mv.visitInsn(ICONST_0);
++                            mv.visitInsn(DUP_X2);
++                            mv.visitInsn(POP);
++                            super.visitMethodInsn(opcode, owner, name, "([BIII)V");
++                            changed[0]++;
++                        } else {
++                            super.visitMethodInsn(opcode, owner, name, desc);
++                        }
++                    }
++                    public void visitMaxs(int maxStack, int maxLocals) {
++                        // ICONST_0 + DUP_X2 temporarily add two stack slots.
++                        super.visitMaxs(maxStack + 2, maxLocals);
++                    }
++                };
++            }
++        }, 0);
++        if (changed[0] != 1) throw new IllegalStateException("Unexpected WW decoder count: " + changed[0]);
++        ClassReader result = new ClassReader(writer.toByteArray());
++        System.out.println("[POP-COMPAT] Applied Warrior Within issue #17 single-byte text decoding fix");
++        return result;
++    }
++}

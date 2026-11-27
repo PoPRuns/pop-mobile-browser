@@ -36,7 +36,7 @@
    "count": 91,
    "groups": 19,
    "resolutions": 18,
-   "languages": 3,
+   "languages": 4,
    "ungrouped": false
   },
   {
@@ -1097,7 +1097,8 @@
     "132x176"
    ],
    "languages": [
-    "English"
+    "English",
+    "German"
    ],
    "devices": [],
    "vendors": [
@@ -16349,7 +16350,7 @@
    "oldFilename": "",
    "archivePaths": "PrinceOfPersia_WarriorWithin/PrinceOfPersia_WarriorWithin (Gameloft SA) (1.0.0) (CLDC-1.0, MIDP-2.0) (cMIDlet) (b2ab6417f2563d1af577ca6f856ea3096263029d095a09284b6ae6ff18fa9d38).jar",
    "device": "",
-   "notesGeneral": "Unplayable: Damaged JAR: 7 unreadable ZIP entries (e.class; l11; l12; l2; l3; l8; l9); static gameplay analysis incomplete.",
+   "notesGeneral": "Unplayable (corrupted source)",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "59C91A6C",
@@ -16378,7 +16379,7 @@
    "cldc": "1.0",
    "midp": "2.0",
    "resolution": "132x176",
-   "language": "English",
+   "language": "German",
    "aboutName": "Prince of Persia Warrior Within",
    "aboutVersion": "v1.0.0",
    "aboutAuthor": "2004 Gameloft",
@@ -16386,7 +16387,7 @@
    "oldFilename": "",
    "archivePaths": "PrinceOfPersia_WarriorWithin/PrinceOfPersia_WarriorWithin (Gameloft SA) (1.0.0) (CLDC-1.0, MIDP-2.0) (368C8CFB).jar PrinceOfPersia_WarriorWithin/PrinceOfPersia_WarriorWithin (Gameloft SA) (1.0.0) (CLDC-1.0, MIDP-2.0) (cMIDlet) (d94375f896e75032806ac9999a6367fa2e80bc49d78d1509f2e293397812943b).jar",
    "device": "",
-   "notesGeneral": "Unplayable",
+   "notesGeneral": "",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "368C8CFB",
@@ -16402,7 +16403,7 @@
    "size": 156057,
    "sheetRow": 21,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "WW-G01",
    "variant": "d"
