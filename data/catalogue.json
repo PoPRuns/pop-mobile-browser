@@ -1471,6 +1471,7 @@
     "96x65"
    ],
    "languages": [
+    "Czech",
     "English"
    ],
    "devices": [],
@@ -18485,7 +18486,7 @@
    "cldc": "1.0",
    "midp": "2.0",
    "resolution": "130x130",
-   "language": "English",
+   "language": "Czech",
    "aboutName": "Prince of Persia Warrior Within",
    "aboutVersion": "v1.0.1",
    "aboutAuthor": "Gameloft 2004",
@@ -18493,7 +18494,7 @@
    "oldFilename": "",
    "archivePaths": "Prince of Persia Warrior Within/Prince Of Persia Warrior Within (Gameloft) (1.0.1) (CLDC-1.0, MIDP-2.0) (5E9733BD).jar Prince Of Persia Warrior Within/Prince Of Persia Warrior Within (Gameloft) (1.0.1) (CLDC-1.0, MIDP-2.0) (cMIDlet) (b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82).jar",
    "device": "",
-   "notesGeneral": "Unplayable",
+   "notesGeneral": "",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "5E9733BD",
@@ -18509,7 +18510,7 @@
    "size": 155523,
    "sheetRow": 77,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "WW-G02",
    "variant": "c"

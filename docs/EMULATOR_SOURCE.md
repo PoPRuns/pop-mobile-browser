@@ -25,6 +25,7 @@ The bundled Java emulator includes the following patches to address playback and
 | [#18](https://github.com/PoPRuns/pop-mobile-browser/issues/18) | Warrior Within | Insert an interruption-safe 1 ms sleep at the verified `d.run()` audio polling loop header (CRC32 `4505D84D`); the other two builds are addressed in #35. |
 | [#35](https://github.com/PoPRuns/pop-mobile-browser/issues/35) | Warrior Within | Insert an interruption-safe 1 ms sleep at the verified `e.run()` audio polling back edge (CRC32 `BE81D1D7` and `421E90B1`). |
 | [#20](https://github.com/PoPRuns/pop-mobile-browser/issues/20) | Warrior Within | Allocate the missing one-byte level-read buffer in the verified `Z.class` (CRC32 `97C913AD`), preserving bytecode offsets and original level resources. |
+| [#21](https://github.com/PoPRuns/pop-mobile-browser/issues/21) | Warrior Within | Extend single-byte text decoding to the verified Czech `a.class` (CRC32 `5E9733BD`), retaining the issue #17 decoder mapping. |
 
 All fixes are applied at class load time using exact SHA-256 class fingerprints. Original game JARs, frame interval targets and MIDI/media binaries remain unchanged. Precise timing equivalence has not been established.
 
@@ -44,6 +45,7 @@ To rebuild the current Java component, apply the following patches to the pinned
 12. [issue-18-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-18-audio-busy-wait.patch)
 13. [issue-35-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-35-audio-busy-wait.patch)
 14. [issue-20-level-loading.patch](../vendor/freej2me-web/web/source-patches/issue-20-level-loading.patch)
+15. [issue-21-text-encoding.patch](../vendor/freej2me-web/web/source-patches/issue-21-text-encoding.patch)
 
 Build using OpenJDK 17 and Apache Ant (`ant -Dant.build.javac.source=1.8`), then copy `web/freej2me-web.jar` into the site vendor directory.
 
@@ -53,7 +55,7 @@ The v0.1.0 corresponding-source archive, the patches above and the current site 
 
 | Component | SHA-256 |
 | --- | --- |
-| `vendor/freej2me-web/web/freej2me-web.jar` | `8d1077f956bbc03892631857d4b79ed04921f272a132140d2ff934a9255614cb` |
+| `vendor/freej2me-web/web/freej2me-web.jar` | `b40fd915382f8ec1c19b47f33e7c1e7bf7b2fb365ba32c77f240d2525390ccfd` |
 | `vendor/freej2me-web/web/libmidi/libmidi.wasm` | `cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98` |
 | `vendor/freej2me-web/web/libmedia/transcode/transcode.wasm` | `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b` |
 | Generated `gm.sf2` within source bundle | `5b1f4a3873294197ee492a182ec955780b495db2ddfeb9635a4faef278cad34e` |
