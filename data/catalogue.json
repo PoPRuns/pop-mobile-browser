@@ -1449,7 +1449,9 @@
    "vendors": [
     "Gameloft SA"
    ],
-   "notes": []
+   "notes": [
+    "Limit FPS to 15"
+   ]
   },
   {
    "id": "WW-G02-c",
@@ -15974,7 +15976,7 @@
    "oldFilename": "Prince_Of_Persia-Warrior_Within.jar",
    "archivePaths": "PrinceOfPersia_WarriorWithin/PrinceOfPersia_WarriorWithin (Gameloft SA) (1.0.0) (CLDC-1.0, MIDP-2.0) (450FCEB2).jar PrinceOfPersia_WarriorWithin/PrinceOfPersia_WarriorWithin (Gameloft SA) (1.0.0) (CLDC-1.0, MIDP-2.0) (cMIDlet) (ca55290459938bb00b53cfb517f6d9c66cf99ced81d61cce22290908415756ff).jar",
    "device": "-",
-   "notesGeneral": "Unplayable",
+   "notesGeneral": "",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "450FCEB2",
@@ -15990,7 +15992,7 @@
    "size": 155895,
    "sheetRow": 10,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "WW-G01",
    "variant": "b"
@@ -16688,7 +16690,7 @@
    "oldFilename": "",
    "archivePaths": "PrinceOfPersia-WarriorWithin srv/PrinceOfPersia-WarriorWithin srv (Gameloft SAserviak) (1.0.0) (CLDC-1.0, MIDP-2.0) (cMIDlet) (9d55b5bb4e2d161f0b94273c414cee7718ebd0f8364b7d05612505c33c9d1932).jar",
    "device": "",
-   "notesGeneral": "Unplayable",
+   "notesGeneral": "",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "8F877BF6",
@@ -16703,7 +16705,7 @@
    "size": 201603,
    "sheetRow": 29,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "WW-G01",
    "variant": "f"
@@ -18455,7 +18457,7 @@
    "archivePaths": "POP-WW/POP-WW (Gameloft SA) (1.0.1) (CLDC-1.0, MIDP-1.0) (cMIDlet) (7ed5f001c9f7d27a26bef326658d429d9b55171cd5f69bb00d709f5ea81c9a3b).jar",
    "device": "",
    "notesGeneral": "",
-   "notesGameplay": "",
+   "notesGameplay": "Limit FPS to 15",
    "notesGameplay2": "",
    "crc32": "97C913AD",
    "sha1": "0199920e98c874ce948c5cd4230db8408df068cb",
@@ -18470,7 +18472,7 @@
    "sheetRow": 76,
    "phoneType": null,
    "unplayable": false,
-   "fpsLimit": null,
+   "fpsLimit": 15,
    "family": "WW-G02",
    "variant": "b"
   },
