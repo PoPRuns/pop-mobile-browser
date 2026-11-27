@@ -1,0 +1,64 @@
+diff --git a/src/org/recompile/mobile/BusyWaitCompat.java b/src/org/recompile/mobile/BusyWaitCompat.java
+index 8cc8900..24d29cc 100644
+--- a/src/org/recompile/mobile/BusyWaitCompat.java
++++ b/src/org/recompile/mobile/BusyWaitCompat.java
+@@ -55,7 +55,59 @@ final class BusyWaitCompat implements Opcodes {
+         return fingerprint.equals(hex.toString());
+     }
+ 
++    private static final String WW_25_STARTUP_SHA256 =
++        "a83e5156394619f55656475650334a0f43de63fbdeefe751fed2feaf82f2116e";
++    private static final String WW_25_STARTUP_PAUSE = "popIssue25Pause";
++
++    // Diagnostic B: only f.N() and f.h(), not f.run() or a.run().
++    private static ClassVisitor wrapIssue25(ClassVisitor downstream) {
++        return new ClassAdapter(downstream) {
++            private int startupYields, introYields;
++
++            public MethodVisitor visitMethod(int access, final String name, String desc,
++                    String signature, String[] exceptions) {
++                MethodVisitor target = super.visitMethod(access, name, desc, signature, exceptions);
++                if (!"()V".equals(desc) || !("N".equals(name) || "h".equals(name))) return target;
++                return new MethodAdapter(target) {
++                    public void visitMethodInsn(int opcode, String owner, String method, String desc) {
++                        if (opcode == INVOKESTATIC && "java/lang/Thread".equals(owner)
++                                && "yield".equals(method) && "()V".equals(desc)) {
++                            if ("N".equals(name)) startupYields++; else introYields++;
++                            super.visitMethodInsn(INVOKESTATIC, "f", WW_25_STARTUP_PAUSE, "()V");
++                            return;
++                        }
++                        super.visitMethodInsn(opcode, owner, method, desc);
++                    }
++                };
++            }
++
++            public void visitEnd() {
++                if (startupYields != 2 || introYields != 4) {
++                    throw new IllegalStateException("Expected WW #25 startup wait sites not found");
++                }
++                MethodVisitor method = super.visitMethod(ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
++                        WW_25_STARTUP_PAUSE, "()V", null, null);
++                Label start = new Label(), end = new Label(), handler = new Label();
++                method.visitCode();
++                method.visitTryCatchBlock(start, end, handler, "java/lang/InterruptedException");
++                method.visitLabel(start);
++                method.visitInsn(LCONST_1);
++                method.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "sleep", "(J)V");
++                method.visitLabel(end);
++                method.visitInsn(RETURN);
++                method.visitLabel(handler);
++                method.visitInsn(POP);
++                method.visitInsn(RETURN);
++                method.visitMaxs(2, 0);
++                method.visitEnd();
++                System.out.println("[POP-COMPAT] Applied Warrior Within issue #25 startup busy-wait fix");
++                super.visitEnd();
++            }
++        };
++    }
++
+     static ClassVisitor wrap(ClassVisitor downstream, ClassReader reader) throws Exception {
++        if (matches(reader, "f", WW_25_STARTUP_SHA256)) return wrapIssue25(downstream);
+         final boolean chapter1 = matches(reader, "prince/l", CLASS_SHA256);
+         final boolean sotAudio = matches(reader, "F", SOT_AUDIO_SHA256);
+         final boolean sot31Audio = matches(reader, "F", SOT_31_AUDIO_SHA256);
