@@ -1,0 +1,78 @@
+diff --git a/src/org/recompile/mobile/BusyWaitCompat.java b/src/org/recompile/mobile/BusyWaitCompat.java
+index 303757a..b74e201 100644
+--- a/src/org/recompile/mobile/BusyWaitCompat.java
++++ b/src/org/recompile/mobile/BusyWaitCompat.java
+@@ -27,6 +27,10 @@ final class BusyWaitCompat implements Opcodes {
+         "f4090b89e0b2b56f8b4221be27333a2666d9b879aac02de046964c1e413786f5";
+     private static final String WW_15_AUDIO_PAUSE = "popIssue15Pause";
+ 
++    private static final String WW_18_AUDIO_SHA256 =
++        "33cf81e68ff5e72ec27d7c7e562b18e41195d4a40a32cd18bc3e0b6a8c01daad";
++    private static final String WW_18_AUDIO_PAUSE = "popIssue18Pause";
++
+     private static final String HA_AUDIO_SHA256 =
+         "a3fe692bcc7c311647ab48f60f6fa22dc59ec57e4cddd6e8e7e9a4997a28b925";
+     private static final String HA_AUDIO_PAUSE = "popIssue13Pause";
+@@ -53,11 +57,13 @@ final class BusyWaitCompat implements Opcodes {
+         final boolean sot31Audio = matches(reader, "F", SOT_31_AUDIO_SHA256);
+         final boolean sot9Audio = matches(reader, "b", SOT_9_AUDIO_SHA256);
+         final boolean ww15Audio = matches(reader, "a", WW_15_AUDIO_SHA256);
++        final boolean ww18Audio = matches(reader, "d", WW_18_AUDIO_SHA256);
+         final boolean haAudio = matches(reader, "L", HA_AUDIO_SHA256);
+         final boolean haStartup = matches(reader, "F", HA_STARTUP_SHA256);
+-        if (!chapter1 && !sotAudio && !sot31Audio && !sot9Audio && !ww15Audio && !haAudio && !haStartup) return downstream;
++        if (!chapter1 && !sotAudio && !sot31Audio && !sot9Audio && !ww15Audio && !ww18Audio && !haAudio && !haStartup) return downstream;
+         return new ClassAdapter(downstream) {
+             private boolean ww15AudioPatched;
++            private boolean ww18AudioPatched;
+             private boolean haAudioPatched;
+             private boolean haStartupPatched;
+ 
+@@ -119,6 +125,28 @@ final class BusyWaitCompat implements Opcodes {
+                     method.visitMaxs(2, 0);
+                     method.visitEnd();
+                 }
++                if (ww18AudioPatched) {
++                    // Stack-neutral pause, equivalent to diagnostic B.
++                    MethodVisitor method = super.visitMethod(
++                            ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
++                            WW_18_AUDIO_PAUSE, "()V", null, null);
++                    Label start = new Label(), end = new Label(), handler = new Label();
++                    method.visitCode();
++                    method.visitTryCatchBlock(start, end, handler, "java/lang/InterruptedException");
++                    method.visitLabel(start);
++                    method.visitInsn(LCONST_1);
++                    method.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "sleep", "(J)V");
++                    method.visitLabel(end);
++                    method.visitInsn(RETURN);
++                    method.visitLabel(handler);
++                    method.visitInsn(POP);
++                    method.visitInsn(RETURN);
++                    method.visitMaxs(2, 0);
++                    method.visitEnd();
++                }
++                if (ww18Audio && !ww18AudioPatched) {
++                    throw new IllegalStateException("Expected WW #18 loop header not found");
++                }
+                 super.visitEnd();
+             }
+ 
+@@ -129,6 +157,18 @@ final class BusyWaitCompat implements Opcodes {
+                 return new MethodAdapter(target) {
+                     private int clockReads;
+                     private int haAudioYields;
++                    public void visitVarInsn(int opcode, int var) {
++                        // Exact d.run() fingerprint: its sole ALOAD 0 is at
++                        // offset 12, after the loop-target label. Both backward
++                        // branches therefore execute the pause on each iteration.
++                        if (ww18Audio && opcode == ALOAD && var == 0) {
++                            if (ww18AudioPatched) throw new IllegalStateException("Unexpected second WW #18 ALOAD 0");
++                            super.visitMethodInsn(INVOKESTATIC, "d", WW_18_AUDIO_PAUSE, "()V");
++                            ww18AudioPatched = true;
++                            System.out.println("[POP-COMPAT] Applied Warrior Within issue #18 audio busy-wait fix");
++                        }
++                        super.visitVarInsn(opcode, var);
++                    }
+                     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
+                         // Only the paused-flag read in the fingerprinted F.run(),
+                         // original offset 14. Do not alter the 83 ms frame loop.
