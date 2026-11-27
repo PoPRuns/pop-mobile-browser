@@ -17463,7 +17463,7 @@
    "oldFilename": "PrinceOfPersia-WarriorWithin_s60v1-N3650 - Mastiwap.Com.jar",
    "archivePaths": "PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.3) (CLDC-1.0, MIDP-1.0) (BE544353).jar PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.3) (CLDC-1.0, MIDP-1.0) (cMIDlet) (1eeb4f6a54270da23de3d785f5b59e78d9b8a0562088d2c00c7959345fbfaf85).jar",
    "device": "-",
-   "notesGeneral": "Unplayable (Key layout is messed up)",
+   "notesGeneral": "Directional controls required; limited numeric keypad functionality",
    "notesGameplay": "",
    "notesGameplay2": "",
    "crc32": "BE544353",
@@ -17479,7 +17479,7 @@
    "size": 202455,
    "sheetRow": 49,
    "phoneType": null,
-   "unplayable": true,
+   "unplayable": false,
    "fpsLimit": null,
    "family": "WW-G01",
    "variant": "g"
