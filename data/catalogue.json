@@ -34,7 +34,7 @@
    "year": "2004",
    "description": "Warrior Within releases across Java-enabled phones.",
    "count": 91,
-   "groups": 19,
+   "groups": 20,
    "resolutions": 17,
    "languages": 4,
    "ungrouped": false
@@ -125,7 +125,7 @@
  ],
  "stats": {
   "builds": 950,
-  "groups": 393,
+  "groups": 394,
   "games": 9,
   "resolutions": 59,
   "languages": 10,
@@ -1360,6 +1360,28 @@
    "title": "Prince of Persia: Warrior Within",
    "unclassified": false,
    "buildIds": [
+    "b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82"
+   ],
+   "count": 1,
+   "resolutions": [
+    "128x128"
+   ],
+   "languages": [
+    "Czech"
+   ],
+   "devices": [],
+   "vendors": [
+    "Gameloft"
+   ],
+   "notes": []
+  },
+  {
+   "id": "WW-G01-n",
+   "game": "warrior-within",
+   "collection": "WW",
+   "title": "Prince of Persia: Warrior Within",
+   "unclassified": false,
+   "buildIds": [
     "3c5982a52b6eef0cf9a8bc601f84195f7fb53563555e67c76dc20d0a84d20c66"
    ],
    "count": 1,
@@ -1376,7 +1398,7 @@
    "notes": []
   },
   {
-   "id": "WW-G01-n",
+   "id": "WW-G01-o",
    "game": "warrior-within",
    "collection": "WW",
    "title": "Prince of Persia: Warrior Within",
@@ -1405,13 +1427,11 @@
    "title": "Prince of Persia: Warrior Within",
    "unclassified": false,
    "buildIds": [
-    "f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c",
     "d7304ff323f64c4d768c88e766855f401d77dcd9d99623e660116f7135780beb",
     "2e211012ceba25b2774b91f3c4708c92711ac8802f8c8c9395434eb6946d0972",
-    "42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd",
     "26c75186c5c1a077295f5936a019c9b158752b29f901cc662b1fc01b8cc41b9c"
    ],
-   "count": 5,
+   "count": 3,
    "resolutions": [
     "128x160"
    ],
@@ -1423,9 +1443,7 @@
     "Nokia s40v2a"
    ],
    "vendors": [
-    "DGSoft",
-    "Gameloft SA",
-    "DG"
+    "Gameloft SA"
    ],
    "notes": []
   },
@@ -1461,23 +1479,19 @@
    "unclassified": false,
    "buildIds": [
     "63b0fb06224364cbe457d60683913ca2c20dbb52b1d5dc708f3828965c89017a",
-    "b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82",
     "bc3a0e264f00cccf6940661bec03d5926932fb7436fc021ee426efed758c956d",
     "ced28e0b0e56dd16fa96378a2b78b911eddc54a128b8e25111ff3fac6d1c6983"
    ],
-   "count": 4,
+   "count": 3,
    "resolutions": [
-    "96x65",
-    "128x128"
+    "96x65"
    ],
    "languages": [
-    "English",
-    "Czech"
+    "English"
    ],
    "devices": [],
    "vendors": [
-    "Gameloft SA",
-    "Gameloft"
+    "Gameloft SA"
    ],
    "notes": []
   },
@@ -1494,26 +1508,34 @@
     "963ee785028018290560a3912e333e9e3e39d12cde4632bb74f32932a771881a",
     "c57999927d46c3f8966344861090e610c904a34563f4887188e27eb308632b10",
     "d036fad3fdbaa97f781877b83c0dec24bed2d9766ef40cb482d67a56fd45d401",
-    "c7519ed6e54393da9b4b3936ee202c82a5e794cfde945de6f3433015e15523b2"
+    "c7519ed6e54393da9b4b3936ee202c82a5e794cfde945de6f3433015e15523b2",
+    "35d062ec50c6f3117340ea2bf87de34a49085c8ffaeeb910c54132f0849ba133",
+    "69c67da7a8becfc82033ffff553aebb848901b8389aeff820f7938d303606cc5",
+    "8c9eed6962cf6eecd65d678100f791349f446b15e294489c806139bde1f43345",
+    "f0908ea7eb053babfd9a1d8f2754262bcda42af5da96b135f1e749f342b47cfa",
+    "bacf4aee4bf37ae5e28370b205468d43678a4b57b21ac6f71be162bfd2a1a7a3"
    ],
-   "count": 7,
+   "count": 12,
    "resolutions": [
-    "128x150",
     "128x128"
    ],
    "languages": [
-    "English"
+    "English",
+    "Spanish"
    ],
    "devices": [
     "Sony Ericsson T610",
-    "-"
+    "-",
+    "Nokia s40v2"
    ],
    "vendors": [
     "www.chipeduks-t610.tk",
     "Gameloft SA",
     "BiNPDA"
    ],
-   "notes": []
+   "notes": [
+    "Limit FPS to 15"
+   ]
   },
   {
    "id": "WW-G02-e",
@@ -1522,30 +1544,22 @@
    "title": "Prince of Persia: Warrior Within",
    "unclassified": false,
    "buildIds": [
-    "35d062ec50c6f3117340ea2bf87de34a49085c8ffaeeb910c54132f0849ba133",
-    "69c67da7a8becfc82033ffff553aebb848901b8389aeff820f7938d303606cc5",
-    "8c9eed6962cf6eecd65d678100f791349f446b15e294489c806139bde1f43345",
-    "f0908ea7eb053babfd9a1d8f2754262bcda42af5da96b135f1e749f342b47cfa",
-    "bacf4aee4bf37ae5e28370b205468d43678a4b57b21ac6f71be162bfd2a1a7a3"
+    "f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c",
+    "42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd"
    ],
-   "count": 5,
+   "count": 2,
    "resolutions": [
     "128x128"
    ],
    "languages": [
-    "Spanish",
     "English"
    ],
-   "devices": [
-    "Nokia s40v2",
-    "-"
-   ],
+   "devices": [],
    "vendors": [
-    "Gameloft SA"
+    "DGSoft",
+    "DG"
    ],
-   "notes": [
-    "Limit FPS to 15"
-   ]
+   "notes": []
   },
   {
    "id": "T2T-G01",
@@ -10672,25 +10686,23 @@
     "d61051e87be45fffdbf5fcfcf2c5c35f0e68d52cc2418c7cf4be09d9c7413555",
     "ead639881f20178672a4cb1ee32df30a2f7175b4cdb6811614065146a1ddacd3",
     "3e00427970fe5afd6f4a2afc0bb4bfb058bc4b5b4fc83418af3b547c570fcc26",
+    "b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82",
     "3c5982a52b6eef0cf9a8bc601f84195f7fb53563555e67c76dc20d0a84d20c66",
     "ceca14b5bd22b6426d64f72bfa0bacdbe255bf6a80df8b96d9d1c3ca031dd813",
     "6896f307a4964d2904a4da3e875ec2ba4f45f777b81259a513150a89d5de6926"
    ],
-   "count": 69
+   "count": 70
   },
   {
    "id": "WW-G02",
    "game": "warrior-within",
    "image": "assets/previews/ww-g02.png",
    "buildIds": [
-    "f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c",
     "d7304ff323f64c4d768c88e766855f401d77dcd9d99623e660116f7135780beb",
     "2e211012ceba25b2774b91f3c4708c92711ac8802f8c8c9395434eb6946d0972",
-    "42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd",
     "26c75186c5c1a077295f5936a019c9b158752b29f901cc662b1fc01b8cc41b9c",
     "7ed5f001c9f7d27a26bef326658d429d9b55171cd5f69bb00d709f5ea81c9a3b",
     "63b0fb06224364cbe457d60683913ca2c20dbb52b1d5dc708f3828965c89017a",
-    "b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82",
     "bc3a0e264f00cccf6940661bec03d5926932fb7436fc021ee426efed758c956d",
     "ced28e0b0e56dd16fa96378a2b78b911eddc54a128b8e25111ff3fac6d1c6983",
     "174d0715c9d1cf1ceceb556b14dc11c08a9e49a36ce61317f3737d861b207152",
@@ -10704,9 +10716,11 @@
     "69c67da7a8becfc82033ffff553aebb848901b8389aeff820f7938d303606cc5",
     "8c9eed6962cf6eecd65d678100f791349f446b15e294489c806139bde1f43345",
     "f0908ea7eb053babfd9a1d8f2754262bcda42af5da96b135f1e749f342b47cfa",
-    "bacf4aee4bf37ae5e28370b205468d43678a4b57b21ac6f71be162bfd2a1a7a3"
+    "bacf4aee4bf37ae5e28370b205468d43678a4b57b21ac6f71be162bfd2a1a7a3",
+    "f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c",
+    "42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd"
    ],
-   "count": 22
+   "count": 21
   }
  ],
  "builds": [
@@ -18143,6 +18157,44 @@
   },
   {
    "group": "WW-G01-m",
+   "name": "Prince Of Persia Warrior Within",
+   "displayTitle": "Prince of Persia: Warrior Within",
+   "version": "1.0.1",
+   "vendor": "Gameloft",
+   "cldc": "1.0",
+   "midp": "2.0",
+   "resolution": "128x128",
+   "language": "Czech",
+   "aboutName": "Prince of Persia Warrior Within",
+   "aboutVersion": "v1.0.1",
+   "aboutAuthor": "Gameloft 2004",
+   "sourceFilenames": "Prince Of Persia Warrior Within (Gameloft) (1.0.1) (CLDC-1.0, MIDP-2.0) (5E9733BD).jar",
+   "oldFilename": "",
+   "archivePaths": "Prince of Persia Warrior Within/Prince Of Persia Warrior Within (Gameloft) (1.0.1) (CLDC-1.0, MIDP-2.0) (5E9733BD).jar Prince Of Persia Warrior Within/Prince Of Persia Warrior Within (Gameloft) (1.0.1) (CLDC-1.0, MIDP-2.0) (cMIDlet) (b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82).jar",
+   "device": "",
+   "notesGeneral": "",
+   "notesGameplay": "",
+   "notesGameplay2": "",
+   "crc32": "5E9733BD",
+   "sha1": "5c62e6f356ce41fb2c911e8f0e61f0e50eeb4e8e",
+   "sha256": "b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82",
+   "id": "b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82",
+   "game": "warrior-within",
+   "collection": "WW",
+   "urls": [
+    "https://archive.org/download/96x65pixels_j2me/JARchiveLite_v11.7z/Prince%20of%20Persia%20Warrior%20Within%2FPrince%20Of%20Persia%20Warrior%20Within%20%28Gameloft%29%20%281.0.1%29%20%28CLDC-1.0%2C%20MIDP-2.0%29%20%285E9733BD%29.jar",
+    "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/Prince%20Of%20Persia%20Warrior%20Within%2FPrince%20Of%20Persia%20Warrior%20Within%20%28Gameloft%29%20%281.0.1%29%20%28CLDC-1.0%2C%20MIDP-2.0%29%20%28cMIDlet%29%20%28b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82%29.jar"
+   ],
+   "size": 155523,
+   "sheetRow": 68,
+   "phoneType": null,
+   "unplayable": false,
+   "fpsLimit": null,
+   "family": "WW-G01",
+   "variant": "m"
+  },
+  {
+   "group": "WW-G01-n",
    "name": "Prince Of Persia Warrior Within Demo",
    "displayTitle": "Prince of Persia: Warrior Within",
    "version": "1.0.4",
@@ -18172,15 +18224,15 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/Prince%20Of%20Persia%20Warrior%20Within%20Demo%2FPrince%20Of%20Persia%20Warrior%20Within%20Demo%20%28Gameloft%20SA%29%20%281.0.4%29%20%28CLDC-1.0%2C%20MIDP-2.0%29%20%28cMIDlet%29%20%283c5982a52b6eef0cf9a8bc601f84195f7fb53563555e67c76dc20d0a84d20c66%29.jar"
    ],
    "size": 225495,
-   "sheetRow": 68,
+   "sheetRow": 69,
    "phoneType": null,
    "unplayable": false,
    "fpsLimit": null,
    "family": "WW-G01",
-   "variant": "m"
+   "variant": "n"
   },
   {
-   "group": "WW-G01-n",
+   "group": "WW-G01-o",
    "name": "Prince Of Persia Warrior Within Demo",
    "displayTitle": "Prince of Persia: Warrior Within",
    "version": "1.0.0",
@@ -18210,15 +18262,15 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/Prince%20Of%20Persia%20Warrior%20Within%20Demo%2FPrince%20Of%20Persia%20Warrior%20Within%20Demo%20%28Gameloft%20SA%29%20%281.0.0%29%20%28CLDC-1.0%2C%20MIDP-2.0%29%20%28cMIDlet%29%20%28ceca14b5bd22b6426d64f72bfa0bacdbe255bf6a80df8b96d9d1c3ca031dd813%29.jar"
    ],
    "size": 226865,
-   "sheetRow": 69,
+   "sheetRow": 70,
    "phoneType": null,
    "unplayable": false,
    "fpsLimit": null,
    "family": "WW-G01",
-   "variant": "n"
+   "variant": "o"
   },
   {
-   "group": "WW-G01-n",
+   "group": "WW-G01-o",
    "name": "Prince Of Persia Warrior Within Demo",
    "displayTitle": "Prince of Persia: Warrior Within",
    "version": "1.0.2",
@@ -18248,49 +18300,12 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/Prince%20Of%20Persia%20Warrior%20Within%20Demo%2FPrince%20Of%20Persia%20Warrior%20Within%20Demo%20%28Gameloft%20SA%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-2.0%29%20%28cMIDlet%29%20%286896f307a4964d2904a4da3e875ec2ba4f45f777b81259a513150a89d5de6926%29.jar"
    ],
    "size": 226850,
-   "sheetRow": 70,
-   "phoneType": null,
-   "unplayable": false,
-   "fpsLimit": null,
-   "family": "WW-G01",
-   "variant": "n"
-  },
-  {
-   "group": "WW-G02-a",
-   "name": "PrinceWW",
-   "displayTitle": "Prince of Persia: Warrior Within",
-   "version": "1.0",
-   "vendor": "DGSoft",
-   "cldc": "1.0",
-   "midp": "1.0",
-   "resolution": "128x160",
-   "language": "English",
-   "aboutName": "Prince of Persia Warrior Within",
-   "aboutVersion": "v1.0",
-   "aboutAuthor": "2004 Gameloft",
-   "sourceFilenames": "PrinceWW (DGSoft) (1.0) (CLDC-1.0, MIDP-1.0) (cMIDlet) (f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c).jar",
-   "oldFilename": "",
-   "archivePaths": "PrinceWW/PrinceWW (DGSoft) (1.0) (CLDC-1.0, MIDP-1.0) (cMIDlet) (f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c).jar",
-   "device": "",
-   "notesGeneral": "",
-   "notesGameplay": "",
-   "notesGameplay2": "",
-   "crc32": "7E83B843",
-   "sha1": "1d1d8485927b6d8f4c6f5b3c16e0bc357106e50f",
-   "sha256": "f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c",
-   "id": "f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c",
-   "game": "warrior-within",
-   "collection": "WW",
-   "urls": [
-    "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceWW%2FPrinceWW%20%28DGSoft%29%20%281.0%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c%29.jar"
-   ],
-   "size": 109029,
    "sheetRow": 71,
    "phoneType": null,
    "unplayable": false,
    "fpsLimit": null,
-   "family": "WW-G02",
-   "variant": "a"
+   "family": "WW-G01",
+   "variant": "o"
   },
   {
    "group": "WW-G02-a",
@@ -18370,43 +18385,6 @@
   },
   {
    "group": "WW-G02-a",
-   "name": "(wap-plus.ru)POP",
-   "displayTitle": "Prince of Persia: Warrior Within",
-   "version": "1.0",
-   "vendor": "DG",
-   "cldc": "1.0",
-   "midp": "1.0",
-   "resolution": "128x160",
-   "language": "English",
-   "aboutName": "Prince of Persia Warrior Within",
-   "aboutVersion": "v1.0",
-   "aboutAuthor": "2004 Gameloft",
-   "sourceFilenames": "(wap-plus.ru)POP (DG) (1.0) (CLDC-1.0, MIDP-1.0) (cMIDlet) (42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd).jar",
-   "oldFilename": "",
-   "archivePaths": "(wap-plus.ru)POP/(wap-plus.ru)POP (DG) (1.0) (CLDC-1.0, MIDP-1.0) (cMIDlet) (42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd).jar",
-   "device": "",
-   "notesGeneral": "",
-   "notesGameplay": "",
-   "notesGameplay2": "",
-   "crc32": "88F11B0D",
-   "sha1": "dfa82c952cf7fd5c46c43076555689f4cf80a60f",
-   "sha256": "42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd",
-   "id": "42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd",
-   "game": "warrior-within",
-   "collection": "WW",
-   "urls": [
-    "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/%28wap-plus.ru%29POP%2F%28wap-plus.ru%29POP%20%28DG%29%20%281.0%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%2842c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd%29.jar"
-   ],
-   "size": 102166,
-   "sheetRow": 74,
-   "phoneType": null,
-   "unplayable": false,
-   "fpsLimit": null,
-   "family": "WW-G02",
-   "variant": "a"
-  },
-  {
-   "group": "WW-G02-a",
    "name": "PrinceOfPersia-WarriorWithin",
    "displayTitle": "Prince of Persia: Warrior Within",
    "version": "1.0.0",
@@ -18436,7 +18414,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WarriorWithin%2FPrinceOfPersia-WarriorWithin%20%28Gameloft%20SA%29%20%281.0.0%29%20%28CLDC-1.1%2C%20MIDP-2.0%29%20%28cMIDlet%29%20%2826c75186c5c1a077295f5936a019c9b158752b29f901cc662b1fc01b8cc41b9c%29.jar"
    ],
    "size": 97969,
-   "sheetRow": 75,
+   "sheetRow": 74,
    "phoneType": "Nokia",
    "unplayable": false,
    "fpsLimit": null,
@@ -18473,7 +18451,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/POP-WW%2FPOP-WW%20%28Gameloft%20SA%29%20%281.0.1%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%287ed5f001c9f7d27a26bef326658d429d9b55171cd5f69bb00d709f5ea81c9a3b%29.jar"
    ],
    "size": 82123,
-   "sheetRow": 76,
+   "sheetRow": 75,
    "phoneType": null,
    "unplayable": false,
    "fpsLimit": 15,
@@ -18511,45 +18489,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/Prince-WW%2FPrince-WW%20%28Gameloft%20SA%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%2863b0fb06224364cbe457d60683913ca2c20dbb52b1d5dc708f3828965c89017a%29.jar"
    ],
    "size": 64566,
-   "sheetRow": 77,
-   "phoneType": null,
-   "unplayable": false,
-   "fpsLimit": null,
-   "family": "WW-G02",
-   "variant": "c"
-  },
-  {
-   "group": "WW-G02-c",
-   "name": "Prince Of Persia Warrior Within",
-   "displayTitle": "Prince of Persia: Warrior Within",
-   "version": "1.0.1",
-   "vendor": "Gameloft",
-   "cldc": "1.0",
-   "midp": "2.0",
-   "resolution": "128x128",
-   "language": "Czech",
-   "aboutName": "Prince of Persia Warrior Within",
-   "aboutVersion": "v1.0.1",
-   "aboutAuthor": "Gameloft 2004",
-   "sourceFilenames": "Prince Of Persia Warrior Within (Gameloft) (1.0.1) (CLDC-1.0, MIDP-2.0) (5E9733BD).jar",
-   "oldFilename": "",
-   "archivePaths": "Prince of Persia Warrior Within/Prince Of Persia Warrior Within (Gameloft) (1.0.1) (CLDC-1.0, MIDP-2.0) (5E9733BD).jar Prince Of Persia Warrior Within/Prince Of Persia Warrior Within (Gameloft) (1.0.1) (CLDC-1.0, MIDP-2.0) (cMIDlet) (b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82).jar",
-   "device": "",
-   "notesGeneral": "",
-   "notesGameplay": "",
-   "notesGameplay2": "",
-   "crc32": "5E9733BD",
-   "sha1": "5c62e6f356ce41fb2c911e8f0e61f0e50eeb4e8e",
-   "sha256": "b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82",
-   "id": "b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82",
-   "game": "warrior-within",
-   "collection": "WW",
-   "urls": [
-    "https://archive.org/download/96x65pixels_j2me/JARchiveLite_v11.7z/Prince%20of%20Persia%20Warrior%20Within%2FPrince%20Of%20Persia%20Warrior%20Within%20%28Gameloft%29%20%281.0.1%29%20%28CLDC-1.0%2C%20MIDP-2.0%29%20%285E9733BD%29.jar",
-    "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/Prince%20Of%20Persia%20Warrior%20Within%2FPrince%20Of%20Persia%20Warrior%20Within%20%28Gameloft%29%20%281.0.1%29%20%28CLDC-1.0%2C%20MIDP-2.0%29%20%28cMIDlet%29%20%28b19d874ebc5b9e1376e6f1461a81aeca07d0e40da42d457c47de3affd4f51c82%29.jar"
-   ],
-   "size": 155523,
-   "sheetRow": 78,
+   "sheetRow": 76,
    "phoneType": null,
    "unplayable": false,
    "fpsLimit": null,
@@ -18587,7 +18527,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/Prince-WW%2FPrince-WW%20%28Gameloft%20SA%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28bc3a0e264f00cccf6940661bec03d5926932fb7436fc021ee426efed758c956d%29.jar"
    ],
    "size": 64550,
-   "sheetRow": 79,
+   "sheetRow": 77,
    "phoneType": null,
    "unplayable": false,
    "fpsLimit": null,
@@ -18625,7 +18565,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/Prince-WW%2FPrince-WW%20%28Gameloft%20SA%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28ced28e0b0e56dd16fa96378a2b78b911eddc54a128b8e25111ff3fac6d1c6983%29.jar"
    ],
    "size": 64552,
-   "sheetRow": 80,
+   "sheetRow": 78,
    "phoneType": null,
    "unplayable": false,
    "fpsLimit": null,
@@ -18640,7 +18580,7 @@
    "vendor": "www.chipeduks-t610.tk",
    "cldc": "1.0",
    "midp": "1.0",
-   "resolution": "128x150",
+   "resolution": "128x128",
    "language": "English",
    "aboutName": "Prince of Persia Warrior Within",
    "aboutVersion": "v1.0.2",
@@ -18662,7 +18602,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WW%2FPrinceOfPersia-WW%20%28www.chipeduks-t610.tk%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28174d0715c9d1cf1ceceb556b14dc11c08a9e49a36ce61317f3737d861b207152%29.jar"
    ],
    "size": 113608,
-   "sheetRow": 81,
+   "sheetRow": 79,
    "phoneType": "SonyEricsson",
    "unplayable": false,
    "fpsLimit": null,
@@ -18677,7 +18617,7 @@
    "vendor": "www.chipeduks-t610.tk",
    "cldc": "1.0",
    "midp": "1.0",
-   "resolution": "128x150",
+   "resolution": "128x128",
    "language": "English",
    "aboutName": "Prince of Persia Warrior Within",
    "aboutVersion": "v1.0.2",
@@ -18699,7 +18639,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WW%2FPrinceOfPersia-WW%20%28www.chipeduks-t610.tk%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28678e4bfddcb4565ddcdef1fa2ea48532e290994fe15cd654833875bc564a3a56%29.jar"
    ],
    "size": 103198,
-   "sheetRow": 82,
+   "sheetRow": 80,
    "phoneType": "SonyEricsson",
    "unplayable": false,
    "fpsLimit": null,
@@ -18714,7 +18654,7 @@
    "vendor": "www.chipeduks-t610.tk",
    "cldc": "1.0",
    "midp": "1.0",
-   "resolution": "128x150",
+   "resolution": "128x128",
    "language": "English",
    "aboutName": "Prince of Persia Warrior Within",
    "aboutVersion": "v1.0.2",
@@ -18736,7 +18676,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WW%2FPrinceOfPersia-WW%20%28www.chipeduks-t610.tk%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28917135f25f0f6ed96640ea6a68757a280428258f51af46e47e9bff09366d1ead%29.jar"
    ],
    "size": 120028,
-   "sheetRow": 83,
+   "sheetRow": 81,
    "phoneType": "SonyEricsson",
    "unplayable": false,
    "fpsLimit": null,
@@ -18751,7 +18691,7 @@
    "vendor": "Gameloft SA",
    "cldc": "1.0",
    "midp": "1.0",
-   "resolution": "128x150",
+   "resolution": "128x128",
    "language": "English",
    "aboutName": "Prince of Persia Warrior Within",
    "aboutVersion": "v1.0.2",
@@ -18774,7 +18714,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WW%2FPrinceOfPersia-WW%20%28Gameloft%20SA%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28963ee785028018290560a3912e333e9e3e39d12cde4632bb74f32932a771881a%29.jar"
    ],
    "size": 103187,
-   "sheetRow": 84,
+   "sheetRow": 82,
    "phoneType": "SonyEricsson",
    "unplayable": false,
    "fpsLimit": null,
@@ -18812,7 +18752,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WW%2FPrinceOfPersia-WW%20%28www.chipeduks-t610.tk%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28c57999927d46c3f8966344861090e610c904a34563f4887188e27eb308632b10%29.jar"
    ],
    "size": 108177,
-   "sheetRow": 85,
+   "sheetRow": 83,
    "phoneType": "SonyEricsson",
    "unplayable": false,
    "fpsLimit": null,
@@ -18827,7 +18767,7 @@
    "vendor": "BiNPDA",
    "cldc": "1.0",
    "midp": "1.0",
-   "resolution": "128x150",
+   "resolution": "128x128",
    "language": "English",
    "aboutName": "Prince of Persia Warrior Within",
    "aboutVersion": "v1.0.2",
@@ -18850,7 +18790,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WW%2FPrinceOfPersia-WW%20%28BiNPDA%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28d036fad3fdbaa97f781877b83c0dec24bed2d9766ef40cb482d67a56fd45d401%29.jar"
    ],
    "size": 103181,
-   "sheetRow": 86,
+   "sheetRow": 84,
    "phoneType": "SonyEricsson",
    "unplayable": false,
    "fpsLimit": null,
@@ -18865,7 +18805,7 @@
    "vendor": "www.chipeduks-t610.tk",
    "cldc": "1.0",
    "midp": "1.0",
-   "resolution": "128x150",
+   "resolution": "128x128",
    "language": "English",
    "aboutName": "Prince of Persia Warrior Within",
    "aboutVersion": "v1.0.2",
@@ -18888,7 +18828,7 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WW%2FPrinceOfPersia-WW%20%28www.chipeduks-t610.tk%29%20%281.0.2%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28c7519ed6e54393da9b4b3936ee202c82a5e794cfde945de6f3433015e15523b2%29.jar"
    ],
    "size": 103198,
-   "sheetRow": 87,
+   "sheetRow": 85,
    "phoneType": null,
    "unplayable": false,
    "fpsLimit": null,
@@ -18896,7 +18836,7 @@
    "variant": "d"
   },
   {
-   "group": "WW-G02-e",
+   "group": "WW-G02-d",
    "name": "PrinceOfPersia-WarriorWithin",
    "displayTitle": "Prince of Persia: Warrior Within",
    "version": "1.0.4",
@@ -18926,15 +18866,15 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WarriorWithin%2FPrinceOfPersia-WarriorWithin%20%28Gameloft%20SA%29%20%281.0.4%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%2835d062ec50c6f3117340ea2bf87de34a49085c8ffaeeb910c54132f0849ba133%29.jar"
    ],
    "size": 64825,
-   "sheetRow": 88,
+   "sheetRow": 86,
    "phoneType": "Nokia",
    "unplayable": false,
    "fpsLimit": 15,
    "family": "WW-G02",
-   "variant": "e"
+   "variant": "d"
   },
   {
-   "group": "WW-G02-e",
+   "group": "WW-G02-d",
    "name": "PrinceOfPersia-WarriorWithin",
    "displayTitle": "Prince of Persia: Warrior Within",
    "version": "1.0.4",
@@ -18964,15 +18904,15 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WarriorWithin%2FPrinceOfPersia-WarriorWithin%20%28Gameloft%20SA%29%20%281.0.4%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%2869c67da7a8becfc82033ffff553aebb848901b8389aeff820f7938d303606cc5%29.jar"
    ],
    "size": 64795,
-   "sheetRow": 89,
+   "sheetRow": 87,
    "phoneType": "Nokia",
    "unplayable": false,
    "fpsLimit": 15,
    "family": "WW-G02",
-   "variant": "e"
+   "variant": "d"
   },
   {
-   "group": "WW-G02-e",
+   "group": "WW-G02-d",
    "name": "PrinceOfPersia-WarriorWithin",
    "displayTitle": "Prince of Persia: Warrior Within",
    "version": "1.0.4",
@@ -19001,15 +18941,15 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WarriorWithin%2FPrinceOfPersia-WarriorWithin%20%28Gameloft%20SA%29%20%281.0.4%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%288c9eed6962cf6eecd65d678100f791349f446b15e294489c806139bde1f43345%29.jar"
    ],
    "size": 71091,
-   "sheetRow": 90,
+   "sheetRow": 88,
    "phoneType": "Nokia",
    "unplayable": false,
    "fpsLimit": 15,
    "family": "WW-G02",
-   "variant": "e"
+   "variant": "d"
   },
   {
-   "group": "WW-G02-e",
+   "group": "WW-G02-d",
    "name": "PrinceOfPersia-WarriorWithin",
    "displayTitle": "Prince of Persia: Warrior Within",
    "version": "1.0.4",
@@ -19039,15 +18979,15 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WarriorWithin%2FPrinceOfPersia-WarriorWithin%20%28Gameloft%20SA%29%20%281.0.4%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28f0908ea7eb053babfd9a1d8f2754262bcda42af5da96b135f1e749f342b47cfa%29.jar"
    ],
    "size": 64792,
-   "sheetRow": 91,
+   "sheetRow": 89,
    "phoneType": null,
    "unplayable": false,
    "fpsLimit": 15,
    "family": "WW-G02",
-   "variant": "e"
+   "variant": "d"
   },
   {
-   "group": "WW-G02-e",
+   "group": "WW-G02-d",
    "name": "PrinceOfPersia-WarriorWithin",
    "displayTitle": "Prince of Persia: Warrior Within",
    "version": "1.0.5",
@@ -19077,10 +19017,84 @@
     "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceOfPersia-WarriorWithin%2FPrinceOfPersia-WarriorWithin%20%28Gameloft%20SA%29%20%281.0.5%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28bacf4aee4bf37ae5e28370b205468d43678a4b57b21ac6f71be162bfd2a1a7a3%29.jar"
    ],
    "size": 64837,
-   "sheetRow": 92,
+   "sheetRow": 90,
    "phoneType": "Nokia",
    "unplayable": false,
    "fpsLimit": 15,
+   "family": "WW-G02",
+   "variant": "d"
+  },
+  {
+   "group": "WW-G02-e",
+   "name": "PrinceWW",
+   "displayTitle": "Prince of Persia: Warrior Within",
+   "version": "1.0",
+   "vendor": "DGSoft",
+   "cldc": "1.0",
+   "midp": "1.0",
+   "resolution": "128x128",
+   "language": "English",
+   "aboutName": "Prince of Persia Warrior Within",
+   "aboutVersion": "v1.0",
+   "aboutAuthor": "2004 Gameloft",
+   "sourceFilenames": "PrinceWW (DGSoft) (1.0) (CLDC-1.0, MIDP-1.0) (cMIDlet) (f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c).jar",
+   "oldFilename": "",
+   "archivePaths": "PrinceWW/PrinceWW (DGSoft) (1.0) (CLDC-1.0, MIDP-1.0) (cMIDlet) (f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c).jar",
+   "device": "",
+   "notesGeneral": "",
+   "notesGameplay": "",
+   "notesGameplay2": "",
+   "crc32": "7E83B843",
+   "sha1": "1d1d8485927b6d8f4c6f5b3c16e0bc357106e50f",
+   "sha256": "f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c",
+   "id": "f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c",
+   "game": "warrior-within",
+   "collection": "WW",
+   "urls": [
+    "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/PrinceWW%2FPrinceWW%20%28DGSoft%29%20%281.0%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%28f646667e27157bfd0052d5fef6d549779faa1507d899670be2f7801b19bbd96c%29.jar"
+   ],
+   "size": 109029,
+   "sheetRow": 91,
+   "phoneType": null,
+   "unplayable": false,
+   "fpsLimit": null,
+   "family": "WW-G02",
+   "variant": "e"
+  },
+  {
+   "group": "WW-G02-e",
+   "name": "(wap-plus.ru)POP",
+   "displayTitle": "Prince of Persia: Warrior Within",
+   "version": "1.0",
+   "vendor": "DG",
+   "cldc": "1.0",
+   "midp": "1.0",
+   "resolution": "128x128",
+   "language": "English",
+   "aboutName": "Prince of Persia Warrior Within",
+   "aboutVersion": "v1.0",
+   "aboutAuthor": "2004 Gameloft",
+   "sourceFilenames": "(wap-plus.ru)POP (DG) (1.0) (CLDC-1.0, MIDP-1.0) (cMIDlet) (42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd).jar",
+   "oldFilename": "",
+   "archivePaths": "(wap-plus.ru)POP/(wap-plus.ru)POP (DG) (1.0) (CLDC-1.0, MIDP-1.0) (cMIDlet) (42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd).jar",
+   "device": "",
+   "notesGeneral": "",
+   "notesGameplay": "",
+   "notesGameplay2": "",
+   "crc32": "88F11B0D",
+   "sha1": "dfa82c952cf7fd5c46c43076555689f4cf80a60f",
+   "sha256": "42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd",
+   "id": "42c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd",
+   "game": "warrior-within",
+   "collection": "WW",
+   "urls": [
+    "https://archive.org/download/96x65pixels_j2me/JARchive_v11.7z/%28wap-plus.ru%29POP%2F%28wap-plus.ru%29POP%20%28DG%29%20%281.0%29%20%28CLDC-1.0%2C%20MIDP-1.0%29%20%28cMIDlet%29%20%2842c85997b958c862385221632bf1a008b6036e6cf98b9b7823f12b10411ae8fd%29.jar"
+   ],
+   "size": 102166,
+   "sheetRow": 92,
+   "phoneType": null,
+   "unplayable": false,
+   "fpsLimit": null,
    "family": "WW-G02",
    "variant": "e"
   },
