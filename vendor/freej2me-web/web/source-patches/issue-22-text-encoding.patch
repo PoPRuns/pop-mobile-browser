@@ -1,0 +1,59 @@
+diff --git a/src/org/recompile/mobile/TextEncodingCompat.java b/src/org/recompile/mobile/TextEncodingCompat.java
+index ae62bc7..13a3ed3 100644
+--- a/src/org/recompile/mobile/TextEncodingCompat.java
++++ b/src/org/recompile/mobile/TextEncodingCompat.java
+@@ -8,7 +8,7 @@ import org.objectweb.asm.MethodAdapter;
+ import org.objectweb.asm.MethodVisitor;
+ import org.objectweb.asm.Opcodes;
+ 
+-/** Issues #17 and #21: preserve single-byte text in verified WW decoders. */
++/** Issues #17, #21 and #22: preserve single-byte text in verified WW decoders. */
+ final class TextEncodingCompat implements Opcodes {
+     private static final String CLASS_SHA256 =
+         "80b92b5855f45f9fd5f73e06b06af97880179d074d8591bc6371e1324e99c828";
+@@ -16,9 +16,15 @@ final class TextEncodingCompat implements Opcodes {
+     private static final String ISSUE21_SHA256 =
+         "0c0a3d4a299f4d579df9686ffedc9c1b82b3136b1b11abf31231971cb54c7ecd";
+ 
++    private static final String ISSUE22_SHA256 =
++        "5b58a54684fd7c958c0375ab6891958b65d127949a09af1a3cdac79564d02520";
++
++    private static final String ISSUE22_V107_SHA256 =
++        "f65d8e18dff6992dfe4c8d2aa205a42e8a1421c3f900ec99d29905ad71918060";
++
+     static ClassReader remap(ClassReader reader) throws Exception {
+         String className = reader.getClassName();
+-        if (!"c".equals(className) && !"a".equals(className)) return reader;
++        if (!"c".equals(className) && !"a".equals(className) && !"b".equals(className)) return reader;
+         StringBuilder hex = new StringBuilder();
+         for (byte b : MessageDigest.getInstance("SHA-256").digest(reader.b)) {
+             int n = b & 255;
+@@ -27,7 +33,9 @@ final class TextEncodingCompat implements Opcodes {
+         }
+         boolean issue17 = "c".equals(className) && CLASS_SHA256.equals(hex.toString());
+         boolean issue21 = "a".equals(className) && ISSUE21_SHA256.equals(hex.toString());
+-        if (!issue17 && !issue21) return reader;
++        final boolean issue22 = "b".equals(className) && (ISSUE22_SHA256.equals(hex.toString())
++            || ISSUE22_V107_SHA256.equals(hex.toString()));
++        if (!issue17 && !issue21 && !issue22) return reader;
+ 
+         ClassWriter writer = new ClassWriter(reader, 0);
+         final int[] changed = {0};
+@@ -35,7 +43,7 @@ final class TextEncodingCompat implements Opcodes {
+             public MethodVisitor visitMethod(int access, String name, String desc,
+                     String signature, String[] exceptions) {
+                 MethodVisitor target = super.visitMethod(access, name, desc, signature, exceptions);
+-                if (!"a".equals(name) || !"(I[B[B)Z".equals(desc)) return target;
++                if (!"a".equals(name) || !(issue22 ? "(II)Ljava/lang/String;" : "(I[B[B)Z").equals(desc)) return target;
+                 return new MethodAdapter(target) {
+                     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+                         if (opcode == INVOKESPECIAL && "java/lang/String".equals(owner)
+@@ -62,7 +70,7 @@ final class TextEncodingCompat implements Opcodes {
+         }, 0);
+         if (changed[0] != 1) throw new IllegalStateException("Unexpected WW decoder count: " + changed[0]);
+         ClassReader result = new ClassReader(writer.toByteArray());
+-        System.out.println("[POP-COMPAT] Applied Warrior Within issue #" + (issue21 ? "21" : "17") + " single-byte text decoding fix");
++        System.out.println("[POP-COMPAT] Applied Warrior Within issue #" + (issue22 ? "22" : issue21 ? "21" : "17") + " single-byte text decoding fix");
+         return result;
+     }
+ }
