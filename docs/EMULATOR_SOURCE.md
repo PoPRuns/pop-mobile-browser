@@ -1,14 +1,14 @@
 # Emulator source, build provenance and MIDI sound bank
 
-This site bundles a reduced freej2me-web runtime, based on upstream commit [`c19416e75cbc15f9a27f7e967ee81cb108761e30`](https://github.com/zb3/freej2me-web/tree/c19416e75cbc15f9a27f7e967ee81cb108761e30). Its Java build uses upstream sources plus the runtime compatibility patches described below, and its media build uses upstream sources and tools; its MIDI module was rebuilt with an original synthesized SoundFont (to avoid using the runtime's old, Roland-identified MIDI sound bank). See the repository's [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) and [`LICENSE`](../LICENSE) for applicable licenses and attributions.
+This site bundles a reduced freej2me-web runtime, based on upstream commit [`c19416e75cbc15f9a27f7e967ee81cb108761e30`](https://github.com/zb3/freej2me-web/tree/c19416e75cbc15f9a27f7e967ee81cb108761e30). Its Java build uses upstream sources plus the cumulative runtime compatibility patch described below, and its media build uses upstream sources and tools; its MIDI module was rebuilt with an original synthesized SoundFont (to avoid using the runtime's old, Roland-identified MIDI sound bank). See the repository's [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) and [`LICENSE`](../LICENSE) for applicable licenses and attributions.
 
 ## Corresponding source for v0.1.0
 
 [Download the complete corresponding-source archive](https://github.com/PoPRuns/pop-mobile-browser/releases/download/v0.1.0/pop-mobile-emulator-corresponding-source-v1.tar.gz) (SHA-256: `ad711845e72f1fbbd0491c3642bd2e35b98f4dfd959444e580a88b331cc3fcd9`). The release bundle contains the pinned upstream FreeJ2ME source and Java build scripts, modified FluidSynth 2.4.0 source, the original generated SoundFont and its generator, FFmpeg 7.1.1, pinned x264 commit `fe9e4a7f39d7a9fd208e4592238f9809d5936439` and patch, corresponding WebAssembly build scripts, and this site's adapter sources. The media build specifies Emscripten SDK `3.1.67`; FFmpeg was built with GPL features and x264.
 
-## Runtime compatibility patches
+## Runtime compatibility patch
 
-The bundled Java emulator includes the following patches to address playback and performance issues:
+The bundled Java emulator includes the following compatibility fixes to address playback and performance issues:
 
 | Issue | Game | Fix |
 |---|---|---|
@@ -32,30 +32,48 @@ The bundled Java emulator includes the following patches to address playback and
 
 All fixes are applied at class load time using exact SHA-256 class fingerprints. Original game JARs, frame interval targets and MIDI/media binaries remain unchanged. Precise timing equivalence has not been established.
 
-To rebuild the current Java component, apply the following patches to the pinned upstream revision using `git apply`, in this order:
+## Rebuild the Java emulator
 
-1. [issue-11-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-11-busy-wait.patch)
-2. [issue-5-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-5-audio-busy-wait.patch)
-3. [issue-13-startup-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-13-startup-audio-busy-wait.patch)
-4. [issue-6-cjsp-sound-api.patch](../vendor/freej2me-web/web/source-patches/issue-6-cjsp-sound-api.patch)
-5. [issue-7-input-callback.patch](../vendor/freej2me-web/web/source-patches/issue-7-input-callback.patch)
-6. [issue-31-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-31-audio-busy-wait.patch)
-7. [issue-8-missing-jad-url.patch](../vendor/freej2me-web/web/source-patches/issue-8-missing-jad-url.patch)
-8. [issue-8-additional-jad-url-builds.patch](../vendor/freej2me-web/web/source-patches/issue-8-additional-jad-url-builds.patch)
-9. [issue-9-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-9-audio-busy-wait.patch)
-10. [issue-15-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-15-audio-busy-wait.patch)
-11. [issue-17-text-encoding.patch](../vendor/freej2me-web/web/source-patches/issue-17-text-encoding.patch)
-12. [issue-18-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-18-audio-busy-wait.patch)
-13. [issue-35-audio-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-35-audio-busy-wait.patch)
-14. [issue-20-level-loading.patch](../vendor/freej2me-web/web/source-patches/issue-20-level-loading.patch)
-15. [issue-21-text-encoding.patch](../vendor/freej2me-web/web/source-patches/issue-21-text-encoding.patch)
-16. [issue-22-text-encoding.patch](../vendor/freej2me-web/web/source-patches/issue-22-text-encoding.patch)
-17. [issue-25-startup-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-25-startup-busy-wait.patch)
-18. [issue-26-text-encoding.patch](../vendor/freej2me-web/web/source-patches/issue-26-text-encoding.patch)
+All 18 previously separate source patches have been consolidated into
+[`pop-mobile-compat.patch`](../vendor/freej2me-web/web/source-patches/pop-mobile-compat.patch).
+The cumulative patch produces the same Java source as the original ordered patch
+chain. The individual issue patches remain available in Git history; do not apply
+them in addition to the cumulative patch. The issue table above records the
+individual compatibility fixes.
 
-Build using OpenJDK 17 and Apache Ant (`ant -Dant.build.javac.source=1.8`), then copy `web/freej2me-web.jar` into the site vendor directory.
+Use a fresh checkout of the pinned upstream revision, OpenJDK 17 and Apache Ant.
+Run the following from the root of the PoP Mobile Browser repository (the clone
+will be created in a new sibling directory):
 
-The v0.1.0 corresponding-source archive, the patches above and the current site adapter sources together constitute the corresponding source for the current release.
+```sh
+SITE_ROOT="$(pwd)"
+PATCH="$SITE_ROOT/vendor/freej2me-web/web/source-patches/pop-mobile-compat.patch"
+cd ..
+git clone --config core.autocrlf=false https://github.com/zb3/freej2me-web.git freej2me-web-pop-build
+cd freej2me-web-pop-build
+git checkout --detach c19416e75cbc15f9a27f7e967ee81cb108761e30
+git apply --check "$PATCH"
+git apply "$PATCH"
+ant -Dant.build.javac.source=1.8
+```
+
+To use the rebuilt Java emulator in a local site checkout, copy the resulting
+JAR (this replaces the vendored Java binary):
+
+```sh
+cp web/freej2me-web.jar "$SITE_ROOT/vendor/freej2me-web/web/freej2me-web.jar"
+```
+
+The published JAR was not rebuilt during patch consolidation. A local build may
+have a different archive hash, for example due to compiler or ZIP metadata. The
+published-binary fingerprint checks below still refer to the distributed JAR;
+replacing it for a new release requires the usual binary validation and release
+metadata updates. Rebuilding the Java component does not rebuild the media or
+MIDI WebAssembly modules.
+
+The v0.1.0 corresponding-source archive, the cumulative patch and the current
+site adapter sources together constitute the corresponding source for the current
+release.
 
 ## Published binary fingerprints
 
@@ -66,7 +84,7 @@ The v0.1.0 corresponding-source archive, the patches above and the current site 
 | `vendor/freej2me-web/web/libmedia/transcode/transcode.wasm` | `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b` |
 | Generated `gm.sf2` within source bundle | `5b1f4a3873294197ee492a182ec955780b495db2ddfeb9635a4faef278cad34e` |
 
-The base archive predates the Java compatibility patches. Use the patches listed above and the current adapter sources when reproducing the bundled runtime. The original upstream media binary has documented source/build inputs but has not been independently reproduced by this project.
+The base archive predates the Java compatibility fixes. Use the cumulative patch above and the current adapter sources when reproducing the bundled runtime. The original upstream media binary has documented source/build inputs but has not been independently reproduced by this project.
 
 ## Original FM General MIDI SoundFont
 

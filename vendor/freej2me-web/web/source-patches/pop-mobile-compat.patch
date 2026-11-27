@@ -1,0 +1,1818 @@
+diff --git a/src/org/recompile/mobile/BusyWaitCompat.java b/src/org/recompile/mobile/BusyWaitCompat.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..24d29cc3ac5f9b56eb0bbf7d466939fcef74344a
+--- /dev/null
++++ b/src/org/recompile/mobile/BusyWaitCompat.java
+@@ -0,0 +1,314 @@
++package org.recompile.mobile;
++
++import java.security.MessageDigest;
++import org.objectweb.asm.ClassReader;
++import org.objectweb.asm.ClassVisitor;
++import org.objectweb.asm.ClassAdapter;
++import org.objectweb.asm.MethodVisitor;
++import org.objectweb.asm.MethodAdapter;
++import org.objectweb.asm.Opcodes;
++import org.objectweb.asm.Label;
++
++/** Runtime compatibility fixes for verified legacy busy-wait loops. */
++final class BusyWaitCompat implements Opcodes {
++    private static final String CLASS_SHA256 =
++        "897456016f5b0e5e6b94619f4b9132a9c441fe027f71e558a3df277b83bb5eb3";
++
++    private static final String SOT_AUDIO_SHA256 =
++        "72d1f8021547cb6344f72638ed4189ec53e4d2b2928b34af5a7653169d763fd8";
++
++    private static final String SOT_31_AUDIO_SHA256 =
++        "6a9de27f14f095167c732b929c8787925c14a8af43a8876552ac7cfb6d4a2cd8";
++
++    private static final String SOT_9_AUDIO_SHA256 =
++        "d0d7fac06b626530a5507fedf702824e47c1eed47a631d271d6aec60c278f9fd";
++
++    private static final String WW_15_AUDIO_SHA256 =
++        "f4090b89e0b2b56f8b4221be27333a2666d9b879aac02de046964c1e413786f5";
++    private static final String WW_15_AUDIO_PAUSE = "popIssue15Pause";
++
++    private static final String WW_18_AUDIO_SHA256 =
++        "33cf81e68ff5e72ec27d7c7e562b18e41195d4a40a32cd18bc3e0b6a8c01daad";
++    private static final String WW_18_AUDIO_PAUSE = "popIssue18Pause";
++
++    private static final String WW_35_AUDIO_SHA256 =
++        "4401a582e3e9084f0ce67f28301b8b3b7b16e7df1d4a3c933503ea8ec97d10a3";
++    private static final String WW_35_AUDIO_PAUSE = "popIssue35Pause";
++
++    private static final String HA_AUDIO_SHA256 =
++        "a3fe692bcc7c311647ab48f60f6fa22dc59ec57e4cddd6e8e7e9a4997a28b925";
++    private static final String HA_AUDIO_PAUSE = "popIssue13Pause";
++    private static final String HA_STARTUP_SHA256 =
++        "d25f3aab077ae78d16edf0fe1a3e05895503337782e55cee59b8448a92083bb1";
++    private static final String HA_STARTUP_PAUSED = "popIssue13Paused";
++
++    private static boolean matches(ClassReader reader, String className,
++            String fingerprint) throws Exception {
++        if (!className.equals(reader.getClassName())) return false;
++        byte[] hash = MessageDigest.getInstance("SHA-256").digest(reader.b);
++        StringBuilder hex = new StringBuilder();
++        for (byte b : hash) {
++            int n = b & 255;
++            if (n < 16) hex.append('0');
++            hex.append(Integer.toHexString(n));
++        }
++        return fingerprint.equals(hex.toString());
++    }
++
++    private static final String WW_25_STARTUP_SHA256 =
++        "a83e5156394619f55656475650334a0f43de63fbdeefe751fed2feaf82f2116e";
++    private static final String WW_25_STARTUP_PAUSE = "popIssue25Pause";
++
++    // Diagnostic B: only f.N() and f.h(), not f.run() or a.run().
++    private static ClassVisitor wrapIssue25(ClassVisitor downstream) {
++        return new ClassAdapter(downstream) {
++            private int startupYields, introYields;
++
++            public MethodVisitor visitMethod(int access, final String name, String desc,
++                    String signature, String[] exceptions) {
++                MethodVisitor target = super.visitMethod(access, name, desc, signature, exceptions);
++                if (!"()V".equals(desc) || !("N".equals(name) || "h".equals(name))) return target;
++                return new MethodAdapter(target) {
++                    public void visitMethodInsn(int opcode, String owner, String method, String desc) {
++                        if (opcode == INVOKESTATIC && "java/lang/Thread".equals(owner)
++                                && "yield".equals(method) && "()V".equals(desc)) {
++                            if ("N".equals(name)) startupYields++; else introYields++;
++                            super.visitMethodInsn(INVOKESTATIC, "f", WW_25_STARTUP_PAUSE, "()V");
++                            return;
++                        }
++                        super.visitMethodInsn(opcode, owner, method, desc);
++                    }
++                };
++            }
++
++            public void visitEnd() {
++                if (startupYields != 2 || introYields != 4) {
++                    throw new IllegalStateException("Expected WW #25 startup wait sites not found");
++                }
++                MethodVisitor method = super.visitMethod(ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
++                        WW_25_STARTUP_PAUSE, "()V", null, null);
++                Label start = new Label(), end = new Label(), handler = new Label();
++                method.visitCode();
++                method.visitTryCatchBlock(start, end, handler, "java/lang/InterruptedException");
++                method.visitLabel(start);
++                method.visitInsn(LCONST_1);
++                method.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "sleep", "(J)V");
++                method.visitLabel(end);
++                method.visitInsn(RETURN);
++                method.visitLabel(handler);
++                method.visitInsn(POP);
++                method.visitInsn(RETURN);
++                method.visitMaxs(2, 0);
++                method.visitEnd();
++                System.out.println("[POP-COMPAT] Applied Warrior Within issue #25 startup busy-wait fix");
++                super.visitEnd();
++            }
++        };
++    }
++
++    static ClassVisitor wrap(ClassVisitor downstream, ClassReader reader) throws Exception {
++        if (matches(reader, "f", WW_25_STARTUP_SHA256)) return wrapIssue25(downstream);
++        final boolean chapter1 = matches(reader, "prince/l", CLASS_SHA256);
++        final boolean sotAudio = matches(reader, "F", SOT_AUDIO_SHA256);
++        final boolean sot31Audio = matches(reader, "F", SOT_31_AUDIO_SHA256);
++        final boolean sot9Audio = matches(reader, "b", SOT_9_AUDIO_SHA256);
++        final boolean ww15Audio = matches(reader, "a", WW_15_AUDIO_SHA256);
++        final boolean ww18Audio = matches(reader, "d", WW_18_AUDIO_SHA256);
++        final boolean ww35Audio = matches(reader, "e", WW_35_AUDIO_SHA256);
++        final boolean haAudio = matches(reader, "L", HA_AUDIO_SHA256);
++        final boolean haStartup = matches(reader, "F", HA_STARTUP_SHA256);
++        if (!chapter1 && !sotAudio && !sot31Audio && !sot9Audio && !ww15Audio && !ww18Audio && !ww35Audio && !haAudio && !haStartup) return downstream;
++        return new ClassAdapter(downstream) {
++            private boolean ww15AudioPatched;
++            private boolean ww18AudioPatched;
++            private boolean ww35AudioPatched;
++            private boolean haAudioPatched;
++            private boolean haStartupPatched;
++
++            public void visitEnd() {
++                if (haAudioPatched || haStartupPatched) {
++                    // Equivalent to the diagnostic B helper, but defined in L
++                    // itself: no extra game class or emulator dependency.
++                    MethodVisitor method = super.visitMethod(
++                            ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
++                            HA_AUDIO_PAUSE, "()V", null, null);
++                    Label start = new Label(), end = new Label(), handler = new Label();
++                    method.visitCode();
++                    method.visitTryCatchBlock(start, end, handler, "java/lang/InterruptedException");
++                    method.visitLabel(start);
++                    method.visitInsn(LCONST_1);
++                    method.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "sleep", "(J)V");
++                    method.visitLabel(end);
++                    method.visitInsn(RETURN);
++                    method.visitLabel(handler);
++                    method.visitInsn(POP);
++                    method.visitInsn(RETURN);
++                    method.visitMaxs(2, 0);
++                    method.visitEnd();
++                }
++                if (haStartupPatched) {
++                    // Sample the original paused flag once; sleep only when
++                    // true, then return that same value (diagnostic E).
++                    MethodVisitor method = super.visitMethod(
++                            ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
++                            HA_STARTUP_PAUSED, "()Z", null, null);
++                    Label done = new Label();
++                    method.visitCode();
++                    method.visitFieldInsn(GETSTATIC, "F", "addRecord", "Z");
++                    method.visitInsn(DUP);
++                    method.visitJumpInsn(IFEQ, done);
++                    method.visitMethodInsn(INVOKESTATIC, "F", HA_AUDIO_PAUSE, "()V");
++                    method.visitLabel(done);
++                    method.visitInsn(IRETURN);
++                    method.visitMaxs(2, 0);
++                    method.visitEnd();
++                }
++                if (ww15AudioPatched) {
++                    // Same stack-neutral, interruption-safe pause as diagnostic B.
++                    // The original a.run() has max_stack=1 and no catch block.
++                    MethodVisitor method = super.visitMethod(
++                            ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
++                            WW_15_AUDIO_PAUSE, "()V", null, null);
++                    Label start = new Label(), end = new Label(), handler = new Label();
++                    method.visitCode();
++                    method.visitTryCatchBlock(start, end, handler, "java/lang/InterruptedException");
++                    method.visitLabel(start);
++                    method.visitInsn(LCONST_1);
++                    method.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "sleep", "(J)V");
++                    method.visitLabel(end);
++                    method.visitInsn(RETURN);
++                    method.visitLabel(handler);
++                    method.visitInsn(POP);
++                    method.visitInsn(RETURN);
++                    method.visitMaxs(2, 0);
++                    method.visitEnd();
++                }
++                if (ww18AudioPatched || ww35AudioPatched) {
++                    // Stack-neutral pause, equivalent to diagnostic B.
++                    MethodVisitor method = super.visitMethod(
++                            ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
++                            ww35AudioPatched ? WW_35_AUDIO_PAUSE : WW_18_AUDIO_PAUSE, "()V", null, null);
++                    Label start = new Label(), end = new Label(), handler = new Label();
++                    method.visitCode();
++                    method.visitTryCatchBlock(start, end, handler, "java/lang/InterruptedException");
++                    method.visitLabel(start);
++                    method.visitInsn(LCONST_1);
++                    method.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "sleep", "(J)V");
++                    method.visitLabel(end);
++                    method.visitInsn(RETURN);
++                    method.visitLabel(handler);
++                    method.visitInsn(POP);
++                    method.visitInsn(RETURN);
++                    method.visitMaxs(2, 0);
++                    method.visitEnd();
++                }
++                if (ww18Audio && !ww18AudioPatched) {
++                    throw new IllegalStateException("Expected WW #18 loop header not found");
++                }
++                if (ww35Audio && !ww35AudioPatched) {
++                    throw new IllegalStateException("Expected WW #35 loop back edge not found");
++                }
++                super.visitEnd();
++            }
++
++            public MethodVisitor visitMethod(int access, String name, String desc,
++                    String signature, String[] exceptions) {
++                MethodVisitor target = super.visitMethod(access, name, desc, signature, exceptions);
++                if (!"run".equals(name) || !"()V".equals(desc)) return target;
++                return new MethodAdapter(target) {
++                    private int clockReads;
++                    private int haAudioYields;
++                    private int ww35Gotos;
++                    public void visitJumpInsn(int opcode, Label label) {
++                        // Fingerprinted e.run(): the second GOTO is at offset 28,
++                        // the target of the initial jump and both conditionals.
++                        // Insert after its label and before GOTO 5, so every
++                        // path through the polling loop executes the pause.
++                        if (ww35Audio && opcode == GOTO && ++ww35Gotos == 2) {
++                            super.visitMethodInsn(INVOKESTATIC, "e", WW_35_AUDIO_PAUSE, "()V");
++                            ww35AudioPatched = true;
++                            System.out.println("[POP-COMPAT] Applied Warrior Within issue #35 audio busy-wait fix");
++                        }
++                        super.visitJumpInsn(opcode, label);
++                    }
++                    public void visitVarInsn(int opcode, int var) {
++                        // Exact d.run() fingerprint: its sole ALOAD 0 is at
++                        // offset 12, after the loop-target label. Both backward
++                        // branches therefore execute the pause on each iteration.
++                        if (ww18Audio && opcode == ALOAD && var == 0) {
++                            if (ww18AudioPatched) throw new IllegalStateException("Unexpected second WW #18 ALOAD 0");
++                            super.visitMethodInsn(INVOKESTATIC, "d", WW_18_AUDIO_PAUSE, "()V");
++                            ww18AudioPatched = true;
++                            System.out.println("[POP-COMPAT] Applied Warrior Within issue #18 audio busy-wait fix");
++                        }
++                        super.visitVarInsn(opcode, var);
++                    }
++                    public void visitFieldInsn(int opcode, String owner, String name, String desc) {
++                        // Only the paused-flag read in the fingerprinted F.run(),
++                        // original offset 14. Do not alter the 83 ms frame loop.
++                        if (haStartup && opcode == GETSTATIC && "F".equals(owner)
++                                && "addRecord".equals(name) && "Z".equals(desc)) {
++                            if (haStartupPatched) throw new IllegalStateException("Unexpected second pause read");
++                            super.visitMethodInsn(INVOKESTATIC, "F", HA_STARTUP_PAUSED, "()Z");
++                            haStartupPatched = true;
++                            System.out.println("[POP-COMPAT] Applied Harem Adventures issue #13 startup busy-wait fix");
++                            return;
++                        }
++                        super.visitFieldInsn(opcode, owner, name, desc);
++                    }
++                    public void visitMethodInsn(int opcode, String owner, String name, String desc) {
++                        // Issue #13: keep the yield under the queue monitor.
++                        // Replace only the second yield (original offset 102),
++                        // after monitorexit, as in the successful B experiment.
++                        if (haAudio && opcode == INVOKESTATIC
++                                && "java/lang/Thread".equals(owner)
++                                && "yield".equals(name) && "()V".equals(desc)
++                                && ++haAudioYields == 2) {
++                            super.visitMethodInsn(INVOKESTATIC, "L", HA_AUDIO_PAUSE, "()V");
++                            haAudioPatched = true;
++                            System.out.println("[POP-COMPAT] Applied Harem Adventures issue #13 audio busy-wait fix");
++                            return;
++                        }
++                        // Issue #15: the sole yield in the verified a.run(), offset 21.
++                        if (ww15Audio && opcode == INVOKESTATIC
++                                && "java/lang/Thread".equals(owner)
++                                && "yield".equals(name) && "()V".equals(desc)) {
++                            if (ww15AudioPatched) throw new IllegalStateException("Unexpected second WW audio yield");
++                            super.visitMethodInsn(INVOKESTATIC, "a", WW_15_AUDIO_PAUSE, "()V");
++                            ww15AudioPatched = true;
++                            System.out.println("[POP-COMPAT] Applied Warrior Within issue #15 audio busy-wait fix");
++                            return;
++                        }
++                        // Issues #5, #31 and #9: each verified audio run() has one idle yield.
++                        // Issue #9 uses b.run(), with original max_stack 6.
++                        // Its existing catch (Exception) covers this call and
++                        // resumes the loop on InterruptedException. The original
++                        // max_stack is 3, enough for the two-slot long argument.
++                        if ((sotAudio || sot31Audio || sot9Audio) && opcode == INVOKESTATIC
++                                && "java/lang/Thread".equals(owner)
++                                && "yield".equals(name) && "()V".equals(desc)) {
++                            super.visitInsn(LCONST_1);
++                            super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "sleep", "(J)V");
++                            System.out.println(sot9Audio
++                                    ? "[POP-COMPAT] Applied Sands of Time issue #9 audio busy-wait fix"
++                                    : sot31Audio
++                                    ? "[POP-COMPAT] Applied Sands of Time issue #31 audio busy-wait fix"
++                                    : "[POP-COMPAT] Applied Sands of Time audio busy-wait fix");
++                            return;
++                        }
++                        if (chapter1 && opcode == INVOKESTATIC && "java/lang/System".equals(owner)
++                                && "currentTimeMillis".equals(name) && "()J".equals(desc)
++                                && ++clockReads == 2) {
++                            // Sleep before the repeated clock read, not the frame's initial read.
++                            // The original 110 ms deadline is unchanged.
++                            mv.visitInsn(LCONST_1);
++                            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "sleep", "(J)V");
++                            System.out.println("[POP-COMPAT] Applied Chapter 1 busy-wait fix");
++                        }
++                        super.visitMethodInsn(opcode, owner, name, desc);
++                    }
++                };
++            }
++        };
++    }
++}
+diff --git a/src/org/recompile/mobile/CanvasInputCompat.java b/src/org/recompile/mobile/CanvasInputCompat.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..bfa2df41bc8d3c842f1287425eb4ebd35ac3d4b6
+--- /dev/null
++++ b/src/org/recompile/mobile/CanvasInputCompat.java
+@@ -0,0 +1,100 @@
++package org.recompile.mobile;
++
++import java.security.MessageDigest;
++import org.objectweb.asm.ClassReader;
++
++/** Issue #7: restore input callbacks in the verified CanvasPlus-based game. */
++final class CanvasInputCompat {
++    private static final String CLASS_SHA256 =
++        "ca4699d9278f15c59cfcbdaf47fc0e00f43c171b9e3e55527fe12dd36b37ddd6";
++
++    static ClassReader remap(ClassReader reader) throws Exception {
++        if (!"pop2/e".equals(reader.getClassName())) return reader;
++        byte[] original = reader.b;
++        StringBuilder hex = new StringBuilder();
++        for (byte b : MessageDigest.getInstance("SHA-256").digest(original)) {
++            int n = b & 255;
++            if (n < 16) hex.append('0');
++            hex.append(Integer.toHexString(n));
++        }
++        if (!CLASS_SHA256.equals(hex.toString())) return reader;
++
++        // Reproduce diagnostic variant B without changing instruction offsets.
++        byte[] data = original.clone();
++        int count = u2(data, 8), p = 10, namesChanged = 0, ownersChanged = 0;
++        String[] names = new String[count];
++        for (int i = 1; i < count; i++) {
++            int start = p;
++            int tag = data[p++] & 255;
++            switch (tag) {
++            case 1:
++                int length = u2(data, p);
++                p += 2;
++                String name = new String(data, p, length, "ISO-8859-1");
++                names[i] = name;
++                String mapped = null;
++                if ("keyPressee".equals(name)) mapped = "keyPressed";
++                if ("keyReleasee".equals(name)) mapped = "keyReleased";
++                if (mapped != null) {
++                    byte[] bytes = mapped.getBytes("ISO-8859-1");
++                    if (bytes.length != length) throw new IllegalStateException("Callback length changed");
++                    System.arraycopy(bytes, 0, data, p, length);
++                    namesChanged++;
++                }
++                p += length; break;
++            case 3: case 4: case 9: case 10: case 11: case 12:
++                p += 4; break;
++            case 5: case 6:
++                p += 8; i++; break;
++            case 7: case 8:
++                p += 2; break;
++            default:
++                throw new IllegalStateException("Unexpected CanvasPlus constant-pool tag: " + tag);
++            }
++            if (i == 53 || i == 54) {
++                if (tag != 10 || u2(data, start + 1) != 350)
++                    throw new IllegalStateException("Unexpected inherited repaint owner");
++                put2(data, start + 1, 274);
++                ownersChanged++;
++            }
++        }
++        if (namesChanged != 2 || ownersChanged != 2)
++            throw new IllegalStateException("Unexpected CanvasPlus remap counts");
++        p += 6; // access_flags, this_class, super_class
++        p += 2 + 2 * u2(data, p); // interfaces
++        int fields = u2(data, p); p += 2;
++        for (int i = 0; i < fields; i++) p = skipMember(data, p);
++        int methods = u2(data, p); p += 2;
++        int fixed = 0;
++        for (int i = 0; i < methods; i++) {
++            String name = names[u2(data, p + 2)];
++            String desc = names[u2(data, p + 4)];
++            if (("keyPressee".equals(name) || "keyReleasee".equals(name)) && "(I)V".equals(desc)) {
++                int flags = u2(data, p);
++                if ((flags & 7) != 4) throw new IllegalStateException("Unexpected callback visibility");
++                put2(data, p, (flags & ~7) | 1);
++                fixed++;
++            }
++            p = skipMember(data, p);
++        }
++        if (fixed != 2) throw new IllegalStateException("Missing input callbacks");
++        ClassReader mapped = new ClassReader(data);
++        System.out.println("[POP-COMPAT] Applied Sands of Time issue #7 input callback fix");
++        return mapped;
++    }
++
++    private static int u2(byte[] b, int p) {
++        return ((b[p] & 255) << 8) | (b[p + 1] & 255);
++    }
++    private static int u4(byte[] b, int p) {
++        return (u2(b, p) << 16) | u2(b, p + 2);
++    }
++    private static void put2(byte[] b, int p, int n) {
++        b[p] = (byte)(n >>> 8); b[p + 1] = (byte)n;
++    }
++    private static int skipMember(byte[] b, int p) {
++        int attrs = u2(b, p + 6); p += 8;
++        for (int i = 0; i < attrs; i++) p += 6 + u4(b, p + 2);
++        return p;
++    }
++}
+diff --git a/src/org/recompile/mobile/CjspSoundCompat.java b/src/org/recompile/mobile/CjspSoundCompat.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..834bd828d286df677c7312aa0353ac18ef77c224
+--- /dev/null
++++ b/src/org/recompile/mobile/CjspSoundCompat.java
+@@ -0,0 +1,72 @@
++package org.recompile.mobile;
++
++import java.io.ByteArrayOutputStream;
++import java.security.MessageDigest;
++import org.objectweb.asm.ClassReader;
++
++/** Issue #6: map the verified Sharp GX10 CJSP sound references to Vodafone. */
++final class CjspSoundCompat {
++    private static final String CLASS_SHA256 =
++        "d493abdb9c09aad0b3d82f3727563b4013788467b2c930ca8494d7bc4196c2a6";
++    private static final String OLD = "com/gcjsp/v10/sound/";
++    private static final String NEW = "com/vodafone/v10/sound/";
++
++    static ClassReader remap(ClassReader reader) throws Exception {
++        if (!"pop2/e".equals(reader.getClassName())) return reader;
++        byte[] original = reader.b;
++        byte[] hash = MessageDigest.getInstance("SHA-256").digest(original);
++        StringBuilder hex = new StringBuilder();
++        for (byte b : hash) {
++            int n = b & 255;
++            if (n < 16) hex.append('0');
++            hex.append(Integer.toHexString(n));
++        }
++        if (!CLASS_SHA256.equals(hex.toString())) return reader;
++
++        // Same constant-pool rewrite as diagnostic B. ISO-8859-1 maps each
++        // byte to one character, so unrelated modified UTF-8 bytes survive.
++        ByteArrayOutputStream out = new ByteArrayOutputStream(original.length + 128);
++        out.write(original, 0, 10);
++        int count = u2(original, 8), p = 10, changed = 0;
++        for (int i = 1; i < count; i++) {
++            int start = p;
++            int tag = original[p++] & 255;
++            switch (tag) {
++            case 1:
++                int length = u2(original, p);
++                p += 2;
++                String raw = new String(original, p, length, "ISO-8859-1");
++                p += length;
++                String value = raw.replace(OLD, NEW);
++                if (!raw.equals(value)) {
++                    byte[] bytes = value.getBytes("ISO-8859-1");
++                    out.write(tag);
++                    out.write(bytes.length >>> 8);
++                    out.write(bytes.length & 255);
++                    out.write(bytes, 0, bytes.length);
++                    changed++;
++                    continue;
++                }
++                break;
++            case 3: case 4: case 9: case 10: case 11: case 12:
++                p += 4; break;
++            case 5: case 6:
++                p += 8; i++; break;
++            case 7: case 8:
++                p += 2; break;
++            default:
++                throw new IllegalStateException("Unexpected CJSP constant-pool tag: " + tag);
++            }
++            out.write(original, start, p - start);
++        }
++        if (changed != 9) throw new IllegalStateException("Unexpected CJSP remap count: " + changed);
++        out.write(original, p, original.length - p);
++        ClassReader mapped = new ClassReader(out.toByteArray());
++        System.out.println("[POP-COMPAT] Applied Sands of Time issue #6 CJSP sound API remap");
++        return mapped;
++    }
++
++    private static int u2(byte[] b, int p) {
++        return ((b[p] & 255) << 8) | (b[p + 1] & 255);
++    }
++}
+diff --git a/src/org/recompile/mobile/JarUrlCompat.java b/src/org/recompile/mobile/JarUrlCompat.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4afeb2ce3f9c9cf6fe83a8dc981ccbe7df357b32
+--- /dev/null
++++ b/src/org/recompile/mobile/JarUrlCompat.java
+@@ -0,0 +1,70 @@
++package org.recompile.mobile;
++
++import java.security.MessageDigest;
++import org.objectweb.asm.ClassReader;
++import org.objectweb.asm.ClassWriter;
++import org.objectweb.asm.ClassAdapter;
++import org.objectweb.asm.MethodAdapter;
++import org.objectweb.asm.MethodVisitor;
++import org.objectweb.asm.Label;
++import org.objectweb.asm.Opcodes;
++
++/** Issue #8: tolerate a missing JAD URL in the verified game class only. */
++final class JarUrlCompat implements Opcodes {
++    private static final String CLASS_SHA256 =
++        "71531b4e5c155a77320809ec6762926c254b7a2e51be97b4f1de1adf8542ced4";
++
++    static ClassReader remap(ClassReader reader) throws Exception {
++        if (!"d".equals(reader.getClassName())) return reader;
++        StringBuilder hex = new StringBuilder();
++        for (byte b : MessageDigest.getInstance("SHA-256").digest(reader.b)) {
++            int n = b & 255;
++            if (n < 16) hex.append('0');
++            hex.append(Integer.toHexString(n));
++        }
++        String fingerprint = hex.toString();
++        if (!CLASS_SHA256.equals(fingerprint)
++                && !"117d1b324d9f04a057af886f8b98367e769bd68002ba550134647289ca4772ca".equals(fingerprint)
++                && !"2c03c021dbef20155db70b76f452cbd14933f7a1962c2e4498a875fa8b590200".equals(fingerprint)) return reader;
++
++        // Preserve all unmodified methods; only c() needs a null fallback.
++        ClassWriter writer = new ClassWriter(reader, 0);
++        final int[] changed = {0};
++        reader.accept(new ClassAdapter(writer) {
++            public MethodVisitor visitMethod(int access, String name, String desc,
++                    String signature, String[] exceptions) {
++                MethodVisitor target = super.visitMethod(access, name, desc, signature, exceptions);
++                if (!"c".equals(name) || !"()V".equals(desc)) return target;
++                return new MethodAdapter(target) {
++                    private boolean urlKey;
++                    public void visitLdcInsn(Object value) {
++                        urlKey = "MIDlet-Jar-URL".equals(value);
++                        super.visitLdcInsn(value);
++                    }
++                    public void visitMethodInsn(int opcode, String owner, String name, String desc) {
++                        super.visitMethodInsn(opcode, owner, name, desc);
++                        if (urlKey && opcode == INVOKEVIRTUAL
++                                && "javax/microedition/midlet/MIDlet".equals(owner)
++                                && "getAppProperty".equals(name)
++                                && "(Ljava/lang/String;)Ljava/lang/String;".equals(desc)) {
++                            // The original call already needs two stack slots;
++                            // DUP therefore needs no increase in max_stack.
++                            Label present = new Label();
++                            mv.visitInsn(DUP);
++                            mv.visitJumpInsn(IFNONNULL, present);
++                            mv.visitInsn(POP);
++                            mv.visitLdcInsn("");
++                            mv.visitLabel(present);
++                            changed[0]++;
++                        }
++                        urlKey = false;
++                    }
++                };
++            }
++        }, 0);
++        if (changed[0] != 1) throw new IllegalStateException("Unexpected JAD lookup count: " + changed[0]);
++        ClassReader result = new ClassReader(writer.toByteArray());
++        System.out.println("[POP-COMPAT] Applied Sands of Time issue #8 missing JAD URL fix");
++        return result;
++    }
++}
+diff --git a/src/org/recompile/mobile/LevelLoadingCompat.java b/src/org/recompile/mobile/LevelLoadingCompat.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..c7d29d6eb01ed53caad803a55fa37212ab5ae2b8
+--- /dev/null
++++ b/src/org/recompile/mobile/LevelLoadingCompat.java
+@@ -0,0 +1,47 @@
++package org.recompile.mobile;
++
++import java.security.MessageDigest;
++import org.objectweb.asm.ClassReader;
++
++/** Issue #20: allocate the missing one-byte level-read buffer. */
++final class LevelLoadingCompat {
++    private static final String CLASS_SHA256 =
++        "3132440d7fa147f48647468b39f0691beeb72bc6e0777a0d4b6bb1ca387a15da";
++
++    static ClassReader remap(ClassReader reader) throws Exception {
++        if (!"Z".equals(reader.getClassName())) return reader;
++        StringBuilder hex = new StringBuilder();
++        for (byte b : MessageDigest.getInstance("SHA-256").digest(reader.b)) {
++            int n = b & 255;
++            if (n < 16) hex.append('0');
++            hex.append(Integer.toHexString(n));
++        }
++        if (!CLASS_SHA256.equals(hex.toString())) return reader;
++
++        // Exact fingerprint and unique instruction sequence: replace GETSTATIC
++        // yI with ICONST_1 NEWARRAY T_BYTE, matching diagnostic B exactly.
++        // Both sequences occupy three bytes and push one byte[] reference.
++        // Preserve branch targets, stack maps and all other class bytes.
++        int[] pattern = {0xb2,0x00,0x16,0xb2,0x01,0x6d,0x03,0x06,
++                         0xb8,0x01,0x68,0xb6,0x01,0x69};
++        byte[] bytes = reader.b.clone();
++        int found = -1;
++        for (int i = 0; i <= bytes.length - pattern.length; i++) {
++            boolean match = true;
++            for (int j = 0; j < pattern.length; j++) {
++                if ((bytes[i+j] & 255) != pattern[j]) { match = false; break; }
++            }
++            if (match) {
++                if (found != -1) throw new IllegalStateException("Duplicate WW level buffer sequence");
++                found = i;
++            }
++        }
++        if (found == -1) throw new IllegalStateException("Missing WW level buffer sequence");
++        bytes[found+3] = 0x04;
++        bytes[found+4] = (byte) 0xbc;
++        bytes[found+5] = 0x08;
++        ClassReader result = new ClassReader(bytes);
++        System.out.println("[POP-COMPAT] Applied Warrior Within issue #20 level-loading buffer fix");
++        return result;
++    }
++}
+diff --git a/src/org/recompile/mobile/MIDletLoader.java b/src/org/recompile/mobile/MIDletLoader.java
+index 8f27ba967d888f088eb69857b6c28c7a76fb60b4..e22a4502f6eaab5e6997608829b4bb737909a74f 100644
+--- a/src/org/recompile/mobile/MIDletLoader.java
++++ b/src/org/recompile/mobile/MIDletLoader.java
+@@ -1,545 +1,545 @@
+-/*
+-	This file is part of FreeJ2ME.
+-
+-	FreeJ2ME is free software: you can redistribute it and/or modify
+-	it under the terms of the GNU General Public License as published by
+-	the Free Software Foundation, either version 3 of the License, or
+-	(at your option) any later version.
+-
+-	FreeJ2ME is distributed in the hope that it will be useful,
+-	but WITHOUT ANY WARRANTY; without even the implied warranty of
+-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-	GNU General Public License for more details.
+-
+-	You should have received a copy of the GNU General Public License
+-	along with FreeJ2ME.  If not, see http://www.gnu.org/licenses/
+-*/
+-package org.recompile.mobile;
+-
+-import java.io.InputStream;
+-import java.io.BufferedReader;
+-import java.io.InputStreamReader;
+-import java.io.ByteArrayOutputStream;
+-import java.io.File;
+-import java.io.ByteArrayInputStream;
+-import java.io.IOException;
+-import java.net.MalformedURLException;
+-import java.net.URISyntaxException;
+-import java.net.URL;
+-import java.net.URLClassLoader;
+-import java.lang.reflect.Constructor;
+-import java.lang.reflect.Method;
+-
+-import java.util.HashMap;
+-import java.util.Map;
+-import java.util.jar.JarEntry;
+-import java.util.jar.JarFile;
+-import java.util.regex.Pattern;
+-import java.util.Enumeration;
+-
+-import org.objectweb.asm.ClassReader;
+-import org.objectweb.asm.ClassWriter;
+-import org.objectweb.asm.ClassAdapter;
+-import org.objectweb.asm.ClassVisitor;
+-import org.objectweb.asm.MethodAdapter;
+-import org.objectweb.asm.MethodVisitor;
+-import org.objectweb.asm.Opcodes;
+-
+-import pl.zb3.freej2me.MainClassFinder;
+-
+-import javax.microedition.midlet.*;
+-
+-public class MIDletLoader extends URLClassLoader {
+-	private static final Pattern TO_SANITIZE = Pattern.compile("[<>:\"/\\\\|?*]");
+-
+-	public String name = "";
+-	public String icon = "";
+-	public String className;
+-	private String appId = "";
+-
+-	public HashMap<String, String> properties = new HashMap<String, String>();
+-
+-	private Class<?> mainClass;
+-	private MIDlet mainInst;
+-	private File jarFile;
+-
+-	private MainClassFinder mainClassFinder = new MainClassFinder();
+-
+-	public static MIDletLoader getMIDletLoader(File jarFile) {
+-		try {
+-			URL jar = new URL(jarFile.toURI().toString());
+-			return new MIDletLoader(new URL[]{jar}, null);
+-		} catch (MalformedURLException e) {
+-			return null;
+-		}
+-	}
+-
+-	public static MIDletLoader getMIDletLoader(File jarFile, String appId) {
+-		try {
+-			URL jar = new URL(jarFile.toURI().toString());
+-			return new MIDletLoader(new URL[]{jar}, appId);
+-		} catch (MalformedURLException e) {
+-			return null;
+-		}
+-	}
+-
+-	public MIDletLoader(URL urls[], String appId) {
+-		super(urls);
+-
+-		try {
+-			jarFile = new File(urls[0].toURI());
+-		} catch (URISyntaxException e) {
+-			e.printStackTrace();
+-		}
+-
+-		try {
+-			loadManifest();
+-		} catch (Exception e) {
+-			System.out.println("Can't Read Manifest!");
+-		}
+-
+-		if (appId != null) {
+-			this.appId = appId;
+-		}
+-	}
+-
+-	public void start() throws MIDletStateChangeException {
+-		Method start = null;
+-
+-		if (className == null) {
+-			className = mainClassFinder.findMainClass(jarFile);
+-		}
+-
+-		try {
+-			mainClass = loadClass(className);
+-
+-			Constructor constructor;
+-			constructor = mainClass.getConstructor();
+-			constructor.setAccessible(true);
+-
+-			MIDlet.initAppProperties(properties);
+-			mainInst = (MIDlet) constructor.newInstance();
+-		} catch (Exception e) {
+-			System.out.println("Problem Constructing " + name + " class: " + className);
+-			throw new RuntimeException(e);
+-		}
+-
+-		try {
+-			while (start == null) {
+-				try {
+-					start = mainClass.getDeclaredMethod("startApp");
+-					start.setAccessible(true);
+-				} catch (NoSuchMethodException e) {
+-					mainClass = mainClass.getSuperclass();
+-					if (mainClass == null || mainClass == MIDlet.class) {
+-						throw e;
+-					}
+-
+-					mainClass = loadClass(mainClass.getName(), true);
+-				}
+-			}
+-		} catch (Exception e) {
+-			System.out.println("Can't Find startApp Method");
+-			throw new RuntimeException(e);
+-		}
+-
+-		try {
+-			start.invoke(mainInst);
+-		} catch (Exception e) {
+-			throw new RuntimeException(e);
+-		}
+-	}
+-
+-	// this can be used statically to read the JAD file
+-	public static void parseDescriptorInto(InputStream is, Map<String, String> keyValueMap) {
+-		String currentKey = null;
+-		StringBuilder currentValue = new StringBuilder();
+-
+-		try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+-			String line;
+-			while ((line = br.readLine()) != null) {
+-				if (line.trim().isEmpty()) {
+-					continue;
+-				}
+-				if (line.startsWith(" ")) {
+-					currentValue.append(line, 1, line.length());
+-				} else {
+-					if (currentKey != null) {
+-						keyValueMap.put(currentKey, currentValue.toString().trim());
+-						currentValue.setLength(0);
+-					}
+-
+-					int colonIndex = line.indexOf(':');
+-					if (colonIndex != -1) {
+-						currentKey = line.substring(0, colonIndex).trim();
+-						currentValue.append(line.substring(colonIndex + 1).trim());
+-					}
+-				}
+-			}
+-
+-			if (currentKey != null) {
+-				keyValueMap.put(currentKey, currentValue.toString().trim());
+-			}
+-
+-		} catch (IOException e) {
+-			e.printStackTrace();
+-		}
+-	}
+-
+-	// this should sanitize the id so that it can be used in a zip file
+-	public void setAppId(String source) {
+-		appId = TO_SANITIZE.matcher(source).replaceAll("_");
+-	}
+-
+-	public String getAppId() {
+-		return appId;
+-	}
+-
+-	private void loadManifest() {
+-		String resource = "META-INF/MANIFEST.MF";
+-		URL url = findResource(resource); // this has a case-insensitive fallback
+-		if (url == null) {
+-			return;
+-		}
+-
+-		try {
+-			parseDescriptorInto(url.openStream(), properties);
+-		} catch (Exception e) {
+-			System.out.println("Can't Read Jar Manifest!");
+-			e.printStackTrace();
+-		}
+-
+-		handleProperties();
+-	}
+-
+-
+-    public void setProperties(Map<String, String> newProperties) {
+-		properties.putAll(newProperties);
+-
+-		handleProperties();
+-    }
+-
+-	private void handleProperties() {
+-		if (properties.containsKey("MIDlet-1")) {
+-			String val = properties.get("MIDlet-1");
+-
+-			String[] parts = val.split(",");
+-			if (parts.length == 3) {
+-				name = parts[0].trim();
+-				icon = parts[1].trim();
+-
+-				// class name can override inferred name
+-				className = parts[2].trim();
+-
+-				if (appId.isEmpty()) { // properties don't change id if it was passed
+-					setAppId(name);
+-				}
+-			}
+-		}
+-	}
+-
+-	public byte[] getIconBytes() {
+-        if (icon.isEmpty()) {
+-            return null;
+-        }
+-        try {
+-            InputStream is = getResourceAsStream(icon);
+-            byte[] buffer = new byte[8192];
+-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+-            int bytesRead;
+-            while ((bytesRead = is.read(buffer)) != -1) {
+-                baos.write(buffer, 0, bytesRead);
+-            }
+-            return baos.toByteArray();
+-        } catch (Exception e) {
+-            return null;
+-        }
+-    }
+-
+-	public InputStream getResourceAsStream(String resource) {
+-		URL url;
+-		// System.out.println("Loading Resource: " + resource);
+-
+-		if (resource.startsWith("/")) {
+-			resource = resource.substring(1);
+-
+-			if (resource.startsWith("/")) {
+-				resource = resource.substring(1);
+-			}
+-		}
+-
+-		try {
+-			url = findResource(resource);
+-			// Read all bytes, return ByteArrayInputStream //
+-			InputStream stream = url.openStream();
+-
+-			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-			int count = 0;
+-			byte[] data = new byte[4096];
+-			while (count != -1) {
+-				count = stream.read(data);
+-				if (count != -1) {
+-					buffer.write(data, 0, count);
+-				}
+-			}
+-			return new ByteArrayInputStream(buffer.toByteArray());
+-		} catch (Exception e) {
+-			System.out.println(resource + " Not Found");
+-			return super.getResourceAsStream(resource);
+-		}
+-	}
+-
+-	public URL getResource(String resource) {
+-		if (resource.startsWith("/")) {
+-			resource = resource.substring(1);
+-			if (resource.startsWith("/")) {
+-				resource = resource.substring(1);
+-			}
+-		}
+-		try {
+-			URL url = findResource(resource);
+-			return url;
+-		} catch (Exception e) {
+-			System.out.println(resource + " Not Found");
+-			return super.getResource(resource);
+-		}
+-	}
+-
+-	@Override
+-	public URL findResource(String name) {
+-		// First, try to find the resource with the original, case-sensitive name
+-		URL resource = super.findResource(name);
+-		if (resource != null) {
+-			return resource;
+-		}
+-
+-		// For each URL, check if it is a JAR file and perform a case-insensitive search
+-		for (URL url : getURLs()) {
+-			resource = findResourceInJar(url, name);
+-			if (resource != null) {
+-				return resource;
+-			}
+-		}
+-
+-		// If not found, return null
+-		return null;
+-	}
+-
+-	private URL findResourceInJar(URL jarUrl, String resourceName) {
+-		if (jarUrl.getProtocol().equals("file") && jarUrl.getPath().endsWith(".jar")) {
+-			try (JarFile jarFile = new JarFile(new File(jarUrl.toURI()))) {
+-				Enumeration<JarEntry> entries = jarFile.entries();
+-				while (entries.hasMoreElements()) {
+-					JarEntry entry = entries.nextElement();
+-					String entryName = entry.getName();
+-					if (entryName.equalsIgnoreCase(resourceName)) {
+-						// Construct the URL for the found resource
+-						String jarEntryUrl = "jar:" + jarUrl.toExternalForm() + "!/" + entryName;
+-						return new URL(jarEntryUrl);
+-					}
+-				}
+-			} catch (URISyntaxException | IOException e) {
+-				// Handle exceptions as needed
+-				e.printStackTrace();
+-			}
+-		}
+-		return null;
+-	}
+-
+-	/*
+-	 ******** loadClass Modifies Methods with ObjectWeb ASM ********
+-	 * Replaces java.lang.Class.getResourceAsStream calls with calls
+-	 * to Mobile.getResourceAsStream which calls
+-	 * MIDletLoader.getResourceAsStream(class, string)
+-	 */
+-
+-	public InputStream getMIDletResourceAsStream(String resource) {
+-		// System.out.println("Get Resource: "+resource);
+-
+-		URL url = getResource(resource);
+-
+-		// Read all bytes, return ByteArrayInputStream //
+-		try {
+-			InputStream stream = url.openStream();
+-
+-			// zb3: why not return a stream? or a bufferedinputstream for marks?
+-
+-			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-			int count = 0;
+-			byte[] data = new byte[4096];
+-			while (count != -1) {
+-				count = stream.read(data);
+-				if (count != -1) {
+-					buffer.write(data, 0, count);
+-				}
+-			}
+-			return new ByteArrayInputStream(buffer.toByteArray());
+-		} catch (Exception e) {
+-			return super.getResourceAsStream(resource);
+-		}
+-	}
+-
+-	public byte[] getMIDletResourceAsByteArray(String resource) {
+-		URL url = getResource(resource);
+-
+-		try {
+-			InputStream stream = url.openStream();
+-
+-			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-			int count = 0;
+-			byte[] data = new byte[4096];
+-			while (count != -1) {
+-				count = stream.read(data);
+-				if (count != -1) {
+-					buffer.write(data, 0, count);
+-				}
+-			}
+-			return buffer.toByteArray();
+-		} catch (Exception e) {
+-			System.out.println(resource + " Not Found");
+-			return new byte[0];
+-		}
+-	}
+-
+-	public Class loadClass(String name) throws ClassNotFoundException {
+-		InputStream stream;
+-		String resource;
+-		byte[] code;
+-
+-		Class c = this.findLoadedClass(name);
+-		if (c != null) {
+-			return c;
+-		}
+-
+-		// System.out.println("Load Class "+name);
+-
+-		// zb3: this needs to be improved as this won't transform games
+-		// like hypothetical com.nokia.tictactoe
+-		// but this isn't that simple because games ship shims for builtins
+-		// we'd not want these to replace our implementations
+-		if (name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("com.nokia") ||
+-				name.startsWith("com.mascotcapsule") || name.startsWith("com.samsung") || name.startsWith("sun.") ||
+-				name.startsWith("com.siemens") || name.startsWith("org.recompile") || name.startsWith("jdk.") ||
+-				name.startsWith("com.vodafone.") || name.startsWith("com.jblend.") || name.startsWith("com.motorola.")
+-				|| name.startsWith("com.sprintpcs.") || name.startsWith("org.")) {
+-			return loadClass(name, true);
+-		}
+-
+-		resource = name.replace(".", "/") + ".class";
+-		stream = super.getResourceAsStream(resource);
+-
+-		if (stream == null) {
+-			throw new ClassNotFoundException();
+-		}
+-
+-		try {
+-			// System.out.println("Instrumenting Class "+name);
+-			code = instrument(stream);
+-			return defineClass(name, code, 0, code.length);
+-		} catch (Exception e) {
+-			System.out.println("Error Adapting Class " + name);
+-			System.out.println(e.toString());
+-			return null;
+-		}
+-
+-	}
+-
+-	/*
+-	 * **************************************************************
+-	 * Special Siemens Stuff
+-	 * **************************************************************
+-	 */
+-
+-	public InputStream getMIDletResourceAsSiemensStream(String resource) {
+-		URL url = getResource(resource);
+-
+-		try {
+-			InputStream stream = url.openStream();
+-
+-			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-			int count = 0;
+-			byte[] data = new byte[4096];
+-			while (count != -1) {
+-				count = stream.read(data);
+-				if (count != -1) {
+-					buffer.write(data, 0, count);
+-				}
+-			}
+-			return new SiemensInputStream(buffer.toByteArray());
+-		} catch (Exception e) {
+-			return super.getResourceAsStream(resource);
+-		}
+-	}
+-
+-	private class SiemensInputStream extends InputStream {
+-		private ByteArrayInputStream iostream;
+-
+-		public SiemensInputStream(byte[] data) {
+-			iostream = new ByteArrayInputStream(data);
+-		}
+-
+-		public int read() {
+-			int t = iostream.read();
+-			if (t == -1) {
+-				return 0;
+-			}
+-			return t;
+-		}
+-
+-		public int read(byte[] b, int off, int len) {
+-			int t = iostream.read(b, off, len);
+-			if (t == -1) {
+-				return 0;
+-			}
+-			return t;
+-		}
+-	}
+-
+-	/*
+-	 * **************************************************************
+-	 * Instrumentation
+-	 * **************************************************************
+-	 */
+-
+-	private byte[] instrument(InputStream stream) throws Exception {
+-		ClassReader reader = new ClassReader(stream);
+-		ClassWriter writer = new ClassWriter(0);
+-		ClassVisitor visitor = new ASMVisitor(writer);
+-		reader.accept(visitor, ClassReader.SKIP_DEBUG);
+-		return writer.toByteArray();
+-	}
+-
+-	private class ASMVisitor extends ClassAdapter {
+-		public ASMVisitor(ClassVisitor visitor) {
+-			super(visitor);
+-		}
+-
+-		public void visit(final int version, final int access, final String name, final String signature,
+-				final String superName, final String[] interfaces) {
+-			super.visit(version, access, name, signature, superName, interfaces);
+-		}
+-
+-		public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature,
+-				final String[] exceptions) {
+-			return new ASMMethodVisitor(super.visitMethod(access, name, desc, signature, exceptions));
+-		}
+-
+-		private class ASMMethodVisitor extends MethodAdapter implements Opcodes {
+-			public ASMMethodVisitor(MethodVisitor visitor) {
+-				super(visitor);
+-			}
+-
+-			public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+-				if (opcode == INVOKEVIRTUAL && name.equals("getResourceAsStream") && owner.equals("java/lang/Class")) {
+-					mv.visitMethodInsn(INVOKESTATIC, "org/recompile/mobile/Mobile", name,
+-							"(Ljava/lang/Class;Ljava/lang/String;)Ljava/io/InputStream;");
+-				} else if (opcode == INVOKESTATIC && name.equals("setListener")
+-						&& owner.equals("com/siemens/mp/io/Connection")) {
+-					mv.visitMethodInsn(opcode, owner, "setListenerCompat", desc);
+-				} else {
+-					mv.visitMethodInsn(opcode, owner, name, desc);
+-				}
+-			}
+-		}
+-	}
+-}
++/*
++	This file is part of FreeJ2ME.
++
++	FreeJ2ME is free software: you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation, either version 3 of the License, or
++	(at your option) any later version.
++
++	FreeJ2ME is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with FreeJ2ME.  If not, see http://www.gnu.org/licenses/
++*/
++package org.recompile.mobile;
++
++import java.io.InputStream;
++import java.io.BufferedReader;
++import java.io.InputStreamReader;
++import java.io.ByteArrayOutputStream;
++import java.io.File;
++import java.io.ByteArrayInputStream;
++import java.io.IOException;
++import java.net.MalformedURLException;
++import java.net.URISyntaxException;
++import java.net.URL;
++import java.net.URLClassLoader;
++import java.lang.reflect.Constructor;
++import java.lang.reflect.Method;
++
++import java.util.HashMap;
++import java.util.Map;
++import java.util.jar.JarEntry;
++import java.util.jar.JarFile;
++import java.util.regex.Pattern;
++import java.util.Enumeration;
++
++import org.objectweb.asm.ClassReader;
++import org.objectweb.asm.ClassWriter;
++import org.objectweb.asm.ClassAdapter;
++import org.objectweb.asm.ClassVisitor;
++import org.objectweb.asm.MethodAdapter;
++import org.objectweb.asm.MethodVisitor;
++import org.objectweb.asm.Opcodes;
++
++import pl.zb3.freej2me.MainClassFinder;
++
++import javax.microedition.midlet.*;
++
++public class MIDletLoader extends URLClassLoader {
++	private static final Pattern TO_SANITIZE = Pattern.compile("[<>:\"/\\\\|?*]");
++
++	public String name = "";
++	public String icon = "";
++	public String className;
++	private String appId = "";
++
++	public HashMap<String, String> properties = new HashMap<String, String>();
++
++	private Class<?> mainClass;
++	private MIDlet mainInst;
++	private File jarFile;
++
++	private MainClassFinder mainClassFinder = new MainClassFinder();
++
++	public static MIDletLoader getMIDletLoader(File jarFile) {
++		try {
++			URL jar = new URL(jarFile.toURI().toString());
++			return new MIDletLoader(new URL[]{jar}, null);
++		} catch (MalformedURLException e) {
++			return null;
++		}
++	}
++
++	public static MIDletLoader getMIDletLoader(File jarFile, String appId) {
++		try {
++			URL jar = new URL(jarFile.toURI().toString());
++			return new MIDletLoader(new URL[]{jar}, appId);
++		} catch (MalformedURLException e) {
++			return null;
++		}
++	}
++
++	public MIDletLoader(URL urls[], String appId) {
++		super(urls);
++
++		try {
++			jarFile = new File(urls[0].toURI());
++		} catch (URISyntaxException e) {
++			e.printStackTrace();
++		}
++
++		try {
++			loadManifest();
++		} catch (Exception e) {
++			System.out.println("Can't Read Manifest!");
++		}
++
++		if (appId != null) {
++			this.appId = appId;
++		}
++	}
++
++	public void start() throws MIDletStateChangeException {
++		Method start = null;
++
++		if (className == null) {
++			className = mainClassFinder.findMainClass(jarFile);
++		}
++
++		try {
++			mainClass = loadClass(className);
++
++			Constructor constructor;
++			constructor = mainClass.getConstructor();
++			constructor.setAccessible(true);
++
++			MIDlet.initAppProperties(properties);
++			mainInst = (MIDlet) constructor.newInstance();
++		} catch (Exception e) {
++			System.out.println("Problem Constructing " + name + " class: " + className);
++			throw new RuntimeException(e);
++		}
++
++		try {
++			while (start == null) {
++				try {
++					start = mainClass.getDeclaredMethod("startApp");
++					start.setAccessible(true);
++				} catch (NoSuchMethodException e) {
++					mainClass = mainClass.getSuperclass();
++					if (mainClass == null || mainClass == MIDlet.class) {
++						throw e;
++					}
++
++					mainClass = loadClass(mainClass.getName(), true);
++				}
++			}
++		} catch (Exception e) {
++			System.out.println("Can't Find startApp Method");
++			throw new RuntimeException(e);
++		}
++
++		try {
++			start.invoke(mainInst);
++		} catch (Exception e) {
++			throw new RuntimeException(e);
++		}
++	}
++
++	// this can be used statically to read the JAD file
++	public static void parseDescriptorInto(InputStream is, Map<String, String> keyValueMap) {
++		String currentKey = null;
++		StringBuilder currentValue = new StringBuilder();
++
++		try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
++			String line;
++			while ((line = br.readLine()) != null) {
++				if (line.trim().isEmpty()) {
++					continue;
++				}
++				if (line.startsWith(" ")) {
++					currentValue.append(line, 1, line.length());
++				} else {
++					if (currentKey != null) {
++						keyValueMap.put(currentKey, currentValue.toString().trim());
++						currentValue.setLength(0);
++					}
++
++					int colonIndex = line.indexOf(':');
++					if (colonIndex != -1) {
++						currentKey = line.substring(0, colonIndex).trim();
++						currentValue.append(line.substring(colonIndex + 1).trim());
++					}
++				}
++			}
++
++			if (currentKey != null) {
++				keyValueMap.put(currentKey, currentValue.toString().trim());
++			}
++
++		} catch (IOException e) {
++			e.printStackTrace();
++		}
++	}
++
++	// this should sanitize the id so that it can be used in a zip file
++	public void setAppId(String source) {
++		appId = TO_SANITIZE.matcher(source).replaceAll("_");
++	}
++
++	public String getAppId() {
++		return appId;
++	}
++
++	private void loadManifest() {
++		String resource = "META-INF/MANIFEST.MF";
++		URL url = findResource(resource); // this has a case-insensitive fallback
++		if (url == null) {
++			return;
++		}
++
++		try {
++			parseDescriptorInto(url.openStream(), properties);
++		} catch (Exception e) {
++			System.out.println("Can't Read Jar Manifest!");
++			e.printStackTrace();
++		}
++
++		handleProperties();
++	}
++
++
++    public void setProperties(Map<String, String> newProperties) {
++		properties.putAll(newProperties);
++
++		handleProperties();
++    }
++
++	private void handleProperties() {
++		if (properties.containsKey("MIDlet-1")) {
++			String val = properties.get("MIDlet-1");
++
++			String[] parts = val.split(",");
++			if (parts.length == 3) {
++				name = parts[0].trim();
++				icon = parts[1].trim();
++
++				// class name can override inferred name
++				className = parts[2].trim();
++
++				if (appId.isEmpty()) { // properties don't change id if it was passed
++					setAppId(name);
++				}
++			}
++		}
++	}
++
++	public byte[] getIconBytes() {
++        if (icon.isEmpty()) {
++            return null;
++        }
++        try {
++            InputStream is = getResourceAsStream(icon);
++            byte[] buffer = new byte[8192];
++            ByteArrayOutputStream baos = new ByteArrayOutputStream();
++            int bytesRead;
++            while ((bytesRead = is.read(buffer)) != -1) {
++                baos.write(buffer, 0, bytesRead);
++            }
++            return baos.toByteArray();
++        } catch (Exception e) {
++            return null;
++        }
++    }
++
++	public InputStream getResourceAsStream(String resource) {
++		URL url;
++		// System.out.println("Loading Resource: " + resource);
++
++		if (resource.startsWith("/")) {
++			resource = resource.substring(1);
++
++			if (resource.startsWith("/")) {
++				resource = resource.substring(1);
++			}
++		}
++
++		try {
++			url = findResource(resource);
++			// Read all bytes, return ByteArrayInputStream //
++			InputStream stream = url.openStream();
++
++			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++			int count = 0;
++			byte[] data = new byte[4096];
++			while (count != -1) {
++				count = stream.read(data);
++				if (count != -1) {
++					buffer.write(data, 0, count);
++				}
++			}
++			return new ByteArrayInputStream(buffer.toByteArray());
++		} catch (Exception e) {
++			System.out.println(resource + " Not Found");
++			return super.getResourceAsStream(resource);
++		}
++	}
++
++	public URL getResource(String resource) {
++		if (resource.startsWith("/")) {
++			resource = resource.substring(1);
++			if (resource.startsWith("/")) {
++				resource = resource.substring(1);
++			}
++		}
++		try {
++			URL url = findResource(resource);
++			return url;
++		} catch (Exception e) {
++			System.out.println(resource + " Not Found");
++			return super.getResource(resource);
++		}
++	}
++
++	@Override
++	public URL findResource(String name) {
++		// First, try to find the resource with the original, case-sensitive name
++		URL resource = super.findResource(name);
++		if (resource != null) {
++			return resource;
++		}
++
++		// For each URL, check if it is a JAR file and perform a case-insensitive search
++		for (URL url : getURLs()) {
++			resource = findResourceInJar(url, name);
++			if (resource != null) {
++				return resource;
++			}
++		}
++
++		// If not found, return null
++		return null;
++	}
++
++	private URL findResourceInJar(URL jarUrl, String resourceName) {
++		if (jarUrl.getProtocol().equals("file") && jarUrl.getPath().endsWith(".jar")) {
++			try (JarFile jarFile = new JarFile(new File(jarUrl.toURI()))) {
++				Enumeration<JarEntry> entries = jarFile.entries();
++				while (entries.hasMoreElements()) {
++					JarEntry entry = entries.nextElement();
++					String entryName = entry.getName();
++					if (entryName.equalsIgnoreCase(resourceName)) {
++						// Construct the URL for the found resource
++						String jarEntryUrl = "jar:" + jarUrl.toExternalForm() + "!/" + entryName;
++						return new URL(jarEntryUrl);
++					}
++				}
++			} catch (URISyntaxException | IOException e) {
++				// Handle exceptions as needed
++				e.printStackTrace();
++			}
++		}
++		return null;
++	}
++
++	/*
++	 ******** loadClass Modifies Methods with ObjectWeb ASM ********
++	 * Replaces java.lang.Class.getResourceAsStream calls with calls
++	 * to Mobile.getResourceAsStream which calls
++	 * MIDletLoader.getResourceAsStream(class, string)
++	 */
++
++	public InputStream getMIDletResourceAsStream(String resource) {
++		// System.out.println("Get Resource: "+resource);
++
++		URL url = getResource(resource);
++
++		// Read all bytes, return ByteArrayInputStream //
++		try {
++			InputStream stream = url.openStream();
++
++			// zb3: why not return a stream? or a bufferedinputstream for marks?
++
++			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++			int count = 0;
++			byte[] data = new byte[4096];
++			while (count != -1) {
++				count = stream.read(data);
++				if (count != -1) {
++					buffer.write(data, 0, count);
++				}
++			}
++			return new ByteArrayInputStream(buffer.toByteArray());
++		} catch (Exception e) {
++			return super.getResourceAsStream(resource);
++		}
++	}
++
++	public byte[] getMIDletResourceAsByteArray(String resource) {
++		URL url = getResource(resource);
++
++		try {
++			InputStream stream = url.openStream();
++
++			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++			int count = 0;
++			byte[] data = new byte[4096];
++			while (count != -1) {
++				count = stream.read(data);
++				if (count != -1) {
++					buffer.write(data, 0, count);
++				}
++			}
++			return buffer.toByteArray();
++		} catch (Exception e) {
++			System.out.println(resource + " Not Found");
++			return new byte[0];
++		}
++	}
++
++	public Class loadClass(String name) throws ClassNotFoundException {
++		InputStream stream;
++		String resource;
++		byte[] code;
++
++		Class c = this.findLoadedClass(name);
++		if (c != null) {
++			return c;
++		}
++
++		// System.out.println("Load Class "+name);
++
++		// zb3: this needs to be improved as this won't transform games
++		// like hypothetical com.nokia.tictactoe
++		// but this isn't that simple because games ship shims for builtins
++		// we'd not want these to replace our implementations
++		if (name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("com.nokia") ||
++				name.startsWith("com.mascotcapsule") || name.startsWith("com.samsung") || name.startsWith("sun.") ||
++				name.startsWith("com.siemens") || name.startsWith("org.recompile") || name.startsWith("jdk.") ||
++				name.startsWith("com.vodafone.") || name.startsWith("com.jblend.") || name.startsWith("com.motorola.")
++				|| name.startsWith("com.sprintpcs.") || name.startsWith("org.")) {
++			return loadClass(name, true);
++		}
++
++		resource = name.replace(".", "/") + ".class";
++		stream = super.getResourceAsStream(resource);
++
++		if (stream == null) {
++			throw new ClassNotFoundException();
++		}
++
++		try {
++			// System.out.println("Instrumenting Class "+name);
++			code = instrument(stream);
++			return defineClass(name, code, 0, code.length);
++		} catch (Exception e) {
++			System.out.println("Error Adapting Class " + name);
++			System.out.println(e.toString());
++			return null;
++		}
++
++	}
++
++	/*
++	 * **************************************************************
++	 * Special Siemens Stuff
++	 * **************************************************************
++	 */
++
++	public InputStream getMIDletResourceAsSiemensStream(String resource) {
++		URL url = getResource(resource);
++
++		try {
++			InputStream stream = url.openStream();
++
++			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++			int count = 0;
++			byte[] data = new byte[4096];
++			while (count != -1) {
++				count = stream.read(data);
++				if (count != -1) {
++					buffer.write(data, 0, count);
++				}
++			}
++			return new SiemensInputStream(buffer.toByteArray());
++		} catch (Exception e) {
++			return super.getResourceAsStream(resource);
++		}
++	}
++
++	private class SiemensInputStream extends InputStream {
++		private ByteArrayInputStream iostream;
++
++		public SiemensInputStream(byte[] data) {
++			iostream = new ByteArrayInputStream(data);
++		}
++
++		public int read() {
++			int t = iostream.read();
++			if (t == -1) {
++				return 0;
++			}
++			return t;
++		}
++
++		public int read(byte[] b, int off, int len) {
++			int t = iostream.read(b, off, len);
++			if (t == -1) {
++				return 0;
++			}
++			return t;
++		}
++	}
++
++	/*
++	 * **************************************************************
++	 * Instrumentation
++	 * **************************************************************
++	 */
++
++	private byte[] instrument(InputStream stream) throws Exception {
++		ClassReader reader = LevelLoadingCompat.remap(TextEncodingCompat.remap(JarUrlCompat.remap(CanvasInputCompat.remap(CjspSoundCompat.remap(new ClassReader(stream))))));
++		ClassWriter writer = new ClassWriter(0);
++		ClassVisitor visitor = new ASMVisitor(writer);
++		reader.accept(BusyWaitCompat.wrap(visitor, reader), ClassReader.SKIP_DEBUG);
++		return writer.toByteArray();
++	}
++
++	private class ASMVisitor extends ClassAdapter {
++		public ASMVisitor(ClassVisitor visitor) {
++			super(visitor);
++		}
++
++		public void visit(final int version, final int access, final String name, final String signature,
++				final String superName, final String[] interfaces) {
++			super.visit(version, access, name, signature, superName, interfaces);
++		}
++
++		public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature,
++				final String[] exceptions) {
++			return new ASMMethodVisitor(super.visitMethod(access, name, desc, signature, exceptions));
++		}
++
++		private class ASMMethodVisitor extends MethodAdapter implements Opcodes {
++			public ASMMethodVisitor(MethodVisitor visitor) {
++				super(visitor);
++			}
++
++			public void visitMethodInsn(int opcode, String owner, String name, String desc) {
++				if (opcode == INVOKEVIRTUAL && name.equals("getResourceAsStream") && owner.equals("java/lang/Class")) {
++					mv.visitMethodInsn(INVOKESTATIC, "org/recompile/mobile/Mobile", name,
++							"(Ljava/lang/Class;Ljava/lang/String;)Ljava/io/InputStream;");
++				} else if (opcode == INVOKESTATIC && name.equals("setListener")
++						&& owner.equals("com/siemens/mp/io/Connection")) {
++					mv.visitMethodInsn(opcode, owner, "setListenerCompat", desc);
++				} else {
++					mv.visitMethodInsn(opcode, owner, name, desc);
++				}
++			}
++		}
++	}
++}
+diff --git a/src/org/recompile/mobile/TextEncodingCompat.java b/src/org/recompile/mobile/TextEncodingCompat.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..a8685aaa46783610cd993b83ef0fc8afc80e2b4b
+--- /dev/null
++++ b/src/org/recompile/mobile/TextEncodingCompat.java
+@@ -0,0 +1,84 @@
++package org.recompile.mobile;
++
++import java.security.MessageDigest;
++import org.objectweb.asm.ClassReader;
++import org.objectweb.asm.ClassWriter;
++import org.objectweb.asm.ClassAdapter;
++import org.objectweb.asm.MethodAdapter;
++import org.objectweb.asm.MethodVisitor;
++import org.objectweb.asm.Opcodes;
++
++/** Issues #17, #21, #22 and #26: preserve single-byte text in verified WW decoders. */
++final class TextEncodingCompat implements Opcodes {
++    private static final String CLASS_SHA256 =
++        "80b92b5855f45f9fd5f73e06b06af97880179d074d8591bc6371e1324e99c828";
++
++    private static final String ISSUE21_SHA256 =
++        "0c0a3d4a299f4d579df9686ffedc9c1b82b3136b1b11abf31231971cb54c7ecd";
++
++    private static final String ISSUE22_SHA256 =
++        "5b58a54684fd7c958c0375ab6891958b65d127949a09af1a3cdac79564d02520";
++
++    private static final String ISSUE22_V107_SHA256 =
++        "f65d8e18dff6992dfe4c8d2aa205a42e8a1421c3f900ec99d29905ad71918060";
++
++    private static final String ISSUE26_SHA256 =
++        "ad26e80e12773cf1148f5cd591e94b3ee49f14f517e3880fe99a57455c073a4b";
++
++    private static final String ISSUE26_V105_SHA256 =
++        "703b94fe17402a33bce0ad061eef53affc244c268d18e5ff9754530b28324bc3";
++
++    static ClassReader remap(ClassReader reader) throws Exception {
++        String className = reader.getClassName();
++        if (!"c".equals(className) && !"a".equals(className) && !"b".equals(className)) return reader;
++        StringBuilder hex = new StringBuilder();
++        for (byte b : MessageDigest.getInstance("SHA-256").digest(reader.b)) {
++            int n = b & 255;
++            if (n < 16) hex.append('0');
++            hex.append(Integer.toHexString(n));
++        }
++        boolean issue17 = "c".equals(className) && CLASS_SHA256.equals(hex.toString());
++        boolean issue21 = "a".equals(className) && ISSUE21_SHA256.equals(hex.toString());
++        final boolean issue22 = "b".equals(className) && (ISSUE22_SHA256.equals(hex.toString())
++            || ISSUE22_V107_SHA256.equals(hex.toString()));
++        final boolean issue26 = "b".equals(className) && (ISSUE26_SHA256.equals(hex.toString())
++            || ISSUE26_V105_SHA256.equals(hex.toString()));
++        if (!issue17 && !issue21 && !issue22 && !issue26) return reader;
++
++        ClassWriter writer = new ClassWriter(reader, 0);
++        final int[] changed = {0};
++        reader.accept(new ClassAdapter(writer) {
++            public MethodVisitor visitMethod(int access, String name, String desc,
++                    String signature, String[] exceptions) {
++                MethodVisitor target = super.visitMethod(access, name, desc, signature, exceptions);
++                if (!"a".equals(name) || !((issue22 || issue26) ? "(II)Ljava/lang/String;" : "(I[B[B)Z").equals(desc)) return target;
++                return new MethodAdapter(target) {
++                    public void visitMethodInsn(int opcode, String owner, String name, String desc) {
++                        if (opcode == INVOKESPECIAL && "java/lang/String".equals(owner)
++                                && "<init>".equals(name) && "([BII)V".equals(desc)) {
++                            // Stack suffix: bytes, offset, length.
++                            // Insert zero high byte before the two int arguments.
++                            // String(bytes, 0, offset, length) is the same mapping
++                            // tested in diagnostic B, independent of default charset.
++                            mv.visitInsn(ICONST_0);
++                            mv.visitInsn(DUP_X2);
++                            mv.visitInsn(POP);
++                            super.visitMethodInsn(opcode, owner, name, "([BIII)V");
++                            changed[0]++;
++                        } else {
++                            super.visitMethodInsn(opcode, owner, name, desc);
++                        }
++                    }
++                    public void visitMaxs(int maxStack, int maxLocals) {
++                        // ICONST_0 + DUP_X2 temporarily add two stack slots.
++                        super.visitMaxs(maxStack + 2, maxLocals);
++                    }
++                };
++            }
++        }, 0);
++        if (changed[0] != 1) throw new IllegalStateException("Unexpected WW decoder count: " + changed[0]);
++        ClassReader result = new ClassReader(writer.toByteArray());
++        System.out.println("[POP-COMPAT] Applied Warrior Within issue #" + (issue26 ? "26" : issue22 ? "22" : issue21 ? "21" : "17") + " single-byte text decoding fix");
++        return result;
++    }
++}
