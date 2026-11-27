@@ -1554,6 +1554,7 @@
     "128x128"
    ],
    "languages": [
+    "Spanish",
     "English"
    ],
    "devices": [
@@ -1563,7 +1564,9 @@
    "vendors": [
     "Gameloft SA"
    ],
-   "notes": []
+   "notes": [
+    "Limit FPS to 15"
+   ]
   },
   {
    "id": "T2T-G01",
@@ -18922,7 +18925,7 @@
    "cldc": "1.0",
    "midp": "1.0",
    "resolution": "128x128",
-   "language": "English",
+   "language": "Spanish",
    "aboutName": "Prince of Persia Warrior Within",
    "aboutVersion": "v1.0.4",
    "aboutAuthor": "2004 Gameloft",
@@ -18930,8 +18933,8 @@
    "oldFilename": "",
    "archivePaths": "PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.4) (CLDC-1.0, MIDP-1.0) (1BC8A118).jar PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.4) (CLDC-1.0, MIDP-1.0) (cMIDlet) (35d062ec50c6f3117340ea2bf87de34a49085c8ffaeeb910c54132f0849ba133).jar",
    "device": "Nokia s40v2",
-   "notesGeneral": "Unplayable",
-   "notesGameplay": "",
+   "notesGeneral": "",
+   "notesGameplay": "Limit FPS to 15",
    "notesGameplay2": "",
    "crc32": "1BC8A118",
    "sha1": "edf81e8dda438c543d35b04cf4311f0b3449f03d",
@@ -18946,8 +18949,8 @@
    "size": 64825,
    "sheetRow": 88,
    "phoneType": "Nokia",
-   "unplayable": true,
-   "fpsLimit": null,
+   "unplayable": false,
+   "fpsLimit": 15,
    "family": "WW-G02",
    "variant": "e"
   },
@@ -18968,8 +18971,8 @@
    "oldFilename": "",
    "archivePaths": "PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.4) (CLDC-1.0, MIDP-1.0) (478F8CA8).jar PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.4) (CLDC-1.0, MIDP-1.0) (cMIDlet) (69c67da7a8becfc82033ffff553aebb848901b8389aeff820f7938d303606cc5).jar",
    "device": "Nokia s40v2",
-   "notesGeneral": "Unplayable",
-   "notesGameplay": "",
+   "notesGeneral": "",
+   "notesGameplay": "Limit FPS to 15",
    "notesGameplay2": "",
    "crc32": "478F8CA8",
    "sha1": "5dec691c33c4d4d3ba73e2791f5dca6d8fa15af1",
@@ -18984,8 +18987,8 @@
    "size": 64795,
    "sheetRow": 89,
    "phoneType": "Nokia",
-   "unplayable": true,
-   "fpsLimit": null,
+   "unplayable": false,
+   "fpsLimit": 15,
    "family": "WW-G02",
    "variant": "e"
   },
@@ -19006,8 +19009,8 @@
    "oldFilename": "",
    "archivePaths": "PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.4) (CLDC-1.0, MIDP-1.0) (cMIDlet) (8c9eed6962cf6eecd65d678100f791349f446b15e294489c806139bde1f43345).jar",
    "device": "Nokia s40v2",
-   "notesGeneral": "Unplayable",
-   "notesGameplay": "",
+   "notesGeneral": "",
+   "notesGameplay": "Limit FPS to 15",
    "notesGameplay2": "",
    "crc32": "4687C3CC",
    "sha1": "fee166f717284c7fdd3346474df0e7dd28672460",
@@ -19021,8 +19024,8 @@
    "size": 71091,
    "sheetRow": 90,
    "phoneType": "Nokia",
-   "unplayable": true,
-   "fpsLimit": null,
+   "unplayable": false,
+   "fpsLimit": 15,
    "family": "WW-G02",
    "variant": "e"
   },
@@ -19043,8 +19046,8 @@
    "oldFilename": "s40_PrinceofPersiaWarriorWithin - Mastiwap.Com.jar",
    "archivePaths": "PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.4) (CLDC-1.0, MIDP-1.0) (964095C9).jar PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.4) (CLDC-1.0, MIDP-1.0) (cMIDlet) (f0908ea7eb053babfd9a1d8f2754262bcda42af5da96b135f1e749f342b47cfa).jar",
    "device": "-",
-   "notesGeneral": "Unplayable",
-   "notesGameplay": "",
+   "notesGeneral": "",
+   "notesGameplay": "Limit FPS to 15",
    "notesGameplay2": "",
    "crc32": "964095C9",
    "sha1": "868a5727eaec261d4ed16896b8f52dcf09b3186f",
@@ -19059,8 +19062,8 @@
    "size": 64792,
    "sheetRow": 91,
    "phoneType": null,
-   "unplayable": true,
-   "fpsLimit": null,
+   "unplayable": false,
+   "fpsLimit": 15,
    "family": "WW-G02",
    "variant": "e"
   },
@@ -19081,8 +19084,8 @@
    "oldFilename": "128x128 (s40v2).jar",
    "archivePaths": "PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.5) (CLDC-1.0, MIDP-1.0) (AD433632).jar PrinceOfPersia-WarriorWithin/PrinceOfPersia-WarriorWithin (Gameloft SA) (1.0.5) (CLDC-1.0, MIDP-1.0) (cMIDlet) (bacf4aee4bf37ae5e28370b205468d43678a4b57b21ac6f71be162bfd2a1a7a3).jar",
    "device": "Nokia s40v2",
-   "notesGeneral": "Unplayable",
-   "notesGameplay": "",
+   "notesGeneral": "",
+   "notesGameplay": "Limit FPS to 15",
    "notesGameplay2": "",
    "crc32": "AD433632",
    "sha1": "6304b778fd11b63cba1bcaf3d94f9de43f77abbf",
@@ -19097,8 +19100,8 @@
    "size": 64837,
    "sheetRow": 92,
    "phoneType": "Nokia",
-   "unplayable": true,
-   "fpsLimit": null,
+   "unplayable": false,
+   "fpsLimit": 15,
    "family": "WW-G02",
    "variant": "e"
   },

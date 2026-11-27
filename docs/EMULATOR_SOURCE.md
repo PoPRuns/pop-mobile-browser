@@ -28,6 +28,7 @@ The bundled Java emulator includes the following patches to address playback and
 | [#21](https://github.com/PoPRuns/pop-mobile-browser/issues/21) | Warrior Within | Extend single-byte text decoding to the verified Czech `a.class` (CRC32 `5E9733BD`), retaining the issue #17 decoder mapping. |
 | [#22](https://github.com/PoPRuns/pop-mobile-browser/issues/22) | Warrior Within | Extend single-byte decoding to two verified `b.class` fingerprints, resolving text rendering for eight tested builds (CRC32 `1DC6D8D2`, `31A04206`, `C89A5F96`, `60B9E1C4`, `AB0D8D02`, `976D2BE3`, `6A257389`, `378A7FBD`). `BE544353` shares the first decoder; issue #36 confirmed its original directional controls work without an additional emulator patch. |
 | [#25](https://github.com/PoPRuns/pop-mobile-browser/issues/25) | Warrior Within | Replace six startup polling yields in the verified `f.class` (`N()` and `h()`) with interruption-safe 1 ms sleeps, resolving intro slowdown for CRC32 `F97F4761` and `7DABC0BA`. Original animation timing and gameplay loop unchanged. |
+| [#26](https://github.com/PoPRuns/pop-mobile-browser/issues/26) | Warrior Within | Extend single-byte text decoding to two verified Compact Edition `b.class` fingerprints, resolving rendering failures for CRC32 `1BC8A118`, `478F8CA8`, `4687C3CC`, `964095C9`, `AD433632`. |
 
 All fixes are applied at class load time using exact SHA-256 class fingerprints. Original game JARs, frame interval targets and MIDI/media binaries remain unchanged. Precise timing equivalence has not been established.
 
@@ -50,6 +51,7 @@ To rebuild the current Java component, apply the following patches to the pinned
 15. [issue-21-text-encoding.patch](../vendor/freej2me-web/web/source-patches/issue-21-text-encoding.patch)
 16. [issue-22-text-encoding.patch](../vendor/freej2me-web/web/source-patches/issue-22-text-encoding.patch)
 17. [issue-25-startup-busy-wait.patch](../vendor/freej2me-web/web/source-patches/issue-25-startup-busy-wait.patch)
+18. [issue-26-text-encoding.patch](../vendor/freej2me-web/web/source-patches/issue-26-text-encoding.patch)
 
 Build using OpenJDK 17 and Apache Ant (`ant -Dant.build.javac.source=1.8`), then copy `web/freej2me-web.jar` into the site vendor directory.
 
@@ -59,7 +61,7 @@ The v0.1.0 corresponding-source archive, the patches above and the current site 
 
 | Component | SHA-256 |
 | --- | --- |
-| `vendor/freej2me-web/web/freej2me-web.jar` | `590eba5d18c0e3567476d3809d8c456b6f3780e61c7ce5def489406e69060a4e` |
+| `vendor/freej2me-web/web/freej2me-web.jar` | `214a532ea6745461cdaaa11d6a3d7e6a52bc500b0740cbc3057935317aca4cf3` |
 | `vendor/freej2me-web/web/libmidi/libmidi.wasm` | `cfe6a6910c54d5a292b1edf6810f895d588f6c0c2841c7c4c78297097ead1d98` |
 | `vendor/freej2me-web/web/libmedia/transcode/transcode.wasm` | `a8831d65180feea3ad3a05911c5197a4ce7fd34e0b5d14e5db038ea9c45c0d5b` |
 | Generated `gm.sf2` within source bundle | `5b1f4a3873294197ee492a182ec955780b495db2ddfeb9635a4faef278cad34e` |
